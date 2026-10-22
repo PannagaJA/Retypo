@@ -6,6 +6,7 @@ from app.services.geometry_service import (
     calculate_bounding_box,
     calculate_geometry_confidence,
     estimate_text_color,
+    estimate_text_weight,
 )
 
 def test_calculate_polygon_angle():
@@ -42,3 +43,18 @@ def test_estimate_text_color():
     quad = [[25.0, 15.0], [175.0, 15.0], [175.0, 85.0], [25.0, 85.0]]
     color = estimate_text_color(img, quad)
     assert color.lower() == "#ff0000"
+
+
+def test_estimate_text_weight():
+    # Regular text: thin stroke
+    img_reg = Image.new("RGB", (100, 30), color=(255, 255, 255))
+    draw_reg = ImageDraw.Draw(img_reg)
+    draw_reg.line([(10, 15), (90, 15)], fill=(0, 0, 0), width=1)
+    quad = [[10.0, 5.0], [90.0, 5.0], [90.0, 25.0], [10.0, 25.0]]
+    assert estimate_text_weight(img_reg, quad, 20.0) == "400"
+
+    # Bold text: thick stroke
+    img_bold = Image.new("RGB", (100, 30), color=(255, 255, 255))
+    draw_bold = ImageDraw.Draw(img_bold)
+    draw_bold.line([(10, 15), (90, 15)], fill=(0, 0, 0), width=6)
+    assert estimate_text_weight(img_bold, quad, 20.0) in ["600", "700"]
