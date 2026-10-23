@@ -10,6 +10,9 @@ def calculate_polygon_angle(polygon: List[List[float]]) -> float:
     """
     Computes baseline orientation angle in degrees (-180 to 180) from quad points [P1, P2, P3, P4].
     Uses the top edge vector P1 -> P2.
+    PaddleOCR quads for short words frequently have 1-3px vertical corner jitter, resulting
+    in small false angles (1° - 4°). Any orientation within ±4.5° of 0° is snapped to 0.0°
+    to preserve perfect horizontal alignment.
     """
     if len(polygon) < 2:
         return 0.0
@@ -19,6 +22,8 @@ def calculate_polygon_angle(polygon: List[List[float]]) -> float:
     dy = p2[1] - p1[1]
     angle_rad = math.atan2(dy, dx)
     angle_deg = math.degrees(angle_rad)
+    if abs(angle_deg) <= 4.5:
+        return 0.0
     return round(angle_deg, 2)
 
 def calculate_font_size(
@@ -141,9 +146,14 @@ def estimate_text_weight(
     except Exception:
         return "400"
 
-def calculate_bounding_box(polygon: List[List[float]]) -> Tuple[float, float, float, float]:
+def calculate_bounding_box(
+    polygon: List[List[float]],
+    image: Optional[Image.Image] = None
+) -> Tuple[float, float, float, float]:
     """
     Returns axis-aligned bounding box (left, top, width, height) in original image pixels.
+    When image is provided, calibrates bounds to exact visual foreground text bounds,
+    preventing 5-6px vertical/horizontal alignment offsets caused by outer whitespace padding.
     """
     xs = [p[0] for p in polygon]
     ys = [p[1] for p in polygon]
@@ -151,7 +161,69 @@ def calculate_bounding_box(polygon: List[List[float]]) -> Tuple[float, float, fl
     max_x = max(xs)
     min_y = min(ys)
     max_y = max(ys)
+
+    if image is not None:
+        try:
+            ix1, ix2 = max(0, int(min_x)), min(image.width, int(max_x))
+            iy1, iy2 = max(0, int(min_y)), min(image.height, int(max_y))
+            if ix2 > ix1 + 4 and iy2 > iy1 + 4:
+                crop = np.array(image.crop((ix1, iy1, ix2, iy2)))
+                if crop.size > 0:
+                    gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY) if len(crop.shape) == 3 else crop
+                    _, th1 = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                    _, th2 = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+                    th = th1 if np.sum(th1 == 255) < np.sum(th2 == 255) else th2
+                    fg_ys, fg_xs = np.where(th == 255)
+                    if len(fg_ys) >= 6 and len(fg_xs) >= 6:
+                        cal_left = ix1 + float(np.min(fg_xs))
+                        cal_top = iy1 + float(np.min(fg_ys))
+                        cal_w = float(np.max(fg_xs) - np.min(fg_xs) + 1)
+                        cal_h = float(np.max(fg_ys) - np.min(fg_ys) + 1)
+                        return (round(cal_left, 1), round(cal_top, 1), round(cal_w, 1), round(cal_h, 1))
+        except Exception:
+            pass
+
     return (round(min_x, 1), round(min_y, 1), round(max_x - min_x, 1), round(max_y - min_y, 1))
+
+def estimate_text_blur(
+    image: Optional[Image.Image],
+    polygon: List[List[float]]
+) -> float:
+    """
+    Estimates natural edge softness / blur radius in native image pixels (typically 0.4 to 1.2px)
+    from foreground text edge sharpness.
+    """
+    if image is None or len(polygon) < 4:
+        return 0.6
+    try:
+        xs = [p[0] for p in polygon]
+        ys = [p[1] for p in polygon]
+        ix1, ix2 = max(0, int(min_x)), min(image.width, int(max_x))
+        iy1, iy2 = max(0, int(min_y)), min(image.height, int(max_y))
+        if ix2 <= ix1 + 4 or iy2 <= iy1 + 4:
+            return 0.6
+
+        crop = np.array(image.crop((ix1, iy1, ix2, iy2)))
+        gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY) if len(crop.shape) == 3 else crop
+
+        gx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
+        gy = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+        mag = np.sqrt(gx**2 + gy**2)
+        sig = mag[mag > 30]
+        if len(sig) == 0:
+            return 0.6
+        p90 = float(np.percentile(sig, 90))
+
+        if p90 >= 600:
+            return 0.4
+        elif p90 >= 380:
+            return 0.6
+        elif p90 >= 250:
+            return 0.8
+        else:
+            return 1.0
+    except Exception:
+        return 0.6
 
 def calculate_geometry_confidence(polygon: List[List[float]]) -> float:
     """
