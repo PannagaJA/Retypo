@@ -30,8 +30,8 @@ import cv2
 import numpy as np
 
 app = FastAPI(
-    title="AI Image Text Editor Backend",
-    description="High-fidelity image typography reconstruction, OCR detection, inpainting & compositing API",
+    title="Retypo API",
+    description="Retypo AI Image Text Editor & High-Fidelity Typography Reconstruction Engine",
     version="1.2.0"
 )
 

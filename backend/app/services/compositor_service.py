@@ -380,7 +380,7 @@ class CompositorService:
         return CompositorExportResponse(
             status="success",
             exportDataUrl=b64_data,
-            fileName=f"photext_studio_export.{ext}",
+            fileName=f"retypo_studio_export.{ext}",
             telemetry=telemetry,
             processingTimeMs=elapsed_ms
         )
