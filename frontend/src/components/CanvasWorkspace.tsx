@@ -23,6 +23,10 @@ interface CanvasWorkspaceProps {
   detectedRegions: DetectedTextRegion[];
   showDetectionOverlay: boolean;
   onConvertRegion: (region: DetectedTextRegion) => void;
+  onHideDetectionOverlay?: () => void;
+  onShowDetectionOverlay?: () => void;
+  hoveredRegionId?: string | null;
+  onHoverRegion?: (regionId: string | null) => void;
 }
 
 export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
@@ -43,6 +47,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   detectedRegions,
   showDetectionOverlay,
   onConvertRegion,
+  onHideDetectionOverlay,
+  onShowDetectionOverlay,
+  hoveredRegionId,
+  onHoverRegion,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasElRef = useRef<HTMLCanvasElement>(null);
@@ -57,6 +65,27 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   const isPanningRef = useRef<boolean>(false);
   const lastPanPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const [hoveredRegion, setHoveredRegion] = useState<{ text: string; confidence: number; x: number; y: number } | null>(null);
+
+  const propsRef = useRef({
+    image,
+    showDetectionOverlay,
+    onHideDetectionOverlay,
+    onShowDetectionOverlay,
+    onSelectLayer,
+    onUpdateLayer,
+    onZoomChange,
+    onHoverRegion,
+  });
+  propsRef.current = {
+    image,
+    showDetectionOverlay,
+    onHideDetectionOverlay,
+    onShowDetectionOverlay,
+    onSelectLayer,
+    onUpdateLayer,
+    onZoomChange,
+    onHoverRegion,
+  };
 
   // 1. Initialize Fabric Canvas
   useEffect(() => {
@@ -142,7 +171,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       opt.e.stopPropagation();
     });
 
-    // Panning
+    // Panning & Outside Click Handling
     canvas.on('mouse:down', (opt) => {
       const mouseEvt = opt.e as MouseEvent;
       if (isSpacePressed || (mouseEvt && mouseEvt.button === 1)) {
@@ -151,6 +180,27 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           lastPanPos.current = { x: mouseEvt.clientX, y: mouseEvt.clientY };
         }
         canvas.setCursor('grab');
+        return;
+      }
+
+      // Hide highlighted detected text boxes when clicking outside the image bounds
+      const { image: curImg, showDetectionOverlay: curShow, onHideDetectionOverlay: curHide } = propsRef.current;
+      if (curImg && curShow && curHide) {
+        const scenePt = (canvas as any).getScenePoint
+          ? (canvas as any).getScenePoint(opt.e)
+          : (canvas as any).getPointer(opt.e);
+
+        if (scenePt) {
+          const isOutside =
+            scenePt.x < 0 ||
+            scenePt.x > curImg.width ||
+            scenePt.y < 0 ||
+            scenePt.y > curImg.height;
+
+          if (isOutside) {
+            curHide();
+          }
+        }
       }
     });
 
@@ -309,7 +359,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     canvas.renderAll();
   }, [patches, isComparing, compareMode, image]);
 
-  // 4. Render Detected OCR Polygons Overlay
+  // 4. Render Detected OCR Polygons Overlay (keeps ghost hitboxes active even when visual overlay is dismissed)
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
@@ -319,20 +369,29 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     currentPolys.forEach((p) => canvas.remove(p));
     currentPolys.clear();
 
-    if (!showDetectionOverlay || !image) {
+    if (!image) {
       canvas.renderAll();
       return;
     }
 
+    const isVisible = showDetectionOverlay;
+
     detectedRegions.forEach((region) => {
       if (region.isConverted) return;
 
+      const isHov = region.regionId === hoveredRegionId;
       const points = region.polygon.map((p) => ({ x: p[0], y: p[1] }));
       const poly = new fabric.Polygon(points, {
-        fill: 'rgba(16, 185, 129, 0.15)',
-        stroke: '#10b981',
-        strokeWidth: 2,
-        strokeDashArray: [4, 3],
+        fill: isHov
+          ? (isVisible ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)')
+          : (isVisible ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)'),
+        stroke: isHov
+          ? (isVisible ? '#34d399' : '#10b981')
+          : (isVisible ? '#10b981' : 'transparent'),
+        strokeWidth: isHov
+          ? (isVisible ? 3 : 1.5)
+          : (isVisible ? 2 : 0),
+        strokeDashArray: isHov ? [3, 2] : (isVisible ? [4, 3] : undefined),
         selectable: false,
         evented: true,
         hoverCursor: 'pointer',
@@ -341,12 +400,15 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       (poly as any).regionData = region;
 
       poly.on('mouseover', (opt) => {
+        const isOverlayOn = propsRef.current.showDetectionOverlay;
         poly.set({
-          fill: 'rgba(16, 185, 129, 0.35)',
-          stroke: '#34d399',
-          strokeWidth: 2.5,
+          fill: isOverlayOn ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)',
+          stroke: isOverlayOn ? '#34d399' : '#10b981',
+          strokeWidth: isOverlayOn ? 3 : 1.5,
+          strokeDashArray: isOverlayOn ? [4, 3] : [3, 2],
         });
-        canvas.renderAll();
+        canvas.requestRenderAll();
+        propsRef.current.onHoverRegion?.(region.regionId);
 
         const mouseEvt = opt.e as MouseEvent;
         if (mouseEvt) {
@@ -360,17 +422,25 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       });
 
       poly.on('mouseout', () => {
+        const isOverlayOn = propsRef.current.showDetectionOverlay;
         poly.set({
-          fill: 'rgba(16, 185, 129, 0.15)',
-          stroke: '#10b981',
-          strokeWidth: 2,
+          fill: isOverlayOn ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)',
+          stroke: isOverlayOn ? '#10b981' : 'transparent',
+          strokeWidth: isOverlayOn ? 2 : 0,
+          strokeDashArray: isOverlayOn ? [4, 3] : undefined,
         });
-        canvas.renderAll();
+        canvas.requestRenderAll();
         setHoveredRegion(null);
+        propsRef.current.onHoverRegion?.(null);
       });
 
       poly.on('mousedown', () => {
         setHoveredRegion(null);
+        propsRef.current.onHoverRegion?.(null);
+        // Re-activate detection overlay if it was hidden
+        if (!propsRef.current.showDetectionOverlay && propsRef.current.onShowDetectionOverlay) {
+          propsRef.current.onShowDetectionOverlay();
+        }
         onConvertRegion(region);
       });
 
@@ -380,6 +450,34 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
     canvas.renderAll();
   }, [detectedRegions, showDetectionOverlay, image, onConvertRegion]);
+
+  // Synchronize canvas polygon highlight when hovered from sidebar or canvas
+  useEffect(() => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return;
+    const currentPolys = detectedPolygonsRef.current;
+    const isVisible = showDetectionOverlay;
+
+    currentPolys.forEach((poly, id) => {
+      const isHov = id === hoveredRegionId;
+      if (isVisible) {
+        poly.set({
+          fill: isHov ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.15)',
+          stroke: isHov ? '#34d399' : '#10b981',
+          strokeWidth: isHov ? 3 : 2,
+          strokeDashArray: [4, 3],
+        });
+      } else {
+        poly.set({
+          fill: isHov ? 'rgba(16, 185, 129, 0.25)' : 'rgba(0, 0, 0, 0.001)',
+          stroke: isHov ? '#10b981' : 'transparent',
+          strokeWidth: isHov ? 1.5 : 0,
+          strokeDashArray: isHov ? [3, 2] : undefined,
+        });
+      }
+    });
+    canvas.requestRenderAll();
+  }, [hoveredRegionId, showDetectionOverlay]);
 
   // 5. Synchronize Text Layers with Fabric Textbox Objects
   useEffect(() => {
@@ -402,6 +500,23 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       const shouldBeVisible =
         layer.isVisible && (!isComparing || compareMode === 'split');
 
+      const blurVal = layer.blur ?? 0.6;
+      const shadowConfig = layer.shadow
+        ? new fabric.Shadow({
+            color: layer.shadow.color,
+            blur: layer.shadow.blur,
+            offsetX: layer.shadow.offsetX,
+            offsetY: layer.shadow.offsetY,
+          })
+        : (blurVal > 0.05
+          ? new fabric.Shadow({
+              color: layer.fill,
+              blur: blurVal,
+              offsetX: 0,
+              offsetY: 0,
+            })
+          : undefined);
+
       if (!tb) {
         tb = new fabric.Textbox(layer.text, {
           left: layer.left,
@@ -417,6 +532,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           textAlign: layer.textAlign,
           angle: layer.angle || 0,
           opacity: layer.opacity,
+          shadow: shadowConfig,
           visible: shouldBeVisible,
           lockMovementX: layer.isLocked,
           lockMovementY: layer.isLocked,
@@ -433,10 +549,19 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
         (tb as any).layerId = layer.id;
         const textObj = tb;
+        tb.on('mousedown', () => {
+          if (!layer.isLocked && textObj) {
+            setTimeout(() => {
+              if (fabricCanvasRef.current && !textObj.isEditing) {
+                textObj.enterEditing();
+                fabricCanvasRef.current.requestRenderAll();
+              }
+            }, 30);
+          }
+        });
         tb.on('mousedblclick', () => {
           if (!layer.isLocked && textObj) {
             textObj.enterEditing();
-            textObj.selectAll();
             canvas.requestRenderAll();
           }
         });
@@ -458,6 +583,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           textAlign: layer.textAlign,
           angle: layer.angle || 0,
           opacity: layer.opacity,
+          shadow: shadowConfig,
           visible: shouldBeVisible,
           lockMovementX: layer.isLocked,
           lockMovementY: layer.isLocked,
@@ -469,15 +595,17 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
 
       if (selectedLayerId === layer.id && !layer.isLocked && tb) {
-        const activeTb = tb;
-        canvas.setActiveObject(activeTb);
+        canvas.setActiveObject(tb);
         setTimeout(() => {
-          if (fabricCanvasRef.current && fabricCanvasRef.current.getActiveObject() === activeTb && !activeTb.isEditing) {
-            activeTb.enterEditing();
-            activeTb.selectAll();
+          if (fabricCanvasRef.current && fabricCanvasRef.current.getActiveObject() === tb && !tb.isEditing) {
+            tb.enterEditing();
+            if (tb.hiddenTextarea) {
+              tb.selectionStart = tb.text.length;
+              tb.selectionEnd = tb.text.length;
+            }
             fabricCanvasRef.current.requestRenderAll();
           }
-        }, 50);
+        }, 30);
       } else if (selectedLayerId === null && canvas.getActiveObject() === tb) {
         canvas.discardActiveObject();
       }
@@ -514,6 +642,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      onMouseDown={(e) => {
+        if (e.target === containerRef.current && propsRef.current.showDetectionOverlay && propsRef.current.onHideDetectionOverlay) {
+          propsRef.current.onHideDetectionOverlay();
+        }
+      }}
       className={`relative flex-1 h-full w-full overflow-hidden bg-[#0a0c12] ${
         isSpacePressed ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
       }`}
