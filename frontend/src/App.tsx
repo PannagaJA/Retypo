@@ -7,6 +7,7 @@ import { LayersPanel } from './components/LayersPanel';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { ExportModal } from './components/ExportModal';
 import { analyzeImageOCR, restoreBackground } from './services/api';
+import { Layers, Type, Maximize2, Eye, Download, Sliders, Copy, Trash2, X } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [image, setImage] = useState<ImageMetadata | null>(null);
@@ -18,6 +19,7 @@ export const App: React.FC = () => {
   const [splitPosition, setSplitPosition] = useState<number>(50);
   const [inpaintPatches, setInpaintPatches] = useState<InpaintPatch[]>([]);
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
+  const [mobileTab, setMobileTab] = useState<'canvas' | 'layers' | 'properties'>('canvas');
 
   // OCR state
   const [detectedRegions, setDetectedRegions] = useState<DetectedTextRegion[]>([]);
@@ -654,7 +656,7 @@ export const App: React.FC = () => {
     : false;
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0b0d13]">
+    <div className="flex flex-col h-screen h-[100dvh] w-screen overflow-hidden bg-[#0b0d13] relative">
       {/* Top Header */}
       <Header
         canUndo={historyRef.current.canUndo()}
@@ -687,38 +689,53 @@ export const App: React.FC = () => {
       />
 
       {/* Main Workspace */}
-      <div className="flex flex-1 h-[calc(100vh-3.5rem)] overflow-hidden">
+      <div className="flex flex-1 h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-3.5rem)] overflow-hidden relative">
         {/* Left: Layers & Inpaint Patches Panel */}
-        <LayersPanel
-          image={image}
-          patches={inpaintPatches}
-          layers={layers}
-          selectedLayerId={selectedLayerId}
-          onSelectLayer={setSelectedLayerId}
-          onAddText={handleAddText}
-          onToggleVisibility={(id) => {
-            const layer = layers.find((l) => l.id === id);
-            if (layer) handleUpdateLayer(id, { isVisible: !layer.isVisible });
-          }}
-          onToggleLock={(id) => {
-            const layer = layers.find((l) => l.id === id);
-            if (layer) handleUpdateLayer(id, { isLocked: !layer.isLocked });
-          }}
-          onDeleteLayer={handleDeleteLayer}
-          onDeletePatch={handleDeletePatch}
-          detectedRegions={detectedRegions}
-          onConvertRegion={handleConvertRegion}
-          onConvertAllRegions={handleConvertAllRegions}
-          onUpdateDetectedText={handleUpdateDetectedText}
-          onDismissDetectedRegion={handleDismissDetectedRegion}
-          onRunOCR={() => handleRunOCR()}
-          isDetecting={isDetecting}
-          onShowDetectionOverlay={() => setShowDetectionOverlay(true)}
-          hoveredRegionId={hoveredRegionId}
-          onHoverRegion={setHoveredRegionId}
-          onInpaintAllDetected={handleInpaintAllDetected}
-          isInpaintingAll={isInpaintingAll}
-        />
+        <div
+          className={`
+            lg:static lg:block lg:w-72 lg:h-full lg:z-auto
+            ${
+              mobileTab === 'layers'
+                ? 'fixed inset-x-0 bottom-0 z-40 h-[82vh] max-h-[82dvh] bg-[#12151e] rounded-t-2xl shadow-2xl border-t border-[#252c3e] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200'
+                : 'hidden lg:flex'
+            }
+          `}
+        >
+          <LayersPanel
+            image={image}
+            patches={inpaintPatches}
+            layers={layers}
+            selectedLayerId={selectedLayerId}
+            onSelectLayer={setSelectedLayerId}
+            onAddText={handleAddText}
+            onToggleVisibility={(id) => {
+              const layer = layers.find((l) => l.id === id);
+              if (layer) handleUpdateLayer(id, { isVisible: !layer.isVisible });
+            }}
+            onToggleLock={(id) => {
+              const layer = layers.find((l) => l.id === id);
+              if (layer) handleUpdateLayer(id, { isLocked: !layer.isLocked });
+            }}
+            onDeleteLayer={handleDeleteLayer}
+            onDeletePatch={handleDeletePatch}
+            detectedRegions={detectedRegions}
+            onConvertRegion={(region) => {
+              handleConvertRegion(region);
+              setMobileTab('canvas');
+            }}
+            onConvertAllRegions={handleConvertAllRegions}
+            onUpdateDetectedText={handleUpdateDetectedText}
+            onDismissDetectedRegion={handleDismissDetectedRegion}
+            onRunOCR={() => handleRunOCR()}
+            isDetecting={isDetecting}
+            onShowDetectionOverlay={() => setShowDetectionOverlay(true)}
+            hoveredRegionId={hoveredRegionId}
+            onHoverRegion={setHoveredRegionId}
+            onInpaintAllDetected={handleInpaintAllDetected}
+            isInpaintingAll={isInpaintingAll}
+            onClose={() => setMobileTab('canvas')}
+          />
+        </div>
 
         {/* Center: Interactive Fabric.js Canvas */}
         <CanvasWorkspace
@@ -746,30 +763,178 @@ export const App: React.FC = () => {
         />
 
         {/* Right: Typography & Inpainting Properties Inspector */}
-        <PropertiesPanel
-          layer={selectedLayer}
-          image={image}
-          onChange={(updates) => {
-            if (selectedLayerId) {
-              handleUpdateLayer(selectedLayerId, updates);
+        <div
+          className={`
+            lg:static lg:block lg:w-80 lg:h-full lg:z-auto
+            ${
+              mobileTab === 'properties'
+                ? 'fixed inset-x-0 bottom-0 z-40 h-[85vh] max-h-[85dvh] bg-[#12151e] rounded-t-2xl shadow-2xl border-t border-[#252c3e] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200'
+                : 'hidden lg:flex'
             }
-          }}
-          onDuplicate={handleDuplicateLayer}
-          onDelete={handleDeleteLayer}
-          onBringForward={handleBringForward}
-          onSendBackward={handleSendBackward}
-          onInpaintLayer={handleInpaintLayer}
-          isInpainting={isInpainting}
-          hasInpaintPatch={hasInpaintPatch}
-        />
+          `}
+        >
+          <PropertiesPanel
+            layer={selectedLayer}
+            image={image}
+            onChange={(updates) => {
+              if (selectedLayerId) {
+                handleUpdateLayer(selectedLayerId, updates);
+              }
+            }}
+            onDuplicate={handleDuplicateLayer}
+            onDelete={handleDeleteLayer}
+            onBringForward={handleBringForward}
+            onSendBackward={handleSendBackward}
+            onInpaintLayer={handleInpaintLayer}
+            isInpainting={isInpainting}
+            hasInpaintPatch={hasInpaintPatch}
+            onClose={() => setMobileTab('canvas')}
+          />
+        </div>
+
+        {/* Backdrop for Mobile Drawers */}
+        {mobileTab !== 'canvas' && (
+          <div
+            className="lg:hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileTab('canvas')}
+          />
+        )}
+
+        {/* Mobile Floating Layer Bar (when layer selected and drawer is closed) */}
+        {selectedLayer && mobileTab === 'canvas' && (
+          <div className="lg:hidden absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between p-2 rounded-xl bg-[#141824]/95 border border-[#2b354c] shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom duration-150">
+            <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+              <div className="w-6 h-6 rounded-md bg-blue-600/20 text-blue-400 flex items-center justify-center shrink-0">
+                <Type className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-white truncate max-w-[130px] sm:max-w-[200px]">
+                  {selectedLayer.text || 'Empty Text'}
+                </p>
+                <p className="text-[10px] text-gray-400 font-mono">
+                  {selectedLayer.fontFamily} • {Math.round(selectedLayer.fontSize)}px
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => setMobileTab('properties')}
+                className="px-2.5 py-1 text-xs font-semibold rounded-md bg-blue-600 hover:bg-blue-500 text-white transition-colors flex items-center gap-1 shadow-sm"
+              >
+                <Sliders className="w-3 h-3" />
+                <span>Style</span>
+              </button>
+              <button
+                onClick={() => handleDuplicateLayer(selectedLayer.id)}
+                className="p-1.5 rounded-md text-gray-300 hover:text-white hover:bg-[#202738] transition-colors"
+                title="Duplicate"
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => handleDeleteLayer(selectedLayer.id)}
+                className="p-1.5 rounded-md text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                title="Delete"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setSelectedLayerId(null)}
+                className="p-1 rounded-md text-gray-400 hover:text-white"
+                title="Deselect"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="lg:hidden h-14 bg-[#10131c] border-t border-[#212636] px-2 flex items-center justify-around z-30 shrink-0 select-none pb-[env(safe-area-inset-bottom)]">
+        <button
+          onClick={() => setMobileTab('canvas')}
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors ${
+            mobileTab === 'canvas'
+              ? 'text-blue-400 font-semibold'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          <Maximize2 className="w-4 h-4 mb-0.5" />
+          <span>Canvas</span>
+        </button>
+
+        <button
+          onClick={() => setMobileTab(mobileTab === 'layers' ? 'canvas' : 'layers')}
+          className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors ${
+            mobileTab === 'layers'
+              ? 'text-blue-400 font-semibold'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          <div className="relative">
+            <Layers className="w-4 h-4 mb-0.5" />
+            {(layers.length > 0 || detectedRegions.length > 0) && (
+              <span className="absolute -top-1 -right-2 px-1 text-[9px] font-mono rounded-full bg-blue-600 text-white leading-none py-0.5 min-w-[14px] text-center">
+                {layers.length + detectedRegions.filter((r) => !r.isConverted).length}
+              </span>
+            )}
+          </div>
+          <span>Layers</span>
+        </button>
+
+        <button
+          onClick={() => setMobileTab(mobileTab === 'properties' ? 'canvas' : 'properties')}
+          className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors ${
+            mobileTab === 'properties'
+              ? 'text-blue-400 font-semibold'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          <div className="relative">
+            <Type className="w-4 h-4 mb-0.5" />
+            {selectedLayer && (
+              <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+            )}
+          </div>
+          <span>Typography</span>
+        </button>
+
+        {image && (
+          <button
+            onClick={() => {
+              setIsComparing((c) => !c);
+              if (mobileTab !== 'canvas') setMobileTab('canvas');
+            }}
+            className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors ${
+              isComparing
+                ? 'text-amber-400 font-semibold'
+                : 'text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            <Eye className="w-4 h-4 mb-0.5" />
+            <span>{isComparing ? 'Original' : 'Compare'}</span>
+          </button>
+        )}
+
+        {image && (
+          <button
+            onClick={() => setIsExportOpen(true)}
+            className="flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <Download className="w-4 h-4 mb-0.5" />
+            <span>Export</span>
+          </button>
+        )}
+      </nav>
 
       {/* Floating Status Toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#141926] border border-[#27364f] shadow-2xl text-xs font-medium text-white">
+        <div className="fixed bottom-16 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#141926] border border-[#27364f] shadow-2xl text-xs font-medium text-white max-w-[90vw]">
           <span className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-emerald-400' : toast.type === 'warn' ? 'bg-amber-400' : 'bg-blue-400'} shrink-0`} />
-          <span>{toast.message}</span>
-          <button onClick={() => setToast(null)} className="ml-2 text-gray-400 hover:text-white">✕</button>
+          <span className="truncate">{toast.message}</span>
+          <button onClick={() => setToast(null)} className="ml-2 text-gray-400 hover:text-white shrink-0">✕</button>
         </div>
       )}
 
