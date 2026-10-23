@@ -19,10 +19,9 @@ import {
   ChevronDown,
   Eraser,
   Loader2,
-  Sparkles,
   CheckCircle2,
   Check,
-  Wand2,
+  ScanText,
   X
 } from 'lucide-react';
 
@@ -99,22 +98,22 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   if (!layer) {
     return (
-      <aside className="w-full lg:w-80 bg-[#12151e] border-l-0 lg:border-l border-[#212636] flex flex-col p-6 items-center justify-center text-center select-none text-gray-500 relative h-full">
+      <aside className="w-full lg:w-80 bg-white border-l-0 lg:border-l border-slate-200 flex flex-col p-6 items-center justify-center text-center select-none text-slate-500 relative h-full">
         {onClose && (
           <button
             onClick={onClose}
-            className="lg:hidden absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#1f2536] transition-colors"
+            className="lg:hidden absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
             title="Close"
           >
             <X className="w-4 h-4" />
           </button>
         )}
-        <div className="w-12 h-12 rounded-full bg-[#181d2a] flex items-center justify-center mb-3 text-gray-400 border border-[#252c3e]">
+        <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 text-slate-600 border border-slate-200 shadow-2xs">
           <Type className="w-6 h-6" />
         </div>
-        <h3 className="text-sm font-medium text-gray-300">No Layer Selected</h3>
-        <p className="text-xs text-gray-500 mt-1 max-w-[200px]">
-          Click on any text in the canvas or add a new text layer to inspect and customize typography.
+        <h3 className="text-sm font-semibold text-slate-800">No Layer Selected</h3>
+        <p className="text-xs text-slate-500 mt-1 max-w-[200px]">
+          Click on any text on the canvas or add a new text layer to inspect and customize typography.
         </p>
       </aside>
     );
@@ -210,34 +209,30 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   };
 
   return (
-    <aside className="w-full lg:w-80 bg-[#12151e] border-l-0 lg:border-l border-[#212636] flex flex-col h-full overflow-y-auto select-none text-gray-200">
+    <aside className="w-full lg:w-80 bg-white border-l-0 lg:border-l border-slate-200 flex flex-col h-full overflow-y-auto select-none text-slate-800">
       {/* Panel Header */}
-      <div className="p-4 border-b border-[#212636] flex items-center justify-between">
+      <div className="p-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
         <div className="flex items-center gap-2">
-          <Type className="w-4 h-4 text-blue-400" />
-          <h2 className="text-sm font-semibold tracking-wide text-white">Typography</h2>
+          <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center shrink-0 border border-slate-200">
+            <Type className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">Typography</h2>
+            <p className="text-[10px] text-slate-500 font-mono leading-none mt-0.5">Inspector</p>
+          </div>
           {layer.origin === 'ocr_detected' && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-mono font-semibold ml-1">
               OCR
             </span>
           )}
         </div>
 
         {/* Quick Toolbar */}
-        <div className="flex items-center gap-1">
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="lg:hidden p-1.5 rounded hover:bg-[#1f2536] text-gray-400 hover:text-white transition-colors mr-1"
-              title="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+        <div className="flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-full p-1 shadow-xs">
           <button
             onClick={() => onChange({ isLocked: !layer.isLocked })}
-            className={`p-1.5 rounded hover:bg-[#1f2536] transition-colors ${
-              layer.isLocked ? 'text-amber-400' : 'text-gray-400'
+            className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+              layer.isLocked ? 'text-amber-700 bg-amber-100' : 'text-slate-500 hover:text-slate-900 hover:bg-white'
             }`}
             title={layer.isLocked ? 'Unlock layer' : 'Lock layer'}
           >
@@ -245,8 +240,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           </button>
           <button
             onClick={() => onChange({ isVisible: !layer.isVisible })}
-            className={`p-1.5 rounded hover:bg-[#1f2536] transition-colors ${
-              !layer.isVisible ? 'text-red-400' : 'text-gray-400'
+            className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+              !layer.isVisible ? 'text-red-700 bg-red-100' : 'text-slate-500 hover:text-slate-900 hover:bg-white'
             }`}
             title={layer.isVisible ? 'Hide layer' : 'Show layer'}
           >
@@ -254,45 +249,54 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           </button>
           <button
             onClick={() => onDuplicate(layer.id)}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-[#1f2536] rounded transition-colors"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-white transition-colors"
             title="Duplicate layer (Ctrl/Cmd + D)"
           >
             <Copy className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => onDelete(layer.id)}
-            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
             title="Delete layer (Delete/Backspace)"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="lg:hidden w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-white transition-colors ml-0.5"
+              title="Close"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
       <div className="p-4 space-y-5">
         {/* Background Inpainting / Text Removal Section */}
-        <div className="bg-[#161a26] border border-[#273044] rounded-lg p-3 space-y-3">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-white flex items-center gap-1.5">
-              <Eraser className="w-3.5 h-3.5 text-purple-400" />
+            <span className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
+              <Eraser className="w-3.5 h-3.5 text-slate-700" />
               Remove Original Text
             </span>
             {hasInpaintPatch ? (
-              <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
-                <CheckCircle2 className="w-3 h-3" />
+              <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full font-medium">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                 Restored
               </span>
             ) : (
-              <span className="text-[10px] text-gray-400 font-mono">Inpainting</span>
+              <span className="text-[10px] text-slate-500 font-mono">Inpainting</span>
             )}
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-medium text-gray-400">Restoration Method</label>
+            <label className="text-[11px] font-medium text-slate-600">Restoration Method</label>
             <select
               value={inpaintStrategy}
               onChange={(e) => setInpaintStrategy(e.target.value)}
-              className="w-full bg-[#12151e] border border-[#273044] rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-purple-500"
+              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-900 cursor-pointer"
             >
               {INPAINT_STRATEGIES.map((s) => (
                 <option key={s.value} value={s.value}>
@@ -304,8 +308,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
           <div className="space-y-1">
             <div className="flex justify-between items-center text-[11px]">
-              <span className="text-gray-400">Mask Padding</span>
-              <span className="font-mono text-gray-300">+{maskPadding}px</span>
+              <span className="text-slate-600">Mask Padding</span>
+              <span className="font-mono text-slate-800">+{maskPadding}px</span>
             </div>
             <input
               type="range"
@@ -313,37 +317,37 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               max="12"
               value={maskPadding}
               onChange={(e) => setMaskPadding(Number(e.target.value))}
-              className="w-full accent-purple-500 cursor-pointer h-1.5 bg-[#252c3e] rounded-lg"
+              className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
             />
           </div>
 
           <button
             onClick={() => onInpaintLayer(layer, inpaintStrategy, maskPadding)}
             disabled={isInpainting}
-            className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-md bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/40 text-xs font-semibold transition-all shadow-sm active:scale-95 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all shadow-xs active:scale-95 disabled:opacity-50"
           >
             {isInpainting ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Inpainting Background...
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
+                Restoring Background...
               </>
             ) : (
               <>
-                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                {hasInpaintPatch ? 'Re-Inpaint Background' : 'Erase Text & Inpaint'}
+                <Eraser className="w-3.5 h-3.5" />
+                {hasInpaintPatch ? 'Re-Inpaint Background' : 'Erase Text from Background'}
               </>
             )}
           </button>
         </div>
 
-        {/* AI Typography Matching Section */}
-        <div className="bg-[#141926] border border-[#27364f] rounded-lg p-3 space-y-3">
+        {/* Typography Matching Section */}
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-white flex items-center gap-1.5">
-              <Wand2 className="w-3.5 h-3.5 text-blue-400" />
-              AI Font Matcher
+            <span className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
+              <ScanText className="w-3.5 h-3.5 text-slate-700" />
+              Font Matching Engine
             </span>
-            <span className="text-[10px] text-blue-400 font-mono bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] text-slate-600 font-mono bg-slate-200/60 border border-slate-200 px-1.5 py-0.5 rounded-full font-medium">
               4-Signal
             </span>
           </div>
@@ -351,24 +355,24 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <button
             onClick={handleScanTypography}
             disabled={isMatching}
-            className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-md bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 text-xs font-semibold transition-all shadow-sm active:scale-95 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-semibold transition-all shadow-xs active:scale-95 disabled:opacity-50"
           >
             {isMatching ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
-                Analyzing Glyphs & Contours...
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-600" />
+                Analyzing Glyphs & Geometry...
               </>
             ) : (
               <>
-                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                Scan & Match Typography
+                <ScanText className="w-3.5 h-3.5 text-slate-700" />
+                Match Font From Image
               </>
             )}
           </button>
 
           {matchMeta && (
-            <div className="text-[10px] font-mono text-gray-400 bg-[#0e121a] px-2 py-1 rounded border border-[#1f2638] flex items-center justify-between">
-              <span>Detected: {matchMeta.detectedWeight} Weight</span>
+            <div className="text-[10px] font-mono text-slate-600 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 flex items-center justify-between">
+              <span>Detected: {matchMeta.detectedWeight}</span>
               <span>{matchMeta.detectedSerif ? 'Serif' : 'Sans-Serif'}</span>
               <span>{matchMeta.strokeWidth}px Stroke</span>
             </div>
@@ -376,7 +380,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
           {candidates.length > 0 && (
             <div className="space-y-1.5 pt-1">
-              <span className="text-[11px] font-medium text-gray-400 block">
+              <span className="text-[11px] font-medium text-slate-600 block">
                 Top Candidates (Hover to preview, Click to apply):
               </span>
               <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
@@ -390,19 +394,19 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                       onMouseEnter={() => handlePreviewCandidate(cand)}
                       onMouseLeave={handleCancelPreview}
                       onClick={() => handleApplyCandidate(cand)}
-                      className={`p-2 rounded-md border text-left cursor-pointer transition-all ${
+                      className={`p-2 rounded-xl border text-left cursor-pointer transition-all ${
                         isSelected
-                          ? 'bg-blue-900/30 border-blue-500/50 text-white'
-                          : 'bg-[#181d2a] border-[#252e42] hover:border-blue-500/40 text-gray-300'
+                          ? 'bg-slate-50 border-2 border-slate-900 text-slate-900 shadow-xs'
+                          : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800 shadow-2xs'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-mono text-gray-500 w-3">
+                          <span className="text-[10px] font-mono text-slate-400 w-3">
                             #{idx + 1}
                           </span>
                           <span
-                            className="text-xs font-medium tracking-wide"
+                            className="text-xs font-semibold tracking-wide"
                             style={{ fontFamily: cand.family, fontWeight: cand.weight }}
                           >
                             {cand.family}
@@ -410,33 +414,31 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         </div>
                         <div className="flex items-center gap-1.5">
                           <span
-                            className={`text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded ${
+                            className={`text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-full ${
                               matchPct >= 80
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                ? 'bg-slate-100 text-slate-900 border border-slate-200'
+                                : 'bg-slate-100 text-slate-600 border border-slate-200'
                             }`}
                           >
                             {matchPct}%
                           </span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-blue-400" />}
+                          {isSelected && <Check className="w-3.5 h-3.5 text-slate-900" />}
                         </div>
                       </div>
 
                       {/* Progress Bar & Badges */}
                       <div className="mt-1.5 space-y-1">
-                        <div className="w-full bg-[#10141f] h-1 rounded-full overflow-hidden">
+                        <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
                           <div
-                            className={`h-full ${
-                              matchPct >= 80 ? 'bg-emerald-500' : 'bg-blue-500'
-                            }`}
+                            className="h-full bg-slate-900"
                             style={{ width: `${matchPct}%` }}
                           />
                         </div>
-                        <div className="flex items-center justify-between text-[9px] text-gray-400 font-mono">
+                        <div className="flex items-center justify-between text-[9px] text-slate-500 font-mono">
                           <span>{cand.category}</span>
                           <span>w: {cand.weight}</span>
                           <span>
-                            {cand.letterSpacing > 0 ? `+${cand.letterSpacing}` : cand.letterSpacing}px tracking
+                            {cand.letterSpacing > 0 ? `+${cand.letterSpacing}` : cand.letterSpacing}px
                           </span>
                         </div>
                       </div>
@@ -450,24 +452,24 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
         {/* Text Content */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-400">Content</label>
+          <label className="text-xs font-medium text-slate-600">Content</label>
           <textarea
             value={layer.text}
             onChange={(e) => onChange({ text: e.target.value })}
             rows={3}
-            className="w-full bg-[#181d2a] border border-[#273044] rounded-md px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition-colors"
           />
         </div>
 
         {/* Font Family & Weight */}
-        <div className="space-y-3 pt-2 border-t border-[#212636]">
+        <div className="space-y-3 pt-2 border-t border-slate-200">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-400">Font Family</label>
+            <label className="text-xs font-medium text-slate-600">Font Family</label>
             <div className="relative">
               <select
                 value={layer.fontFamily}
                 onChange={(e) => onChange({ fontFamily: e.target.value })}
-                className="w-full bg-[#181d2a] border border-[#273044] rounded-md px-3 py-1.5 text-xs text-white appearance-none focus:outline-none focus:border-blue-500 cursor-pointer"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 appearance-none focus:outline-none focus:border-slate-900 focus:bg-white cursor-pointer"
                 style={{ fontFamily: layer.fontFamily }}
               >
                 {FONT_FAMILIES.map((family) => (
@@ -476,19 +478,19 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-3 top-2.5 pointer-events-none" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             {/* Weight */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-gray-400">Weight</label>
+              <label className="text-xs font-medium text-slate-600">Weight</label>
               <div className="relative">
                 <select
                   value={String(layer.fontWeight)}
                   onChange={(e) => onChange({ fontWeight: e.target.value })}
-                  className="w-full bg-[#181d2a] border border-[#273044] rounded-md px-3 py-1.5 text-xs text-white appearance-none focus:outline-none focus:border-blue-500 cursor-pointer"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 appearance-none focus:outline-none focus:border-slate-900 focus:bg-white cursor-pointer"
                 >
                   {FONT_WEIGHTS.map((w) => (
                     <option key={w.value} value={w.value}>
@@ -496,21 +498,21 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-3 top-2.5 pointer-events-none" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
               </div>
             </div>
 
             {/* Style (Italic) */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-gray-400">Style</label>
+              <label className="text-xs font-medium text-slate-600">Style</label>
               <button
                 onClick={() =>
                   onChange({ fontStyle: layer.fontStyle === 'italic' ? 'normal' : 'italic' })
                 }
-                className={`w-full py-1.5 px-3 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 border transition-colors ${
+                className={`w-full py-1.5 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 border transition-colors ${
                   layer.fontStyle === 'italic'
-                    ? 'bg-blue-600 border-blue-500 text-white'
-                    : 'bg-[#181d2a] border-[#273044] text-gray-400 hover:text-white'
+                    ? 'bg-slate-900 border-slate-900 text-white'
+                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                 }`}
               >
                 <Italic className="w-3.5 h-3.5" />
@@ -521,10 +523,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </div>
 
         {/* Font Size & Alignment */}
-        <div className="space-y-3 pt-2 border-t border-[#212636]">
+        <div className="space-y-3 pt-2 border-t border-slate-200">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-gray-400">Font Size</label>
-            <span className="text-xs font-mono text-gray-300">{Math.round(layer.fontSize)} px</span>
+            <label className="text-xs font-medium text-slate-600">Font Size</label>
+            <span className="text-xs font-mono text-slate-800 font-semibold">{Math.round(layer.fontSize)} px</span>
           </div>
           <input
             type="range"
@@ -532,13 +534,13 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             max="180"
             value={layer.fontSize}
             onChange={(e) => onChange({ fontSize: Number(e.target.value) })}
-            className="w-full accent-blue-500 cursor-pointer h-1.5 bg-[#252c3e] rounded-lg"
+            className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
           />
 
           {/* Text Alignment */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-400">Text Align</label>
-            <div className="grid grid-cols-4 gap-1 bg-[#181d2a] p-1 border border-[#273044] rounded-md">
+            <label className="text-xs font-medium text-slate-600">Text Align</label>
+            <div className="grid grid-cols-4 gap-1 bg-slate-100 p-1 border border-slate-200 rounded-lg">
               {(['left', 'center', 'right', 'justify'] as const).map((align) => {
                 const Icon =
                   align === 'left'
@@ -552,10 +554,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   <button
                     key={align}
                     onClick={() => onChange({ textAlign: align })}
-                    className={`p-1.5 flex justify-center rounded transition-colors ${
+                    className={`p-1.5 flex justify-center rounded-md transition-colors ${
                       layer.textAlign === align
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white hover:bg-[#252c3e]'
+                        ? 'bg-slate-900 text-white shadow-xs'
+                        : 'text-slate-500 hover:text-slate-900 hover:bg-white'
                     }`}
                     title={`Align ${align}`}
                   >
@@ -568,28 +570,28 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </div>
 
         {/* Colors & Fill */}
-        <div className="space-y-3 pt-2 border-t border-[#212636]">
-          <h3 className="text-xs font-semibold tracking-wider uppercase text-gray-400 flex items-center gap-1.5">
-            <Sliders className="w-3.5 h-3.5 text-blue-400" />
+        <div className="space-y-3 pt-2 border-t border-slate-200">
+          <h3 className="text-xs font-semibold tracking-wider uppercase text-slate-500 flex items-center gap-1.5">
+            <Sliders className="w-3.5 h-3.5 text-slate-700" />
             Appearance
           </h3>
 
           <div className="grid grid-cols-2 gap-3">
             {/* Fill Color */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-gray-400">Text Color</label>
-              <div className="flex items-center gap-2 bg-[#181d2a] border border-[#273044] rounded-md p-1.5">
+              <label className="text-xs font-medium text-slate-600">Text Color</label>
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1.5">
                 <input
                   type="color"
-                  value={layer.fill.startsWith('#') ? layer.fill : '#ffffff'}
+                  value={layer.fill.startsWith('#') ? layer.fill : '#0f172a'}
                   onChange={(e) => onChange({ fill: e.target.value })}
-                  className="w-6 h-6 rounded border-0 cursor-pointer bg-transparent"
+                  className="w-6 h-6 rounded border border-slate-200 cursor-pointer bg-transparent"
                 />
                 <input
                   type="text"
                   value={layer.fill}
                   onChange={(e) => onChange({ fill: e.target.value })}
-                  className="w-full bg-transparent text-xs font-mono text-white focus:outline-none"
+                  className="w-full bg-transparent text-xs font-mono text-slate-900 focus:outline-none"
                 />
               </div>
             </div>
@@ -597,8 +599,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             {/* Opacity */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs">
-                <label className="font-medium text-gray-400">Opacity</label>
-                <span className="font-mono text-gray-300">{Math.round(layer.opacity * 100)}%</span>
+                <label className="font-medium text-slate-600">Opacity</label>
+                <span className="font-mono text-slate-800">{Math.round(layer.opacity * 100)}%</span>
               </div>
               <input
                 type="range"
@@ -607,15 +609,15 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.05"
                 value={layer.opacity}
                 onChange={(e) => onChange({ opacity: Number(e.target.value) })}
-                className="w-full accent-blue-500 cursor-pointer h-1.5 bg-[#252c3e] rounded-lg mt-3"
+                className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg mt-3"
               />
             </div>
 
             {/* Edge Softness / Natural Blur */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs">
-                <label className="font-medium text-gray-400">Edge Softness (Blur)</label>
-                <span className="font-mono text-gray-300">{(layer.blur ?? 0.6).toFixed(1)}px</span>
+                <label className="font-medium text-slate-600">Edge Softness</label>
+                <span className="font-mono text-slate-800">{(layer.blur ?? 0.6).toFixed(1)}px</span>
               </div>
               <input
                 type="range"
@@ -624,7 +626,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.1"
                 value={layer.blur ?? 0.6}
                 onChange={(e) => onChange({ blur: Number(e.target.value) })}
-                className="w-full accent-blue-500 cursor-pointer h-1.5 bg-[#252c3e] rounded-lg mt-3"
+                className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg mt-3"
               />
             </div>
           </div>
@@ -632,18 +634,18 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {/* Stroke */}
           <div className="space-y-2">
             <div className="flex justify-between items-center text-xs">
-              <label className="font-medium text-gray-400">Stroke Outline</label>
-              <span className="font-mono text-gray-300">{layer.strokeWidth || 0} px</span>
+              <label className="font-medium text-slate-600">Stroke Outline</label>
+              <span className="font-mono text-slate-800">{layer.strokeWidth || 0} px</span>
             </div>
             <div className="grid grid-cols-3 gap-2 items-center">
-              <div className="flex items-center gap-1.5 bg-[#181d2a] border border-[#273044] rounded p-1">
+              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg p-1">
                 <input
                   type="color"
                   value={layer.stroke || '#000000'}
                   onChange={(e) => onChange({ stroke: e.target.value })}
-                  className="w-5 h-5 rounded border-0 cursor-pointer bg-transparent"
+                  className="w-5 h-5 rounded border border-slate-200 cursor-pointer bg-transparent"
                 />
-                <span className="text-[10px] font-mono text-gray-400">Color</span>
+                <span className="text-[10px] font-mono text-slate-500">Color</span>
               </div>
               <div className="col-span-2">
                 <input
@@ -652,7 +654,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   max="20"
                   value={layer.strokeWidth || 0}
                   onChange={(e) => onChange({ strokeWidth: Number(e.target.value) })}
-                  className="w-full accent-blue-500 cursor-pointer h-1.5 bg-[#252c3e] rounded-lg"
+                  className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
                 />
               </div>
             </div>
@@ -661,18 +663,18 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {/* Spacing & Line Height */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-gray-400">Tracking</label>
+              <label className="text-[11px] font-medium text-slate-600">Tracking</label>
               <input
                 type="number"
                 min="-10"
                 max="100"
                 value={layer.letterSpacing || 0}
                 onChange={(e) => onChange({ letterSpacing: Number(e.target.value) })}
-                className="w-full bg-[#181d2a] border border-[#273044] rounded px-2 py-1 text-xs font-mono"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-mono text-slate-900"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-gray-400">Line Height</label>
+              <label className="text-[11px] font-medium text-slate-600">Line Height</label>
               <input
                 type="number"
                 step="0.1"
@@ -680,35 +682,35 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 max="3.0"
                 value={layer.lineHeight || 1.2}
                 onChange={(e) => onChange({ lineHeight: Number(e.target.value) })}
-                className="w-full bg-[#181d2a] border border-[#273044] rounded px-2 py-1 text-xs font-mono"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-mono text-slate-900"
               />
             </div>
           </div>
         </div>
 
         {/* Shadow */}
-        <div className="space-y-3 pt-2 border-t border-[#212636]">
+        <div className="space-y-3 pt-2 border-t border-slate-200">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-gray-400">Drop Shadow</label>
+            <label className="text-xs font-medium text-slate-600">Drop Shadow</label>
             <input
               type="checkbox"
               checked={Boolean(layer.shadow && layer.shadow.blur > 0)}
               onChange={(e) => {
                 if (e.target.checked) {
-                  onChange({ shadow: { color: 'rgba(0,0,0,0.6)', blur: 8, offsetX: 3, offsetY: 3 } });
+                  onChange({ shadow: { color: 'rgba(0,0,0,0.25)', blur: 8, offsetX: 3, offsetY: 3 } });
                 } else {
                   onChange({ shadow: { color: 'transparent', blur: 0, offsetX: 0, offsetY: 0 } });
                 }
               }}
-              className="accent-blue-500 rounded cursor-pointer"
+              className="accent-slate-900 rounded cursor-pointer"
             />
           </div>
 
           {layer.shadow && layer.shadow.blur > 0 && (
-            <div className="space-y-2 bg-[#181d2a] p-2.5 rounded-md border border-[#273044]">
+            <div className="space-y-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-400">Blur</span>
-                <span className="font-mono text-gray-300">{layer.shadow.blur}px</span>
+                <span className="text-slate-600">Blur</span>
+                <span className="font-mono text-slate-800">{layer.shadow.blur}px</span>
               </div>
               <input
                 type="range"
@@ -720,28 +722,28 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     shadow: { ...layer.shadow!, blur: Number(e.target.value) },
                   })
                 }
-                className="w-full accent-blue-500 cursor-pointer h-1.5 bg-[#252c3e] rounded-lg"
+                className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
               />
             </div>
           )}
         </div>
 
         {/* Layer Depth Ordering */}
-        <div className="space-y-2 pt-2 border-t border-[#212636]">
-          <label className="text-xs font-medium text-gray-400 flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-blue-400" />
+        <div className="space-y-2 pt-2 border-t border-slate-200">
+          <label className="text-xs font-medium text-slate-600 flex items-center gap-1.5">
+            <Layers className="w-3.5 h-3.5 text-slate-700" />
             Layer Stacking
           </label>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => onBringForward(layer.id)}
-              className="py-1 px-2.5 text-xs bg-[#181d2a] hover:bg-[#252c3e] border border-[#273044] rounded text-gray-300 transition-colors"
+              className="py-1 px-2.5 text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-700 transition-colors font-medium"
             >
               Bring Forward
             </button>
             <button
               onClick={() => onSendBackward(layer.id)}
-              className="py-1 px-2.5 text-xs bg-[#181d2a] hover:bg-[#252c3e] border border-[#273044] rounded text-gray-300 transition-colors"
+              className="py-1 px-2.5 text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-700 transition-colors font-medium"
             >
               Send Backward
             </button>

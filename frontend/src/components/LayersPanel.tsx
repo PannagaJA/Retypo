@@ -9,7 +9,6 @@ import {
   Unlock,
   Trash2,
   Image as ImageIcon,
-  Sparkles,
   Type,
   ScanText,
   ArrowRight,
@@ -99,76 +98,84 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
   const unconvertedCount = detectedRegions.filter((r) => !r.isConverted).length;
 
   return (
-    <aside className="w-full lg:w-72 bg-[#12151e] border-r-0 lg:border-r border-[#212636] flex flex-col h-full select-none text-gray-200">
-      {/* Navigation Tabs */}
-      <div className="flex items-center border-b border-[#212636] bg-[#0e1017]">
-        <button
-          onClick={() => setActiveTab('layers')}
-          className={`flex-1 py-2.5 px-3 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors border-b-2 ${
-            activeTab === 'layers'
-              ? 'border-blue-500 text-white bg-[#141722]'
-              : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-[#12141c]'
-          }`}
-        >
-          <Layers className="w-3.5 h-3.5 text-blue-400" />
-          Layers
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#1e2333] font-mono text-gray-300">
-            {layers.length + patches.length}
-          </span>
-        </button>
-
-        <button
-          onClick={() => {
-            setActiveTab('detected');
-            onShowDetectionOverlay?.();
-          }}
-          className={`flex-1 py-2.5 px-3 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors border-b-2 ${
-            activeTab === 'detected'
-              ? 'border-emerald-500 text-white bg-[#141722]'
-              : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-[#12141c]'
-          }`}
-        >
-          <ScanText className="w-3.5 h-3.5 text-emerald-400" />
-          Detected OCR
-          {unconvertedCount > 0 && (
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-mono">
-              {unconvertedCount}
-            </span>
-          )}
-        </button>
-
-        {onClose && (
+    <aside className="w-full lg:w-72 bg-white border-r-0 lg:border-r border-slate-200 flex flex-col h-full select-none text-slate-800">
+      {/* Modern Segmented Navigation Tabs */}
+      <div className="p-2 border-b border-slate-200 bg-slate-50/70">
+        <div className="flex items-center bg-slate-200/60 p-1 rounded-full border border-slate-200">
           <button
-            onClick={onClose}
-            className="lg:hidden p-2 text-gray-400 hover:text-white hover:bg-[#1f2536] transition-colors"
-            title="Close"
+            onClick={() => setActiveTab('layers')}
+            className={`flex-1 py-1.5 px-3 text-xs font-semibold rounded-full flex items-center justify-center gap-1.5 transition-all ${
+              activeTab === 'layers'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
           >
-            <X className="w-4 h-4" />
+            <Layers className="w-3.5 h-3.5" />
+            <span>Layers</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+              activeTab === 'layers' ? 'bg-slate-100 text-slate-900' : 'bg-slate-300 text-slate-700'
+            }`}>
+              {layers.length + patches.length}
+            </span>
           </button>
-        )}
+
+          <button
+            onClick={() => {
+              setActiveTab('detected');
+              onShowDetectionOverlay?.();
+            }}
+            className={`flex-1 py-1.5 px-3 text-xs font-semibold rounded-full flex items-center justify-center gap-1.5 transition-all ${
+              activeTab === 'detected'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <ScanText className="w-3.5 h-3.5" />
+            <span>OCR</span>
+            {unconvertedCount > 0 && (
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                activeTab === 'detected' ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-700'
+              }`}>
+                {unconvertedCount}
+              </span>
+            )}
+          </button>
+
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="lg:hidden w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-1"
+              title="Close"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tab 1: Standard Layers Tree */}
       {activeTab === 'layers' && (
         <>
-          <div className="p-3 border-b border-[#212636] flex items-center justify-between">
-            <span className="text-xs text-gray-400 font-medium">Canvas Elements</span>
+          <div className="p-3 border-b border-slate-200 flex items-center justify-between">
+            <span className="text-xs text-slate-500 font-semibold tracking-wide uppercase text-[10px]">
+              Canvas Elements
+            </span>
             <button
               onClick={onAddText}
               disabled={!image}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full transition-all ${
                 image
-                  ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm'
-                  : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                  ? 'bg-slate-900 hover:bg-slate-800 text-white shadow-xs active:scale-95'
+                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
               }`}
-              title="Add new editable text layer"
+              title="Add new text layer"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Text
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          <div className="flex-1 overflow-y-auto p-2.5 space-y-1.5">
             {/* Render text layers in reverse order (top of stack first) */}
             {[...layers].reverse().map((layer) => {
               const isSelected = selectedLayerId === layer.id;
@@ -177,17 +184,28 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                 <div
                   key={layer.id}
                   onClick={() => onSelectLayer(layer.id)}
-                  className={`group flex items-center justify-between px-2.5 py-2 rounded-md border text-xs cursor-pointer transition-all ${
+                  className={`group flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-blue-600/15 border-blue-500/50 text-white shadow-sm'
-                      : 'bg-[#181d2a]/60 border-[#212636] hover:bg-[#1f2536] text-gray-300'
+                      ? 'bg-slate-50 border-2 border-slate-900 text-slate-900 shadow-xs'
+                      : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700 shadow-2xs'
                   }`}
                 >
-                  <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
-                    <Type className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-blue-400' : 'text-gray-400'}`} />
-                    <span className="truncate font-medium">{layer.text || '(Empty Text)'}</span>
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                      isSelected ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-700'
+                    }`}>
+                      <Type className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-slate-900 leading-tight">
+                        {layer.text || '(Empty Text)'}
+                      </p>
+                      <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                        {layer.fontFamily} • {Math.round(layer.fontSize)}px
+                      </p>
+                    </div>
                     {layer.origin === 'ocr_detected' && (
-                      <span className="shrink-0 text-[9px] px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                      <span className="shrink-0 text-[8px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-mono font-semibold">
                         OCR
                       </span>
                     )}
@@ -199,12 +217,12 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                         e.stopPropagation();
                         onToggleVisibility(layer.id);
                       }}
-                      className={`p-1 rounded hover:bg-[#283046] transition-colors ${
-                        !layer.isVisible ? 'text-red-400' : 'text-gray-400 group-hover:text-gray-200'
+                      className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                        !layer.isVisible ? 'text-red-500 bg-red-50' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100'
                       }`}
                       title={layer.isVisible ? 'Hide layer' : 'Show layer'}
                     >
-                      {layer.isVisible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                      {layer.isVisible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                     </button>
 
                     <button
@@ -212,12 +230,12 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                         e.stopPropagation();
                         onToggleLock(layer.id);
                       }}
-                      className={`p-1 rounded hover:bg-[#283046] transition-colors ${
-                        layer.isLocked ? 'text-amber-400' : 'text-gray-400 group-hover:text-gray-200'
+                      className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                        layer.isLocked ? 'text-amber-600 bg-amber-50' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100'
                       }`}
                       title={layer.isLocked ? 'Unlock layer' : 'Lock layer'}
                     >
-                      {layer.isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                      {layer.isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                     </button>
 
                     <button
@@ -225,10 +243,10 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                         e.stopPropagation();
                         onDeleteLayer(layer.id);
                       }}
-                      className="p-1 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                       title="Delete layer"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -238,27 +256,27 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
             {/* Inpaint Patches Section */}
             {patches.length > 0 && (
               <div className="pt-2">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-purple-400/80 px-1 py-1 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-purple-400" />
-                  Inpainted Background Patches ({patches.length})
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 px-1 py-1 flex items-center gap-1">
+                  <Eraser className="w-3 h-3 text-slate-500" />
+                  Restored Background Patches ({patches.length})
                 </div>
                 {patches.map((patch, idx) => (
                   <div
                     key={patch.id}
-                    className="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-[#161a26] border border-[#273044] text-xs text-gray-300 mt-1"
+                    className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-700 mt-1"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-2 h-2 rounded-full bg-purple-400 shrink-0" />
+                      <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
                       <span className="truncate text-xs font-medium">Patch #{idx + 1}</span>
-                      <span className="text-[9px] px-1 py-0.5 rounded bg-purple-500/20 text-purple-300 uppercase font-mono">
+                      <span className="text-[9px] px-1 py-0.5 rounded bg-slate-200 text-slate-700 uppercase font-mono">
                         {patch.strategy}
                       </span>
                     </div>
 
                     <button
                       onClick={() => onDeletePatch(patch.id)}
-                      className="p-1 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                      title="Remove inpaint patch"
+                      className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      title="Remove patch"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -269,18 +287,18 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
 
             {/* Base Image Layer */}
             {image && (
-              <div className="flex items-center justify-between px-2.5 py-2 rounded-md bg-[#131620] border border-[#212636] text-xs text-gray-400 mt-2">
+              <div className="flex items-center justify-between px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 mt-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <ImageIcon className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                  <ImageIcon className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   <div className="truncate flex flex-col">
-                    <span className="truncate text-gray-300 font-medium">{image.fileName}</span>
-                    <span className="text-[10px] text-gray-500 font-mono">
+                    <span className="truncate text-slate-800 font-medium">{image.fileName}</span>
+                    <span className="text-[10px] text-slate-500 font-mono">
                       {image.width} × {image.height} px
                     </span>
                   </div>
                 </div>
                 <span title="Base image layer is locked">
-                  <Lock className="w-3 h-3 text-gray-500 shrink-0" />
+                  <Lock className="w-3 h-3 text-slate-400 shrink-0" />
                 </span>
               </div>
             )}
@@ -293,18 +311,18 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
         <div className="flex-1 overflow-y-auto flex flex-col">
           {detectedRegions.length === 0 ? (
             <div className="p-6 text-center my-auto flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-3 border border-emerald-500/20">
+              <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center mb-3 border border-slate-200">
                 <ScanText className="w-5 h-5" />
               </div>
-              <h3 className="text-xs font-medium text-gray-300">No Detected Text Yet</h3>
-              <p className="text-[11px] text-gray-500 mt-1 max-w-[200px]">
+              <h3 className="text-xs font-medium text-slate-800">No Detected Text Yet</h3>
+              <p className="text-[11px] text-slate-500 mt-1 max-w-[200px]">
                 Run OCR on your image to automatically detect and transcribe all visible text.
               </p>
               {image && (
                 <button
                   onClick={onRunOCR}
                   disabled={isDetecting}
-                  className="mt-4 px-3 py-1.5 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all"
+                  className="mt-4 px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all"
                 >
                   {isDetecting ? 'Analyzing...' : 'Detect Text Now'}
                 </button>
@@ -312,19 +330,19 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
             </div>
           ) : (
             <div className="p-3 space-y-2">
-              <div className="flex items-center justify-between pb-2 border-b border-[#212636]">
-                <span className="text-xs text-gray-400">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                <span className="text-xs text-slate-500">
                   {unconvertedCount} pending adoption
                 </span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={onInpaintAllDetected}
                     disabled={isInpaintingAll}
-                    className="flex items-center gap-1 text-[11px] font-medium text-purple-400 hover:text-purple-300 transition-colors"
+                    className="flex items-center gap-1 text-[11px] font-medium text-slate-600 hover:text-slate-900 transition-colors"
                     title="Inpaint background for all detected regions"
                   >
                     {isInpaintingAll ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <Loader2 className="w-3 h-3 animate-spin text-slate-600" />
                     ) : (
                       <Eraser className="w-3 h-3" />
                     )}
@@ -334,7 +352,7 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                   {unconvertedCount > 0 && (
                     <button
                       onClick={onConvertAllRegions}
-                      className="flex items-center gap-1 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+                      className="flex items-center gap-1 text-[11px] font-semibold text-slate-900 hover:text-slate-700 transition-colors"
                       title="Convert all detected blocks to editable text layers"
                     >
                       <CheckCheck className="w-3.5 h-3.5" />
@@ -355,23 +373,23 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                     }}
                     onMouseEnter={() => onHoverRegion?.(region.regionId)}
                     onMouseLeave={() => onHoverRegion?.(null)}
-                    className={`p-2.5 rounded-lg border text-xs space-y-2 transition-all ${
+                    className={`p-2.5 rounded-xl border text-xs space-y-2 transition-all ${
                       isHovered
-                        ? 'bg-emerald-500/15 border-emerald-400 ring-2 ring-emerald-500/40 shadow-lg scale-[1.01]'
+                        ? 'bg-slate-50 border-slate-900 ring-2 ring-slate-900/10 shadow-md scale-[1.01]'
                         : region.isConverted
-                        ? 'bg-[#151822]/40 border-[#1f2433] opacity-60'
-                        : 'bg-[#181d2a] border-[#252c3e] hover:border-emerald-500/40 shadow-sm'
+                        ? 'bg-slate-50/70 border-slate-200 opacity-60'
+                        : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
                     }`}
                   >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-medium">
                         {Math.round(region.confidence * 100)}% match
                       </span>
                       {onDismissDetectedRegion && !region.isConverted && (
                         <button
                           onClick={() => onDismissDetectedRegion(region.regionId)}
-                          className="p-0.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                          className="p-0.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                           title="Dismiss this region"
                         >
                           <X className="w-3 h-3" />
@@ -380,11 +398,11 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span
-                        className="w-3 h-3 rounded-full border border-white/20"
+                        className="w-3 h-3 rounded-full border border-slate-300 shadow-2xs"
                         style={{ backgroundColor: region.estimatedColor }}
                         title={`Estimated color: ${region.estimatedColor}`}
                       />
-                      <span className="text-[10px] font-mono text-gray-400">
+                      <span className="text-[10px] font-mono text-slate-500">
                         {Math.round(region.estimatedFontSize)}px
                       </span>
                     </div>
@@ -395,19 +413,19 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                     type="text"
                     value={region.text}
                     onChange={(e) => onUpdateDetectedText(region.regionId, e.target.value)}
-                    className="w-full bg-[#12151e] border border-[#273044] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-emerald-500 font-sans"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white font-sans transition-colors"
                     title="Edit transcription text if needed"
                   />
 
                   <div className="flex justify-end">
                     {region.isConverted ? (
-                      <span className="text-[10px] text-gray-500 font-medium italic">
+                      <span className="text-[10px] text-slate-400 font-medium italic">
                         Layer Active
                       </span>
                     ) : (
                       <button
                         onClick={() => onConvertRegion(region)}
-                        className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 transition-colors"
+                        className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-colors"
                       >
                         <span>Edit on Canvas</span>
                         <ArrowRight className="w-3 h-3" />
