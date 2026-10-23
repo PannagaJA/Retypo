@@ -25,6 +25,7 @@ export interface TextLayer {
   height: number;
   angle: number; // in degrees
   opacity: number;
+  blur?: number;
   isLocked: boolean;
   isVisible: boolean;
   origin: 'ocr_detected' | 'manual';
@@ -39,6 +40,7 @@ export interface DetectedTextRegion {
   estimatedFontSize: number;
   estimatedColor: string;
   estimatedWeight?: string;
+  estimatedBlur?: number;
   confidence: number;
   geometryConfidence: number;
   isConverted: boolean;
