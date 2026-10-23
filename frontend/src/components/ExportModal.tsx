@@ -35,7 +35,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
     try {
       const ext = format === 'jpeg' ? 'jpg' : format;
-      const baseName = image.fileName.substring(0, image.fileName.lastIndexOf('.')) || 'photext-export';
+      const baseName = image.fileName.substring(0, image.fileName.lastIndexOf('.')) || 'retypo-export';
 
       if (engine === 'studio') {
         const result = await renderStudioExport(
@@ -50,11 +50,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         // Convert data URL to Blob for clean download
         const res = await fetch(result.exportDataUrl);
         const blob = await res.blob();
-        const outputName = `${baseName}_studio_lossless.${ext}`;
+        const outputName = `${baseName}_retypo_studio.${ext}`;
         triggerDownload(blob, outputName);
       } else {
         const blob = await exportHighResImage(image, patches, layers, { format, quality });
-        const outputName = `${baseName}_canvas_export.${ext}`;
+        const outputName = `${baseName}_retypo.${ext}`;
         triggerDownload(blob, outputName);
       }
     } catch (err: any) {
@@ -75,8 +75,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <Download className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">Lossless Studio Export</h2>
-              <p className="text-[10px] text-slate-500">Non-destructive compositing at exact source resolution</p>
+              <h2 className="text-sm font-semibold text-slate-900">Retypo Studio Export</h2>
+              <p className="text-[10px] text-slate-500">Non-destructive typography compositing at exact source resolution</p>
             </div>
           </div>
           <button

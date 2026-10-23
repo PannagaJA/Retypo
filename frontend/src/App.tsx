@@ -458,7 +458,7 @@ export const App: React.FC = () => {
 
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 84px "Montserrat", sans-serif';
-    ctx.fillText('STARLIGHT CANVAS', 150, 390);
+    ctx.fillText('RETYPO STUDIO', 150, 390);
 
     ctx.fillStyle = '#475569';
     ctx.font = '400 28px "Inter", sans-serif';
@@ -466,14 +466,14 @@ export const App: React.FC = () => {
 
     ctx.fillStyle = '#0284c7';
     ctx.font = '600 22px "Outfit", sans-serif';
-    ctx.fillText('STUDIO EDITION 2026', 150, 560);
+    ctx.fillText('EDITION 2026', 150, 560);
 
     const dataUrl = canvas.toDataURL('image/png');
 
     const meta: ImageMetadata = {
       width: 1600,
       height: 1000,
-      fileName: 'typography_sample_poster.png',
+      fileName: 'retypo_sample_poster.png',
       format: 'png',
       dataUrl,
     };
@@ -481,7 +481,7 @@ export const App: React.FC = () => {
     const sampleDetected: DetectedTextRegion[] = [
       {
         regionId: 'ocr-sample-1',
-        text: 'STARLIGHT CANVAS',
+        text: 'RETYPO STUDIO',
         polygon: [[148, 305], [960, 305], [960, 400], [148, 400]],
         bbox: [148, 305, 812, 95],
         angle: 0,
