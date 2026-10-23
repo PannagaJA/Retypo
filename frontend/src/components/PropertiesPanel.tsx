@@ -589,6 +589,23 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 className="w-full accent-blue-500 cursor-pointer h-1.5 bg-[#252c3e] rounded-lg mt-3"
               />
             </div>
+
+            {/* Edge Softness / Natural Blur */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center text-xs">
+                <label className="font-medium text-gray-400">Edge Softness (Blur)</label>
+                <span className="font-mono text-gray-300">{(layer.blur ?? 0.6).toFixed(1)}px</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="2.5"
+                step="0.1"
+                value={layer.blur ?? 0.6}
+                onChange={(e) => onChange({ blur: Number(e.target.value) })}
+                className="w-full accent-blue-500 cursor-pointer h-1.5 bg-[#252c3e] rounded-lg mt-3"
+              />
+            </div>
           </div>
 
           {/* Stroke */}
