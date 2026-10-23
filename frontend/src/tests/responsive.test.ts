@@ -50,18 +50,22 @@ describe('Mobile Responsiveness & Viewport Calculations', () => {
 
   it('validates mobile tab switching workflow', () => {
     type MobileTab = 'canvas' | 'layers' | 'properties';
+    const toggleTab = (current: MobileTab, target: MobileTab): MobileTab => {
+      return current === target ? 'canvas' : target;
+    };
+
     let currentTab: MobileTab = 'canvas';
 
     // Tap layers
-    currentTab = currentTab === 'layers' ? 'canvas' : 'layers';
+    currentTab = toggleTab(currentTab, 'layers');
     expect(currentTab).toBe('layers');
 
     // Tap layers again to toggle off
-    currentTab = currentTab === 'layers' ? 'canvas' : 'layers';
+    currentTab = toggleTab(currentTab, 'layers');
     expect(currentTab).toBe('canvas');
 
     // Tap properties
-    currentTab = currentTab === 'properties' ? 'canvas' : 'properties';
+    currentTab = toggleTab(currentTab, 'properties');
     expect(currentTab).toBe('properties');
 
     // Tap canvas tab to return to canvas
