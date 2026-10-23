@@ -4,6 +4,31 @@ import type { ImageMetadata, TextLayer, InpaintPatch, DetectedTextRegion } from 
 import { calculateFitScale } from '../utils/coordinates';
 import { UploadCloud, Image as ImageIcon, HelpCircle, ZoomIn, ZoomOut } from 'lucide-react';
 
+function isPointInPolygon(pt: { x: number; y: number }, poly: number[][]): boolean {
+  if (!poly || poly.length < 3) return false;
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i][0];
+    const yi = poly[i][1];
+    const xj = poly[j][0];
+    const yj = poly[j][1];
+    const intersect = yi > pt.y !== yj > pt.y && pt.x < ((xj - xi) * (pt.y - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function isPointInBBox(pt: { x: number; y: number }, bbox: number[], padding: number = 10): boolean {
+  if (!bbox || bbox.length < 4) return false;
+  const [x, y, w, h] = bbox;
+  return (
+    pt.x >= x - padding &&
+    pt.x <= x + w + padding &&
+    pt.y >= y - padding &&
+    pt.y <= y + h + padding
+  );
+}
+
 interface CanvasWorkspaceProps {
   image: ImageMetadata | null;
   patches: InpaintPatch[];
@@ -68,6 +93,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
   const propsRef = useRef({
     image,
+    layers,
+    detectedRegions,
+    onConvertRegion,
     showDetectionOverlay,
     onHideDetectionOverlay,
     onShowDetectionOverlay,
@@ -78,6 +106,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   });
   propsRef.current = {
     image,
+    layers,
+    detectedRegions,
+    onConvertRegion,
     showDetectionOverlay,
     onHideDetectionOverlay,
     onShowDetectionOverlay,
@@ -173,6 +204,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
     // Touch and Mouse Helpers
     let lastTouchDistance = 0;
+    let touchDownPos = { x: 0, y: 0 };
+    let hasMoved = false;
+
     const getEvtPos = (e: any) => {
       if (e.touches && e.touches.length > 0) {
         return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -186,9 +220,12 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       const isTouch = Boolean(e && e.touches);
       const isBgTouch = isTouch && !opt.target;
 
+      const pos = getEvtPos(e);
+      touchDownPos = { x: pos.x, y: pos.y };
+      hasMoved = false;
+
       if (isSpacePressed || (e && e.button === 1) || isBgTouch) {
         isPanningRef.current = true;
-        const pos = getEvtPos(e);
         lastPanPos.current = { x: pos.x, y: pos.y };
         if (isTouch && e.touches.length === 2) {
           lastTouchDistance = Math.hypot(
@@ -197,32 +234,16 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           );
         }
         canvas.setCursor('grab');
-        return;
-      }
-
-      // Hide highlighted detected text boxes when clicking outside the image bounds
-      const { image: curImg, showDetectionOverlay: curShow, onHideDetectionOverlay: curHide } = propsRef.current;
-      if (curImg && curShow && curHide) {
-        const scenePt = (canvas as any).getScenePoint
-          ? (canvas as any).getScenePoint(opt.e)
-          : (canvas as any).getPointer(opt.e);
-
-        if (scenePt) {
-          const isOutside =
-            scenePt.x < 0 ||
-            scenePt.x > curImg.width ||
-            scenePt.y < 0 ||
-            scenePt.y > curImg.height;
-
-          if (isOutside) {
-            curHide();
-          }
-        }
       }
     });
 
     canvas.on('mouse:move', (opt) => {
       const e = opt.e as any;
+      const pos = getEvtPos(e);
+
+      if (Math.hypot(pos.x - touchDownPos.x, pos.y - touchDownPos.y) > 6) {
+        hasMoved = true;
+      }
 
       // Handle 2-finger touch pinch-to-zoom
       if (e && e.touches && e.touches.length === 2) {
@@ -246,7 +267,6 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
 
       if (isPanningRef.current) {
-        const pos = getEvtPos(e);
         const vpt = canvas.viewportTransform;
         if (vpt) {
           vpt[4] += pos.x - lastPanPos.current.x;
@@ -257,10 +277,76 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
     });
 
-    canvas.on('mouse:up', () => {
+    canvas.on('mouse:up', (opt) => {
       isPanningRef.current = false;
       lastTouchDistance = 0;
       canvas.setCursor('default');
+
+      // If user was panning / dragging (> 6px moved), do not treat as tap or click
+      if (hasMoved) return;
+
+      const scenePt = (canvas as any).getScenePoint
+        ? (canvas as any).getScenePoint(opt.e)
+        : (canvas as any).getPointer(opt.e);
+
+      if (!scenePt) return;
+
+      const {
+        detectedRegions: curRegions,
+        onConvertRegion: curConvert,
+        onShowDetectionOverlay: curShow,
+        onHideDetectionOverlay: curHide,
+        showDetectionOverlay: isOverlayOn,
+        layers: curLayers,
+        onSelectLayer: curSelect,
+      } = propsRef.current;
+
+      // 1. Did user tap an unconverted detected OCR text region?
+      let targetRegion: DetectedTextRegion | undefined;
+
+      if (opt.target && (opt.target as any).regionData) {
+        targetRegion = (opt.target as any).regionData;
+      } else if (curRegions && curRegions.length > 0) {
+        targetRegion = curRegions.find(
+          (r) =>
+            !r.isConverted &&
+            (isPointInPolygon(scenePt, r.polygon) || isPointInBBox(scenePt, r.bbox, 12))
+        );
+      }
+
+      if (targetRegion) {
+        // Tapped on detected text! Re-enable overlay and convert to editable text layer
+        if (curShow) curShow();
+        curConvert(targetRegion);
+        return;
+      }
+
+      // 2. Did user tap an existing editable TextLayer?
+      if (opt.target && (opt.target as any).layerId) {
+        curSelect((opt.target as any).layerId);
+        return;
+      }
+
+      if (curLayers && curLayers.length > 0) {
+        for (const [layerId, tbObj] of objectMapRef.current.entries()) {
+          const layer = curLayers.find((l) => l.id === layerId);
+          if (layer && layer.isVisible && !layer.isLocked) {
+            if ((tbObj as any).containsPoint?.(scenePt)) {
+              curSelect(layerId);
+              return;
+            }
+          }
+        }
+      }
+
+      // 3. User tapped outside any detected text or layer (on background or empty image)
+      // Disable detected text overlay and deselect any selected layer
+      if (isOverlayOn && curHide) {
+        curHide();
+      }
+      curSelect(null);
+      setHoveredRegion(null);
+      propsRef.current.onHoverRegion?.(null);
     });
 
     // Window Resize Observer
@@ -558,6 +644,26 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
             })
           : undefined);
 
+      const isMobile =
+        typeof window !== 'undefined' &&
+        (window.innerWidth < 768 ||
+          'ontouchstart' in window ||
+          (navigator as any).maxTouchPoints > 0);
+
+      const controlOptions = {
+        borderColor: '#3b82f6',
+        borderScaleFactor: isMobile ? 2.5 : 1.5,
+        cornerColor: '#3b82f6',
+        cornerStrokeColor: '#ffffff',
+        cornerStyle: 'circle' as const,
+        cornerSize: isMobile ? 18 : 10,
+        touchCornerSize: 36,
+        transparentCorners: false,
+        padding: 6,
+        hasControls: true,
+        hasBorders: true,
+      };
+
       if (!tb) {
         tb = new fabric.Textbox(layer.text, {
           left: layer.left,
@@ -581,24 +687,22 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           lockScalingX: layer.isLocked,
           lockScalingY: layer.isLocked,
           editable: !layer.isLocked,
-          borderColor: '#3b82f6',
-          cornerColor: '#3b82f6',
-          cornerSize: 8,
-          transparentCorners: false,
-          padding: 4,
+          ...controlOptions,
         });
 
         (tb as any).layerId = layer.id;
         const textObj = tb;
+        let lastTap = 0;
         tb.on('mousedown', () => {
-          if (!layer.isLocked && textObj) {
-            setTimeout(() => {
-              if (fabricCanvasRef.current && !textObj.isEditing) {
-                textObj.enterEditing();
-                fabricCanvasRef.current.requestRenderAll();
-              }
-            }, 30);
+          const now = Date.now();
+          if (now - lastTap < 350) {
+            // Rapid double-tap or double-click enters inline editing mode
+            if (!layer.isLocked && textObj) {
+              textObj.enterEditing();
+              canvas.requestRenderAll();
+            }
           }
+          lastTap = now;
         });
         tb.on('mousedblclick', () => {
           if (!layer.isLocked && textObj) {
@@ -632,23 +736,21 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           lockScalingX: layer.isLocked,
           lockScalingY: layer.isLocked,
           editable: !layer.isLocked,
+          ...controlOptions,
         });
       }
 
       if (selectedLayerId === layer.id && !layer.isLocked && tb) {
-        canvas.setActiveObject(tb);
-        setTimeout(() => {
-          if (fabricCanvasRef.current && fabricCanvasRef.current.getActiveObject() === tb && !tb.isEditing) {
-            tb.enterEditing();
-            if (tb.hiddenTextarea) {
-              tb.selectionStart = tb.text.length;
-              tb.selectionEnd = tb.text.length;
-            }
-            fabricCanvasRef.current.requestRenderAll();
-          }
-        }, 30);
-      } else if (selectedLayerId === null && canvas.getActiveObject() === tb) {
-        canvas.discardActiveObject();
+        if (canvas.getActiveObject() !== tb) {
+          canvas.setActiveObject(tb);
+        }
+      } else if (selectedLayerId !== layer.id && canvas.getActiveObject() === tb) {
+        if (tb.isEditing) {
+          tb.exitEditing();
+        }
+        if (selectedLayerId === null) {
+          canvas.discardActiveObject();
+        }
       }
     });
 
@@ -684,8 +786,19 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onMouseDown={(e) => {
-        if (e.target === containerRef.current && propsRef.current.showDetectionOverlay && propsRef.current.onHideDetectionOverlay) {
-          propsRef.current.onHideDetectionOverlay();
+        if (e.target === containerRef.current) {
+          if (propsRef.current.showDetectionOverlay && propsRef.current.onHideDetectionOverlay) {
+            propsRef.current.onHideDetectionOverlay();
+          }
+          propsRef.current.onSelectLayer(null);
+        }
+      }}
+      onTouchEnd={(e) => {
+        if (e.target === containerRef.current) {
+          if (propsRef.current.showDetectionOverlay && propsRef.current.onHideDetectionOverlay) {
+            propsRef.current.onHideDetectionOverlay();
+          }
+          propsRef.current.onSelectLayer(null);
         }
       }}
       className={`relative flex-1 h-full w-full overflow-hidden bg-[#0a0c12] ${
