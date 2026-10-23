@@ -198,7 +198,12 @@ class CompositorService:
 
         layer_canvas = Image.alpha_composite(layer_canvas, text_canvas)
 
-        # 3. Apply Opacity
+        # 3. Apply Edge Blur / Softness if specified
+        blur_radius = getattr(layer, "blur", 0.0)
+        if blur_radius > 0.05:
+            layer_canvas = layer_canvas.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+
+        # 4. Apply Opacity
         if layer.opacity < 0.999:
             alpha = layer_canvas.split()[3]
             alpha = alpha.point(lambda p: int(p * layer.opacity))
