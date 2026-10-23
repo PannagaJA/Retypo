@@ -38,6 +38,9 @@ interface LayersPanelProps {
   onDismissDetectedRegion?: (regionId: string) => void;
   onRunOCR: () => void;
   isDetecting: boolean;
+  onShowDetectionOverlay?: () => void;
+  hoveredRegionId?: string | null;
+  onHoverRegion?: (regionId: string | null) => void;
   // Inpaint all
   onInpaintAllDetected: () => Promise<void>;
   isInpaintingAll: boolean;
@@ -61,10 +64,28 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
   onDismissDetectedRegion,
   onRunOCR,
   isDetecting,
+  onShowDetectionOverlay,
+  hoveredRegionId,
+  onHoverRegion,
   onInpaintAllDetected,
   isInpaintingAll,
 }) => {
   const [activeTab, setActiveTab] = useState<'layers' | 'detected'>('layers');
+  const itemRefs = React.useRef<Map<string, HTMLDivElement>>(new Map());
+
+  // Automatically scroll pending adoption card into view when hovered on canvas
+  useEffect(() => {
+    if (hoveredRegionId) {
+      setActiveTab('detected');
+      const timer = setTimeout(() => {
+        const el = itemRefs.current.get(hoveredRegionId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [hoveredRegionId]);
 
   // Auto-switch to detected tab when OCR finds regions
   useEffect(() => {
@@ -95,7 +116,10 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
         </button>
 
         <button
-          onClick={() => setActiveTab('detected')}
+          onClick={() => {
+            setActiveTab('detected');
+            onShowDetectionOverlay?.();
+          }}
           className={`flex-1 py-2.5 px-3 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors border-b-2 ${
             activeTab === 'detected'
               ? 'border-emerald-500 text-white bg-[#141722]'
@@ -308,15 +332,25 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                 </div>
               </div>
 
-              {detectedRegions.map((region) => (
-                <div
-                  key={region.regionId}
-                  className={`p-2.5 rounded-lg border text-xs space-y-2 transition-all ${
-                    region.isConverted
-                      ? 'bg-[#151822]/40 border-[#1f2433] opacity-60'
-                      : 'bg-[#181d2a] border-[#252c3e] hover:border-emerald-500/40 shadow-sm'
-                  }`}
-                >
+              {detectedRegions.map((region) => {
+                const isHovered = region.regionId === hoveredRegionId;
+                return (
+                  <div
+                    key={region.regionId}
+                    ref={(el) => {
+                      if (el) itemRefs.current.set(region.regionId, el);
+                      else itemRefs.current.delete(region.regionId);
+                    }}
+                    onMouseEnter={() => onHoverRegion?.(region.regionId)}
+                    onMouseLeave={() => onHoverRegion?.(null)}
+                    className={`p-2.5 rounded-lg border text-xs space-y-2 transition-all ${
+                      isHovered
+                        ? 'bg-emerald-500/15 border-emerald-400 ring-2 ring-emerald-500/40 shadow-lg scale-[1.01]'
+                        : region.isConverted
+                        ? 'bg-[#151822]/40 border-[#1f2433] opacity-60'
+                        : 'bg-[#181d2a] border-[#252c3e] hover:border-emerald-500/40 shadow-sm'
+                    }`}
+                  >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
@@ -369,7 +403,8 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
