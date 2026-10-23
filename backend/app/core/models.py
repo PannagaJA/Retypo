@@ -27,6 +27,7 @@ class TextLayerModel(BaseModel):
     height: float = 50.0    # Native image height
     angle: float = 0.0      # Rotation in degrees
     opacity: float = 1.0
+    blur: float = 0.0
     isLocked: bool = False
     isVisible: bool = True
     origin: Literal['ocr_detected', 'manual'] = 'manual'
@@ -46,6 +47,7 @@ class DetectedTextRegion(BaseModel):
     estimatedFontSize: float = Field(32.0, description="Estimated font size in original image pixels")
     estimatedColor: str = Field("#ffffff", description="Estimated dominant text HEX color")
     estimatedWeight: str = Field("400", description="Estimated font weight (300, 400, 500, 600, etc.)")
+    estimatedBlur: float = Field(0.6, description="Estimated edge softness blur radius in original image pixels")
     confidence: float = Field(..., ge=0.0, le=1.0, description="OCR confidence score")
     geometryConfidence: float = Field(1.0, ge=0.0, le=1.0, description="Polygon geometry regularity score")
     isConverted: bool = Field(False, description="Whether this region has been adopted into an editable layer")
