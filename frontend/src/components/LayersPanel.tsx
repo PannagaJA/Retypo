@@ -44,6 +44,7 @@ interface LayersPanelProps {
   // Inpaint all
   onInpaintAllDetected: () => Promise<void>;
   isInpaintingAll: boolean;
+  onClose?: () => void;
 }
 
 export const LayersPanel: React.FC<LayersPanelProps> = ({
@@ -69,6 +70,7 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
   onHoverRegion,
   onInpaintAllDetected,
   isInpaintingAll,
+  onClose,
 }) => {
   const [activeTab, setActiveTab] = useState<'layers' | 'detected'>('layers');
   const itemRefs = React.useRef<Map<string, HTMLDivElement>>(new Map());
@@ -97,9 +99,9 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
   const unconvertedCount = detectedRegions.filter((r) => !r.isConverted).length;
 
   return (
-    <aside className="w-72 bg-[#12151e] border-r border-[#212636] flex flex-col h-full select-none text-gray-200">
+    <aside className="w-full lg:w-72 bg-[#12151e] border-r-0 lg:border-r border-[#212636] flex flex-col h-full select-none text-gray-200">
       {/* Navigation Tabs */}
-      <div className="flex border-b border-[#212636] bg-[#0e1017]">
+      <div className="flex items-center border-b border-[#212636] bg-[#0e1017]">
         <button
           onClick={() => setActiveTab('layers')}
           className={`flex-1 py-2.5 px-3 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors border-b-2 ${
@@ -134,6 +136,16 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
             </span>
           )}
         </button>
+
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden p-2 text-gray-400 hover:text-white hover:bg-[#1f2536] transition-colors"
+            title="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Tab 1: Standard Layers Tree */}

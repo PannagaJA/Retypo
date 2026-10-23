@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as fabric from 'fabric';
 import type { ImageMetadata, TextLayer, InpaintPatch, DetectedTextRegion } from '../types';
 import { calculateFitScale } from '../utils/coordinates';
-import { UploadCloud, Image as ImageIcon, HelpCircle } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, HelpCircle, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface CanvasWorkspaceProps {
   image: ImageMetadata | null;
@@ -171,13 +171,30 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       opt.e.stopPropagation();
     });
 
+    // Touch and Mouse Helpers
+    let lastTouchDistance = 0;
+    const getEvtPos = (e: any) => {
+      if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      return { x: e.clientX ?? 0, y: e.clientY ?? 0 };
+    };
+
     // Panning & Outside Click Handling
     canvas.on('mouse:down', (opt) => {
-      const mouseEvt = opt.e as MouseEvent;
-      if (isSpacePressed || (mouseEvt && mouseEvt.button === 1)) {
+      const e = opt.e as any;
+      const isTouch = Boolean(e && e.touches);
+      const isBgTouch = isTouch && !opt.target;
+
+      if (isSpacePressed || (e && e.button === 1) || isBgTouch) {
         isPanningRef.current = true;
-        if (mouseEvt) {
-          lastPanPos.current = { x: mouseEvt.clientX, y: mouseEvt.clientY };
+        const pos = getEvtPos(e);
+        lastPanPos.current = { x: pos.x, y: pos.y };
+        if (isTouch && e.touches.length === 2) {
+          lastTouchDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
         }
         canvas.setCursor('grab');
         return;
@@ -205,20 +222,44 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     });
 
     canvas.on('mouse:move', (opt) => {
+      const e = opt.e as any;
+
+      // Handle 2-finger touch pinch-to-zoom
+      if (e && e.touches && e.touches.length === 2) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        if (lastTouchDistance > 0) {
+          const ratio = dist / lastTouchDistance;
+          let newZoom = canvas.getZoom() * ratio;
+          newZoom = Math.min(Math.max(0.1, newZoom), 5.0);
+          const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+          const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+          const rect = canvas.upperCanvasEl.getBoundingClientRect();
+          const point = new fabric.Point(midX - rect.left, midY - rect.top);
+          canvas.zoomToPoint(point, newZoom);
+          onZoomChange(newZoom);
+        }
+        lastTouchDistance = dist;
+        return;
+      }
+
       if (isPanningRef.current) {
-        const mouseEvt = opt.e as MouseEvent;
+        const pos = getEvtPos(e);
         const vpt = canvas.viewportTransform;
-        if (vpt && mouseEvt) {
-          vpt[4] += mouseEvt.clientX - lastPanPos.current.x;
-          vpt[5] += mouseEvt.clientY - lastPanPos.current.y;
+        if (vpt) {
+          vpt[4] += pos.x - lastPanPos.current.x;
+          vpt[5] += pos.y - lastPanPos.current.y;
           canvas.requestRenderAll();
-          lastPanPos.current = { x: mouseEvt.clientX, y: mouseEvt.clientY };
+          lastPanPos.current = { x: pos.x, y: pos.y };
         }
       }
     });
 
     canvas.on('mouse:up', () => {
       isPanningRef.current = false;
+      lastTouchDistance = 0;
       canvas.setCursor('default');
     });
 
@@ -675,6 +716,23 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           <div
             className="absolute top-0 bottom-0 border-r-2 border-amber-400 z-30 shadow-lg flex items-center justify-center pointer-events-auto cursor-ew-resize"
             style={{ left: `${splitPosition}%` }}
+            onTouchStart={(e) => {
+              const startX = e.touches[0].clientX;
+              const startPos = splitPosition;
+              const handleTouchMove = (moveEvent: TouchEvent) => {
+                if (!containerRef.current || moveEvent.touches.length === 0) return;
+                const rect = containerRef.current.getBoundingClientRect();
+                const diff = ((moveEvent.touches[0].clientX - startX) / rect.width) * 100;
+                const newPos = Math.max(5, Math.min(95, startPos + diff));
+                onSplitChange(newPos);
+              };
+              const handleTouchEnd = () => {
+                window.removeEventListener('touchmove', handleTouchMove);
+                window.removeEventListener('touchend', handleTouchEnd);
+              };
+              window.addEventListener('touchmove', handleTouchMove);
+              window.addEventListener('touchend', handleTouchEnd);
+            }}
             onMouseDown={(e) => {
               const startX = e.clientX;
               const startPos = splitPosition;
@@ -693,7 +751,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
               window.addEventListener('mouseup', handleMouseUp);
             }}
           >
-            <div className="w-6 h-6 rounded-full bg-amber-400 text-black flex items-center justify-center font-bold text-[10px] shadow-md">
+            <div className="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-amber-400 text-black flex items-center justify-center font-bold text-[11px] sm:text-[10px] shadow-md">
               ⇄
             </div>
           </div>
@@ -708,27 +766,27 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       {/* Empty State */}
       {!image && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none pointer-events-auto">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-6 text-center select-none pointer-events-auto">
           <div
-            className={`w-full max-w-lg p-10 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center ${
+            className={`w-full max-w-lg p-6 sm:p-10 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center ${
               isDraggingOver
                 ? 'border-blue-500 bg-blue-500/10 scale-[1.02]'
                 : 'border-[#262c3d] bg-[#12151e]/80 hover:border-blue-500/40'
             }`}
           >
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600/20 to-indigo-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center mb-4 shadow-lg shadow-blue-500/10">
-              <UploadCloud className="w-8 h-8" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-blue-600/20 to-indigo-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center mb-4 shadow-lg shadow-blue-500/10">
+              <UploadCloud className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>
 
-            <h2 className="text-lg font-semibold text-white tracking-tight">
+            <h2 className="text-base sm:text-lg font-semibold text-white tracking-tight">
               Drag & Drop your Image here
             </h2>
-            <p className="text-xs text-gray-400 mt-1 max-w-sm">
+            <p className="text-xs text-gray-400 mt-1 max-w-sm px-2">
               Supports PNG, JPG, JPEG, and WebP. Automatically detects text regions with PaddleOCR.
             </p>
 
-            <div className="flex items-center gap-3 mt-6">
-              <label className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/20 cursor-pointer transition-all active:scale-95">
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 mt-6 w-full sm:w-auto">
+              <label className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/20 cursor-pointer transition-all active:scale-95">
                 <UploadCloud className="w-4 h-4" />
                 Browse File
                 <input
@@ -745,7 +803,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
               <button
                 onClick={onLoadSample}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg bg-[#1a1f2e] hover:bg-[#242b3e] text-blue-300 border border-blue-500/30 transition-colors"
+                className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg bg-[#1a1f2e] hover:bg-[#242b3e] text-blue-300 border border-blue-500/30 transition-colors"
               >
                 <ImageIcon className="w-4 h-4 text-blue-400" />
                 Load Sample Image
@@ -757,9 +815,37 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       {/* Floating Canvas Hint */}
       {image && (
-        <div className="absolute bottom-3 left-4 flex items-center gap-2 px-2.5 py-1 rounded bg-[#12151e]/80 backdrop-blur border border-[#212636] text-[11px] text-gray-400 pointer-events-none select-none shadow">
-          <HelpCircle className="w-3 h-3 text-blue-400" />
-          <span>Hold Space + Drag to Pan • Mouse Wheel to Zoom</span>
+        <div className="absolute bottom-3 left-3 sm:left-4 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded bg-[#12151e]/85 backdrop-blur border border-[#212636] text-[10px] sm:text-[11px] text-gray-400 pointer-events-none select-none shadow z-10">
+          <HelpCircle className="w-3 h-3 text-blue-400 shrink-0" />
+          <span className="hidden sm:inline">Hold Space + Drag to Pan • Mouse Wheel to Zoom</span>
+          <span className="sm:hidden">Drag canvas to pan • Pinch to zoom</span>
+        </div>
+      )}
+
+      {/* Floating Canvas Zoom Controls */}
+      {image && (
+        <div className="absolute bottom-3 right-3 flex items-center bg-[#12151e]/90 backdrop-blur-md rounded-lg p-1 border border-[#212636] shadow-lg gap-1 z-20">
+          <button
+            onClick={() => onZoomChange(Math.max(0.1, _zoom * 0.85))}
+            className="p-1.5 text-gray-300 hover:text-white hover:bg-[#1f2536] rounded transition-colors"
+            title="Zoom out"
+          >
+            <ZoomOut className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => onZoomChange(1.0)}
+            className="px-1.5 text-[11px] font-mono text-gray-300 hover:text-white"
+            title="Reset zoom"
+          >
+            {Math.round(_zoom * 100)}%
+          </button>
+          <button
+            onClick={() => onZoomChange(Math.min(5.0, _zoom * 1.15))}
+            className="p-1.5 text-gray-300 hover:text-white hover:bg-[#1f2536] rounded transition-colors"
+            title="Zoom in"
+          >
+            <ZoomIn className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
     </main>

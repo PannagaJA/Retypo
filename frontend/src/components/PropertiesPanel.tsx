@@ -22,7 +22,8 @@ import {
   Sparkles,
   CheckCircle2,
   Check,
-  Wand2
+  Wand2,
+  X
 } from 'lucide-react';
 
 interface PropertiesPanelProps {
@@ -37,6 +38,7 @@ interface PropertiesPanelProps {
   onInpaintLayer: (layer: TextLayer, strategy: string, padding: number) => Promise<void>;
   isInpainting: boolean;
   hasInpaintPatch: boolean;
+  onClose?: () => void;
 }
 
 const FONT_FAMILIES = [
@@ -80,6 +82,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   onInpaintLayer,
   isInpainting,
   hasInpaintPatch,
+  onClose,
 }) => {
   const [inpaintStrategy, setInpaintStrategy] = useState<string>('auto');
   const [maskPadding, setMaskPadding] = useState<number>(2);
@@ -96,7 +99,16 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   if (!layer) {
     return (
-      <aside className="w-80 bg-[#12151e] border-l border-[#212636] flex flex-col p-6 items-center justify-center text-center select-none text-gray-500">
+      <aside className="w-full lg:w-80 bg-[#12151e] border-l-0 lg:border-l border-[#212636] flex flex-col p-6 items-center justify-center text-center select-none text-gray-500 relative h-full">
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#1f2536] transition-colors"
+            title="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
         <div className="w-12 h-12 rounded-full bg-[#181d2a] flex items-center justify-center mb-3 text-gray-400 border border-[#252c3e]">
           <Type className="w-6 h-6" />
         </div>
@@ -198,7 +210,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   };
 
   return (
-    <aside className="w-80 bg-[#12151e] border-l border-[#212636] flex flex-col h-full overflow-y-auto select-none text-gray-200">
+    <aside className="w-full lg:w-80 bg-[#12151e] border-l-0 lg:border-l border-[#212636] flex flex-col h-full overflow-y-auto select-none text-gray-200">
       {/* Panel Header */}
       <div className="p-4 border-b border-[#212636] flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -213,6 +225,15 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
         {/* Quick Toolbar */}
         <div className="flex items-center gap-1">
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="lg:hidden p-1.5 rounded hover:bg-[#1f2536] text-gray-400 hover:text-white transition-colors mr-1"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={() => onChange({ isLocked: !layer.isLocked })}
             className={`p-1.5 rounded hover:bg-[#1f2536] transition-colors ${

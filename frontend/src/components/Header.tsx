@@ -78,19 +78,19 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="h-14 bg-[#12151e] border-b border-[#212636] px-4 flex items-center justify-between z-20 shrink-0 select-none">
+    <header className="h-14 bg-[#12151e] border-b border-[#212636] px-2 sm:px-4 flex items-center justify-between z-20 shrink-0 select-none gap-2 overflow-x-auto no-scrollbar">
       {/* Brand & Upload */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
-          <span className="font-semibold text-base tracking-tight text-white flex items-center gap-1.5">
-            PhoText <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">STUDIO</span>
+          <span className="font-semibold text-sm sm:text-base tracking-tight text-white flex items-center gap-1.5">
+            PhoText <span className="hidden md:inline-block text-xs px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">STUDIO</span>
           </span>
         </div>
 
-        <div className="h-5 w-px bg-[#262c3d] mx-1" />
+        <div className="hidden sm:block h-5 w-px bg-[#262c3d] mx-0.5" />
 
         {/* Upload Controls */}
         <input
@@ -102,32 +102,34 @@ export const Header: React.FC<HeaderProps> = ({
         />
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-[#1c2232] hover:bg-[#252c40] text-gray-200 border border-[#2e374d] transition-colors shadow-sm"
+          className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-md bg-[#1c2232] hover:bg-[#252c40] text-gray-200 border border-[#2e374d] transition-colors shadow-sm shrink-0"
           title="Upload new image (PNG, JPG, WebP)"
         >
           <Upload className="w-3.5 h-3.5 text-blue-400" />
-          Upload Image
+          <span className="hidden sm:inline">Upload Image</span>
+          <span className="sm:hidden">Upload</span>
         </button>
 
         {!hasImage && (
           <button
             onClick={onLoadSample}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 transition-colors"
+            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 text-xs font-medium rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 transition-colors shrink-0"
             title="Load sample typography poster for instant testing"
           >
             <ImageIcon className="w-3.5 h-3.5" />
-            Try Sample
+            <span className="hidden sm:inline">Try Sample</span>
+            <span className="sm:hidden">Sample</span>
           </button>
         )}
 
         {/* OCR Analyze Button */}
         {hasImage && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <div className="flex items-center bg-[#141926] border border-[#27364f] rounded-md p-0.5">
               <button
                 onClick={onRunOCR}
                 disabled={isDetecting}
-                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded transition-all shadow-sm ${
+                className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-medium rounded transition-all shadow-sm ${
                   isDetecting
                     ? 'bg-blue-600/30 text-blue-300 border border-blue-500/40 cursor-wait'
                     : 'bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300'
@@ -137,12 +139,13 @@ export const Header: React.FC<HeaderProps> = ({
                 {isDetecting ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
-                    Detecting...
+                    <span className="hidden sm:inline">Detecting...</span>
                   </>
                 ) : (
                   <>
                     <ScanText className="w-3.5 h-3.5 text-emerald-400" />
-                    Detect Text
+                    <span className="hidden sm:inline">Detect Text</span>
+                    <span className="sm:hidden">OCR</span>
                   </>
                 )}
               </button>
@@ -151,12 +154,12 @@ export const Header: React.FC<HeaderProps> = ({
                 <select
                   value={ocrLang}
                   onChange={(e) => onChangeOcrLang(e.target.value)}
-                  className="bg-[#181d2a] border-l border-[#27364f] text-gray-300 hover:text-white px-2 py-1 text-[11px] font-mono cursor-pointer focus:outline-none"
+                  className="bg-[#181d2a] border-l border-[#27364f] text-gray-300 hover:text-white px-1 sm:px-2 py-1 text-[11px] font-mono cursor-pointer focus:outline-none"
                   title="OCR Language Model"
                 >
                   <option value="en">EN</option>
-                  <option value="ka">ಕನ್ನಡ (KA)</option>
-                  <option value="hi">हिन्दी (HI)</option>
+                  <option value="ka">KA</option>
+                  <option value="hi">HI</option>
                 </select>
               )}
             </div>
@@ -178,9 +181,9 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
 
-      {/* Center Toolset: Undo/Redo & Zoom & Compare */}
+      {/* Center Toolset: Desktop Undo/Redo & Zoom & Compare */}
       {hasImage && (
-        <div className="flex items-center gap-2">
+        <div className="hidden lg:flex items-center gap-2">
           {/* History */}
           <div className="flex items-center bg-[#181d2a] rounded-md p-0.5 border border-[#252c3e]">
             <button
@@ -272,16 +275,43 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       )}
 
-      {/* Right Actions */}
-      <div className="flex items-center gap-3">
+      {/* Right Actions: Mobile Undo/Redo & Export */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Mobile Undo & Redo */}
+        {hasImage && (
+          <div className="flex lg:hidden items-center bg-[#181d2a] rounded-md p-0.5 border border-[#252c3e] shrink-0">
+            <button
+              onClick={onUndo}
+              disabled={!canUndo}
+              className={`p-1.5 rounded transition-colors ${
+                canUndo ? 'text-gray-300 hover:text-white hover:bg-[#262d40]' : 'text-gray-600 cursor-not-allowed'
+              }`}
+              title="Undo"
+            >
+              <Undo2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={onRedo}
+              disabled={!canRedo}
+              className={`p-1.5 rounded transition-colors ${
+                canRedo ? 'text-gray-300 hover:text-white hover:bg-[#262d40]' : 'text-gray-600 cursor-not-allowed'
+              }`}
+              title="Redo"
+            >
+              <Redo2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {hasImage && (
           <button
             onClick={onOpenExport}
-            className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-500/20 transition-all active:scale-95"
+            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-500/20 transition-all active:scale-95 shrink-0"
             title="Export non-destructive composited image at full native resolution"
           >
-            <Download className="w-4 h-4" />
-            Export High-Res
+            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Export High-Res</span>
+            <span className="sm:hidden">Export</span>
           </button>
         )}
       </div>

@@ -66,10 +66,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 select-none animate-in fade-in duration-150">
-      <div className="w-full max-w-lg bg-[#131620] border border-[#252c3e] rounded-xl shadow-2xl overflow-hidden flex flex-col text-gray-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-4 select-none animate-in fade-in duration-150">
+      <div className="w-full max-w-lg max-h-[92dvh] bg-[#131620] border border-[#252c3e] rounded-xl shadow-2xl overflow-hidden flex flex-col text-gray-200">
         {/* Header */}
-        <div className="p-4 border-b border-[#212636] flex items-center justify-between">
+        <div className="p-4 border-b border-[#212636] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center">
               <Download className="w-4 h-4" />
@@ -88,11 +88,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-5 space-y-4 text-xs">
+        <div className="p-4 sm:p-5 space-y-4 text-xs overflow-y-auto flex-1">
           {/* Engine Selector */}
           <div className="space-y-1.5">
             <label className="font-medium text-gray-300">Rendering Engine</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setEngine('studio')}
@@ -222,16 +222,16 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-[#0f1118] border-t border-[#212636] flex items-center justify-between">
-          <span className="text-[10px] text-gray-500 font-mono">
+        <div className="p-3 sm:p-4 bg-[#0f1118] border-t border-[#212636] flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+          <span className="text-[10px] text-gray-500 font-mono text-center sm:text-left">
             Output: {image.width}×{image.height}px • {format.toUpperCase()}
           </span>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <button
               onClick={onClose}
               disabled={isExporting}
-              className="px-4 py-2 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-[#1a1f2e] transition-colors"
+              className="px-3 sm:px-4 py-2 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-[#1a1f2e] transition-colors"
             >
               Close
             </button>
@@ -239,7 +239,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <button
               onClick={handleExport}
               disabled={isExporting}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-50"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-50"
             >
               {isExporting ? (
                 <>
