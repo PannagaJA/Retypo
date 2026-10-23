@@ -7,7 +7,7 @@ import { LayersPanel } from './components/LayersPanel';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { ExportModal } from './components/ExportModal';
 import { analyzeImageOCR, restoreBackground } from './services/api';
-import { Layers, Type, Maximize2, Eye, Download, Sliders, Copy, Trash2, X } from 'lucide-react';
+import { Layers, Type, Maximize2, Eye, Sliders, Copy, Trash2, X, ScanText, Eraser, Plus, Loader2 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [image, setImage] = useState<ImageMetadata | null>(null);
@@ -420,16 +420,16 @@ export const App: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Background gradient
+    // Background gradient - clean light theme
     const grad = ctx.createLinearGradient(0, 0, 1600, 1000);
-    grad.addColorStop(0, '#0f172a');
-    grad.addColorStop(0.5, '#1e1b4b');
-    grad.addColorStop(1, '#090d16');
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.5, '#f8fafc');
+    grad.addColorStop(1, '#f1f5f9');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 1600, 1000);
 
     // Decorative grid
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.strokeStyle = 'rgba(15, 23, 42, 0.04)';
     ctx.lineWidth = 1;
     for (let x = 0; x < 1600; x += 40) {
       ctx.beginPath();
@@ -444,9 +444,9 @@ export const App: React.FC = () => {
       ctx.stroke();
     }
 
-    // Radial glow
+    // Soft warm radial ambient glow
     const radGrad = ctx.createRadialGradient(800, 450, 50, 800, 450, 400);
-    radGrad.addColorStop(0, 'rgba(59, 130, 246, 0.25)');
+    radGrad.addColorStop(0, 'rgba(15, 23, 42, 0.03)');
     radGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = radGrad;
     ctx.fillRect(0, 0, 1600, 1000);
@@ -456,17 +456,17 @@ export const App: React.FC = () => {
     ctx.font = '600 24px "Inter", sans-serif';
     ctx.fillText('HIGH-FIDELITY TYPOGRAPHY RECONSTRUCTION', 150, 260);
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 84px "Montserrat", sans-serif';
-    ctx.fillText('PHOTEXT STUDIO', 150, 390);
+    ctx.fillText('STARLIGHT CANVAS', 150, 390);
 
-    ctx.fillStyle = '#94a3b8';
+    ctx.fillStyle = '#475569';
     ctx.font = '400 28px "Inter", sans-serif';
     ctx.fillText('Precision typography matching, seamless text removal & non-destructive 4K export.', 150, 470);
 
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#0284c7';
     ctx.font = '600 22px "Outfit", sans-serif';
-    ctx.fillText('PRO EDITION 2026', 150, 560);
+    ctx.fillText('STUDIO EDITION 2026', 150, 560);
 
     const dataUrl = canvas.toDataURL('image/png');
 
@@ -481,12 +481,12 @@ export const App: React.FC = () => {
     const sampleDetected: DetectedTextRegion[] = [
       {
         regionId: 'ocr-sample-1',
-        text: 'PHOTEXT STUDIO',
+        text: 'STARLIGHT CANVAS',
         polygon: [[148, 305], [960, 305], [960, 400], [148, 400]],
         bbox: [148, 305, 812, 95],
         angle: 0,
         estimatedFontSize: 84,
-        estimatedColor: '#ffffff',
+        estimatedColor: '#0f172a',
         confidence: 0.985,
         geometryConfidence: 1.0,
         isConverted: false,
@@ -659,7 +659,7 @@ export const App: React.FC = () => {
     : false;
 
   return (
-    <div className="flex flex-col h-screen h-[100dvh] w-screen overflow-hidden bg-[#0b0d13] relative">
+    <div className="flex flex-col h-screen h-[100dvh] w-screen overflow-hidden bg-slate-50 text-slate-900 relative">
       {/* Top Header */}
       <Header
         canUndo={historyRef.current.canUndo()}
@@ -692,18 +692,19 @@ export const App: React.FC = () => {
       />
 
       {/* Main Workspace */}
-      <div className="flex flex-1 h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-3.5rem)] overflow-hidden relative">
+      <div className="flex flex-1 h-[calc(100dvh-3.5rem)] sm:h-[calc(100dvh-4rem)] overflow-hidden relative">
         {/* Left: Layers & Inpaint Patches Panel */}
         <div
           className={`
             lg:static lg:block lg:w-72 lg:h-full lg:z-auto
             ${
               mobileTab === 'layers'
-                ? 'fixed inset-x-0 bottom-0 z-40 h-[82vh] max-h-[82dvh] bg-[#12151e] rounded-t-2xl shadow-2xl border-t border-[#252c3e] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200'
+                ? 'fixed inset-x-0 bottom-0 z-40 h-[84vh] max-h-[84dvh] bg-white rounded-t-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.12)] border-t border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200'
                 : 'hidden lg:flex'
             }
           `}
         >
+          <div className="lg:hidden w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2.5 shrink-0" />
           <LayersPanel
             image={image}
             patches={inpaintPatches}
@@ -771,11 +772,12 @@ export const App: React.FC = () => {
             lg:static lg:block lg:w-80 lg:h-full lg:z-auto
             ${
               mobileTab === 'properties'
-                ? 'fixed inset-x-0 bottom-0 z-40 h-[85vh] max-h-[85dvh] bg-[#12151e] rounded-t-2xl shadow-2xl border-t border-[#252c3e] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200'
+                ? 'fixed inset-x-0 bottom-0 z-40 h-[85vh] max-h-[85dvh] bg-white rounded-t-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.12)] border-t border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200'
                 : 'hidden lg:flex'
             }
           `}
         >
+          <div className="lg:hidden w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2.5 shrink-0" />
           <PropertiesPanel
             layer={selectedLayer}
             image={image}
@@ -798,28 +800,95 @@ export const App: React.FC = () => {
         {/* Backdrop for Mobile Drawers */}
         {mobileTab !== 'canvas' && (
           <div
-            className="lg:hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-xs transition-opacity"
+            className="lg:hidden fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-xs transition-opacity"
             onClick={() => setMobileTab('canvas')}
           />
         )}
 
-        {/* Mobile Floating Layer Bar (when layer selected and drawer is closed) */}
+        {/* Mobile Quick Action Pill Card */}
+        {image && mobileTab === 'canvas' && !selectedLayer && (
+          <div className="lg:hidden absolute top-3 inset-x-3 sm:max-w-md sm:mx-auto z-20 bg-white/95 border border-slate-200 shadow-xl backdrop-blur-xl rounded-2xl p-2.5 flex items-center justify-around gap-2 animate-in slide-in-from-top duration-150">
+            {/* Auto OCR */}
+            <button
+              onClick={() => handleRunOCR()}
+              disabled={isDetecting}
+              className="flex flex-col items-center gap-1 text-center active:scale-95 transition-transform"
+            >
+              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 shadow-xs">
+                {isDetecting ? <Loader2 className="w-4 h-4 animate-spin text-slate-600" /> : <ScanText className="w-4 h-4 text-slate-700" />}
+              </div>
+              <span className="text-[10px] font-medium text-slate-700">Detect Text</span>
+            </button>
+
+            {/* Inpaint All */}
+            <button
+              onClick={() => handleInpaintAllDetected()}
+              disabled={isInpaintingAll || detectedRegions.length === 0}
+              className="flex flex-col items-center gap-1 text-center active:scale-95 transition-transform disabled:opacity-40"
+            >
+              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 shadow-xs">
+                {isInpaintingAll ? <Loader2 className="w-4 h-4 animate-spin text-slate-600" /> : <Eraser className="w-4 h-4 text-slate-700" />}
+              </div>
+              <span className="text-[10px] font-medium text-slate-700">Clean BG</span>
+            </button>
+
+            {/* Add Text */}
+            <button
+              onClick={handleAddText}
+              className="flex flex-col items-center gap-1 text-center active:scale-95 transition-transform"
+            >
+              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 shadow-xs">
+                <Type className="w-4 h-4 text-slate-700" />
+              </div>
+              <span className="text-[10px] font-medium text-slate-700">Add Text</span>
+            </button>
+
+            {/* Compare */}
+            <button
+              onClick={() => setIsComparing((c) => !c)}
+              className="flex flex-col items-center gap-1 text-center active:scale-95 transition-transform"
+            >
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center shadow-xs transition-all ${
+                  isComparing
+                    ? 'bg-amber-100 border border-amber-300 text-amber-900'
+                    : 'bg-slate-100 border border-slate-200 text-slate-700'
+                }`}
+              >
+                <Eye className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-medium text-slate-700">
+                {isComparing ? 'Original' : 'Compare'}
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* Mobile Floating Layer Card */}
         {selectedLayer && mobileTab === 'canvas' && (
-          <div className="lg:hidden absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between p-2 rounded-xl bg-[#141824]/95 border border-[#2b354c] shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom duration-150">
+          <div className="lg:hidden absolute bottom-20 left-3 right-3 sm:max-w-md sm:mx-auto z-30 rounded-2xl bg-white border border-slate-200 shadow-xl p-3 flex items-center justify-between animate-in slide-in-from-bottom duration-150">
             <div
               onClick={() => setMobileTab('properties')}
-              className="flex items-center gap-2 min-w-0 flex-1 mr-2 cursor-pointer active:opacity-80"
-              title="Tap to edit text & properties"
+              className="flex items-center gap-2.5 min-w-0 flex-1 mr-2 cursor-pointer active:opacity-80"
+              title="Tap to edit typography & styling"
             >
-              <div className="w-6 h-6 rounded-md bg-blue-600/20 text-blue-400 flex items-center justify-center shrink-0">
-                <Type className="w-3.5 h-3.5" />
+              <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-xs font-bold">
+                <Type className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-medium text-white truncate max-w-[130px] sm:max-w-[200px]">
+                <p className="text-xs font-bold text-slate-900 truncate max-w-[140px] sm:max-w-[200px]">
                   {selectedLayer.text || 'Empty Text'}
                 </p>
-                <p className="text-[10px] text-gray-400 font-mono">
-                  {selectedLayer.fontFamily} • {Math.round(selectedLayer.fontSize)}px
+                <p className="text-[10px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
+                  <span>{selectedLayer.fontFamily}</span>
+                  <span>•</span>
+                  <span>{Math.round(selectedLayer.fontSize)}px</span>
+                  {selectedLayer.angle !== 0 && (
+                    <>
+                      <span>•</span>
+                      <span>{Math.round(selectedLayer.angle)}°</span>
+                    </>
+                  )}
                 </p>
               </div>
             </div>
@@ -827,28 +896,28 @@ export const App: React.FC = () => {
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={() => setMobileTab('properties')}
-                className="px-2.5 py-1 text-xs font-semibold rounded-md bg-blue-600 hover:bg-blue-500 text-white transition-colors flex items-center gap-1 shadow-sm"
+                className="px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-colors flex items-center gap-1 shadow-xs active:scale-95"
               >
                 <Sliders className="w-3 h-3" />
                 <span>Style</span>
               </button>
               <button
                 onClick={() => handleDuplicateLayer(selectedLayer.id)}
-                className="p-1.5 rounded-md text-gray-300 hover:text-white hover:bg-[#202738] transition-colors"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors"
                 title="Duplicate"
               >
                 <Copy className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => handleDeleteLayer(selectedLayer.id)}
-                className="p-1.5 rounded-md text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors"
                 title="Delete"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setSelectedLayerId(null)}
-                className="p-1 rounded-md text-gray-400 hover:text-white"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200"
                 title="Deselect"
               >
                 <X className="w-3.5 h-3.5" />
@@ -858,90 +927,80 @@ export const App: React.FC = () => {
         )}
       </div>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="lg:hidden h-14 bg-[#10131c] border-t border-[#212636] px-2 flex items-center justify-around z-30 shrink-0 select-none pb-[env(safe-area-inset-bottom)]">
+      {/* Floating Modern Pill Dock */}
+      <nav className="lg:hidden fixed bottom-4 inset-x-0 mx-auto w-fit z-40 bg-white/95 border border-slate-200 shadow-xl shadow-slate-300/40 backdrop-blur-2xl rounded-full p-1.5 flex items-center gap-1 select-none">
+        {/* Canvas Tab */}
         <button
           onClick={() => setMobileTab('canvas')}
-          className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors ${
+          className={`flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-xs transition-all ${
             mobileTab === 'canvas'
-              ? 'text-blue-400 font-semibold'
-              : 'text-gray-400 hover:text-gray-200'
+              ? 'bg-slate-900 text-white font-semibold shadow-xs scale-100'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Maximize2 className="w-4 h-4 mb-0.5" />
-          <span>Canvas</span>
+          <Maximize2 className="w-3.5 h-3.5" />
+          {mobileTab === 'canvas' && <span>Canvas</span>}
         </button>
 
+        {/* Layers Tab */}
         <button
           onClick={() => setMobileTab(mobileTab === 'layers' ? 'canvas' : 'layers')}
-          className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors ${
+          className={`relative flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-xs transition-all ${
             mobileTab === 'layers'
-              ? 'text-blue-400 font-semibold'
-              : 'text-gray-400 hover:text-gray-200'
+              ? 'bg-slate-900 text-white font-semibold shadow-xs scale-100'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
           <div className="relative">
-            <Layers className="w-4 h-4 mb-0.5" />
+            <Layers className="w-3.5 h-3.5" />
             {(layers.length > 0 || detectedRegions.length > 0) && (
-              <span className="absolute -top-1 -right-2 px-1 text-[9px] font-mono rounded-full bg-blue-600 text-white leading-none py-0.5 min-w-[14px] text-center">
+              <span
+                className={`absolute -top-1 -right-2 px-1 text-[8px] font-mono rounded-full font-bold leading-none py-0.5 min-w-[12px] text-center ${
+                  mobileTab === 'layers' ? 'bg-white text-slate-900' : 'bg-slate-900 text-white'
+                }`}
+              >
                 {layers.length + detectedRegions.filter((r) => !r.isConverted).length}
               </span>
             )}
           </div>
-          <span>Layers</span>
+          {mobileTab === 'layers' && <span>Layers</span>}
         </button>
 
+        {/* Typography / Style Tab */}
         <button
           onClick={() => setMobileTab(mobileTab === 'properties' ? 'canvas' : 'properties')}
-          className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors ${
+          className={`relative flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-xs transition-all ${
             mobileTab === 'properties'
-              ? 'text-blue-400 font-semibold'
-              : 'text-gray-400 hover:text-gray-200'
+              ? 'bg-slate-900 text-white font-semibold shadow-xs scale-100'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
           <div className="relative">
-            <Type className="w-4 h-4 mb-0.5" />
+            <Sliders className="w-3.5 h-3.5" />
             {selectedLayer && (
-              <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
             )}
           </div>
-          <span>Typography</span>
+          {mobileTab === 'properties' && <span>Style</span>}
         </button>
 
-        {image && (
-          <button
-            onClick={() => {
-              setIsComparing((c) => !c);
-              if (mobileTab !== 'canvas') setMobileTab('canvas');
-            }}
-            className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors ${
-              isComparing
-                ? 'text-amber-400 font-semibold'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            <Eye className="w-4 h-4 mb-0.5" />
-            <span>{isComparing ? 'Original' : 'Compare'}</span>
-          </button>
-        )}
-
-        {image && (
-          <button
-            onClick={() => setIsExportOpen(true)}
-            className="flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium text-blue-400 hover:text-blue-300 transition-colors"
-          >
-            <Download className="w-4 h-4 mb-0.5" />
-            <span>Export</span>
-          </button>
-        )}
+        {/* Quick Add Text Pill Button */}
+        <button
+          onClick={handleAddText}
+          disabled={!image}
+          className="w-8 h-8 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xs active:scale-95 transition-all flex items-center justify-center disabled:opacity-40 disabled:pointer-events-none ml-1"
+          title="Add Text Layer"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
       </nav>
 
       {/* Floating Status Toast */}
       {toast && (
-        <div className="fixed bottom-16 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#141926] border border-[#27364f] shadow-2xl text-xs font-medium text-white max-w-[90vw]">
-          <span className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-emerald-400' : toast.type === 'warn' ? 'bg-amber-400' : 'bg-blue-400'} shrink-0`} />
+        <div className="fixed bottom-16 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-slate-200 shadow-xl text-xs font-medium text-slate-800 max-w-[90vw]">
+          <span className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-emerald-500' : toast.type === 'warn' ? 'bg-amber-500' : 'bg-blue-500'} shrink-0`} />
           <span className="truncate">{toast.message}</span>
-          <button onClick={() => setToast(null)} className="ml-2 text-gray-400 hover:text-white shrink-0">✕</button>
+          <button onClick={() => setToast(null)} className="ml-2 text-slate-400 hover:text-slate-700 shrink-0">✕</button>
         </div>
       )}
 
