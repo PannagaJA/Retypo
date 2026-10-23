@@ -105,6 +105,9 @@ export const App: React.FC = () => {
 
   // Convert a single detected OCR region to an editable TextLayer with seamless automatic background restoration & typography matching
   const handleConvertRegion = async (region: DetectedTextRegion) => {
+    if (detectedRegions.find((r) => r.regionId === region.regionId)?.isConverted) {
+      return;
+    }
     const newId = `layer-ocr-${Date.now()}`;
     const newLayer: TextLayer = {
       id: newId,
@@ -803,7 +806,11 @@ export const App: React.FC = () => {
         {/* Mobile Floating Layer Bar (when layer selected and drawer is closed) */}
         {selectedLayer && mobileTab === 'canvas' && (
           <div className="lg:hidden absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between p-2 rounded-xl bg-[#141824]/95 border border-[#2b354c] shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom duration-150">
-            <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+            <div
+              onClick={() => setMobileTab('properties')}
+              className="flex items-center gap-2 min-w-0 flex-1 mr-2 cursor-pointer active:opacity-80"
+              title="Tap to edit text & properties"
+            >
               <div className="w-6 h-6 rounded-md bg-blue-600/20 text-blue-400 flex items-center justify-center shrink-0">
                 <Type className="w-3.5 h-3.5" />
               </div>
