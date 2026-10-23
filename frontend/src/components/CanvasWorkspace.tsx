@@ -633,22 +633,14 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       const shouldBeVisible =
         layer.isVisible && (!isComparing || compareMode === 'split');
 
-      const blurVal = layer.blur ?? 0.6;
-      const shadowConfig = layer.shadow
+      const shadowConfig = layer.shadow && layer.shadow.blur > 0
         ? new fabric.Shadow({
             color: layer.shadow.color,
             blur: layer.shadow.blur,
             offsetX: layer.shadow.offsetX,
             offsetY: layer.shadow.offsetY,
           })
-        : (blurVal > 0.05
-          ? new fabric.Shadow({
-              color: layer.fill,
-              blur: blurVal,
-              offsetX: 0,
-              offsetY: 0,
-            })
-          : undefined);
+        : undefined;
 
       const isMobile =
         typeof window !== 'undefined' &&

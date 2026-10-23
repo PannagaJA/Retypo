@@ -11,6 +11,15 @@ export async function exportHighResImage(
   layers: TextLayer[],
   options: ExportOptions
 ): Promise<Blob> {
+  // Ensure web fonts are completely loaded before rasterizing offscreen canvas
+  if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
+    try {
+      await document.fonts.ready;
+    } catch {
+      // Fallback gracefully
+    }
+  }
+
   const canvas = document.createElement('canvas');
   canvas.width = image.width;
   canvas.height = image.height;
@@ -68,7 +77,7 @@ export async function exportHighResImage(
     // Configure font typography
     const stylePrefix = layer.fontStyle === 'italic' ? 'italic ' : '';
     const weightPrefix = `${layer.fontWeight} `;
-    ctx.font = `${stylePrefix}${weightPrefix}${layer.fontSize}px "${layer.fontFamily}", sans-serif`;
+    ctx.font = `${stylePrefix}${weightPrefix}${layer.fontSize}px "${layer.fontFamily}", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", Helvetica, Arial, sans-serif`;
     ctx.textAlign = layer.textAlign === 'center' ? 'center' : layer.textAlign === 'right' ? 'right' : 'left';
     ctx.textBaseline = 'top';
 
