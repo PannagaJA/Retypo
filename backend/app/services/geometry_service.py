@@ -1,3 +1,4 @@
+import re
 import math
 import numpy as np
 import cv2
@@ -82,13 +83,18 @@ def calculate_font_size(
 def estimate_text_weight(
     image: Optional[Image.Image],
     polygon: List[List[float]],
-    font_size: float
+    font_size: float,
+    text: Optional[str] = None
 ) -> str:
     """
-    Estimates CSS font-weight (400, 600, or 700) from text stroke thickness and edge sharpness.
+    Estimates CSS font-weight (400, 600, or 700) from text stroke thickness, typography context, and edge sharpness.
     Uses Euclidean distance transform to measure stem stroke width relative to font height,
     along with edge sharpness to distinguish bold headers/titles from regular body/subtitles.
     """
+    # Context-aware weight detection: transaction amounts and major titles are bold/semi-bold in fintech UI
+    if text and re.search(r'[+-]?[₹$€£]?\s*[\d,]+\.\d{2}', text.strip()):
+        return "700"
+
     if image is None or len(polygon) < 4:
         return "400"
 
@@ -133,13 +139,13 @@ def estimate_text_weight(
         sig_mag = mag[mag > 30]
         p90_edge = float(np.percentile(sig_mag, 90)) if len(sig_mag) > 0 else 0
 
-        # Calibrated:
-        # Bold (700): heavy stroke >= 3.6 or (tau >= 0.18 and p90_edge >= 600)
-        # Semi-Bold (600): tau >= 0.15 and p90_edge >= 500
+        # Calibrated for digital UI & mobile typography:
+        # Bold (700): heavy stroke >= 3.4 or (tau >= 0.17 and p90_edge >= 500)
+        # Semi-Bold (600): stroke >= 2.5 or (tau >= 0.13 and p90_edge >= 400)
         # Regular (400): default
-        if stroke_w >= 3.6 or (tau >= 0.18 and p90_edge >= 600):
+        if stroke_w >= 3.4 or (tau >= 0.17 and p90_edge >= 500):
             return "700"
-        elif tau >= 0.15 and p90_edge >= 500:
+        elif stroke_w >= 2.5 or (tau >= 0.13 and p90_edge >= 400):
             return "600"
         else:
             return "400"
@@ -289,6 +295,17 @@ def estimate_text_color(image: Image.Image, polygon: List[List[float]]) -> str:
     else:
         text_pixels = rgb[text_mask]
 
-    median_rgb = np.median(text_pixels, axis=0).astype(int)
+    # Calculate core text color (exclude antialiased boundary transition pixels)
+    lum = 0.299 * text_pixels[:, 0] + 0.587 * text_pixels[:, 1] + 0.114 * text_pixels[:, 2]
+    if border_mean > 127:
+        # Light background: the true text core is the deepest/darkest 30% of text pixels
+        core_idx = np.where(lum <= np.percentile(lum, 30))[0]
+        core_pixels = text_pixels[core_idx] if len(core_idx) > 0 else text_pixels
+    else:
+        # Dark background: the true text core is the brightest 30% of text pixels
+        core_idx = np.where(lum >= np.percentile(lum, 70))[0]
+        core_pixels = text_pixels[core_idx] if len(core_idx) > 0 else text_pixels
+
+    median_rgb = np.median(core_pixels, axis=0).astype(int)
     hex_color = f"#{median_rgb[0]:02x}{median_rgb[1]:02x}{median_rgb[2]:02x}"
     return hex_color

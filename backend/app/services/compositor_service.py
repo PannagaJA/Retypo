@@ -57,8 +57,15 @@ class CompositorService:
                 patterns = entry["bold_patterns"] if is_bold else entry["regular_patterns"]
                 return self._typography_service._load_font(patterns, size)
 
-        # Fallback to system fonts
-        fallback_patterns = [f"{family}-Bold.ttf", f"{family}.ttf", "Arial Bold.ttf" if is_bold else "Arial.ttf", "Helvetica.ttc"]
+        # Fallback to system fonts (Inter & Helvetica prioritized over Arial to guarantee Rupee / unicode support)
+        fallback_patterns = [
+            f"{family}-Bold.ttf" if is_bold else f"{family}.ttf",
+            "Inter-Bold.ttf" if is_bold else "Inter-Regular.ttf",
+            "Helvetica-Bold.ttc" if is_bold else "Helvetica.ttc",
+            "SFNS.ttf",
+            "DejaVuSans-Bold.ttf" if is_bold else "DejaVuSans.ttf",
+            "Arial Bold.ttf" if is_bold else "Arial.ttf"
+        ]
         return self._typography_service._load_font(fallback_patterns, size)
 
     def _create_feather_mask(self, width: int, height: int, feather_px: int = 2) -> Image.Image:
@@ -88,6 +95,17 @@ class CompositorService:
 
         font_size = max(8, int(round(layer.fontSize)))
         font = self._resolve_font(layer.fontFamily, str(layer.fontWeight), font_size)
+        # Unicode fallback font with full currency support (Inter / Helvetica)
+        fallback_font = self._resolve_font("Inter", str(layer.fontWeight), font_size)
+
+        def get_char_font(ch: str) -> ImageFont.FreeTypeFont:
+            try:
+                # If primary font lacks glyph for ch, getbbox matches missing glyph
+                if font.getbbox(ch) == font.getbbox('\uFFFF'):
+                    return fallback_font
+            except Exception:
+                pass
+            return font
 
         lines = layer.text.split("\n")
         line_height = layer.lineHeight if layer.lineHeight and layer.lineHeight > 0.5 else 1.2
@@ -101,8 +119,9 @@ class CompositorService:
             line_w = 0.0
             line_h = font_size
             for idx, ch in enumerate(l):
+                ch_font = get_char_font(ch)
                 try:
-                    bbox = font.getbbox(ch)
+                    bbox = ch_font.getbbox(ch)
                     ch_w = bbox[2] - bbox[0]
                 except Exception:
                     ch_w = font_size * 0.6
@@ -144,9 +163,10 @@ class CompositorService:
                 curr_y = margin + (row_idx * line_spacing_px) + s_oy
 
                 for idx, ch in enumerate(line):
-                    shadow_draw.text((curr_x, curr_y), ch, fill=s_color, font=font)
+                    ch_font = get_char_font(ch)
+                    shadow_draw.text((curr_x, curr_y), ch, fill=s_color, font=ch_font)
                     try:
-                        bbox = font.getbbox(ch)
+                        bbox = ch_font.getbbox(ch)
                         ch_w = bbox[2] - bbox[0]
                     except Exception:
                         ch_w = font_size * 0.6
@@ -176,21 +196,22 @@ class CompositorService:
             curr_y = margin + (row_idx * line_spacing_px)
 
             for idx, ch in enumerate(line):
+                ch_font = get_char_font(ch)
                 # Stroke
                 if stroke_w > 0 and stroke_color:
                     text_draw.text(
                         (curr_x, curr_y),
                         ch,
-                        font=font,
+                        font=ch_font,
                         fill=fill_color,
                         stroke_width=stroke_w,
                         stroke_fill=stroke_color
                     )
                 else:
-                    text_draw.text((curr_x, curr_y), ch, font=font, fill=fill_color)
+                    text_draw.text((curr_x, curr_y), ch, font=ch_font, fill=fill_color)
 
                 try:
-                    bbox = font.getbbox(ch)
+                    bbox = ch_font.getbbox(ch)
                     ch_w = bbox[2] - bbox[0]
                 except Exception:
                     ch_w = font_size * 0.6
@@ -198,9 +219,10 @@ class CompositorService:
 
         layer_canvas = Image.alpha_composite(layer_canvas, text_canvas)
 
-        # 3. Apply Edge Blur / Softness if specified
+        # 3. Apply Edge Blur / Softness only if explicitly set to a heavy blur effect (> 1.5px)
+        # Small fractional blurs (< 1.5px) must NEVER be applied to digital text as they dilute opacity and wash out colors
         blur_radius = getattr(layer, "blur", 0.0)
-        if blur_radius > 0.05:
+        if blur_radius > 1.5:
             layer_canvas = layer_canvas.filter(ImageFilter.GaussianBlur(radius=blur_radius))
 
         # 4. Apply Opacity

@@ -272,16 +272,16 @@ class OCRService:
                 font_size = calculate_font_size(clean_polygon, image=image, text=raw_text)
                 bbox = calculate_bounding_box(clean_polygon, image=image)
                 geom_conf = calculate_geometry_confidence(clean_polygon)
-                color = estimate_text_color(image, clean_polygon)
-                weight = estimate_text_weight(image, clean_polygon, font_size)
-                blur = estimate_text_blur(image, clean_polygon)
-
                 # Filter out UI icons, non-text symbols, and graphic glyphs
                 if self._is_icon_or_noise(raw_text, bbox, round(score, 3)):
                     continue
 
-                # Apply domain-aware text normalization
+                # Apply domain-aware text normalization first
                 normalized_text = self._normalize_detected_text(raw_text, all_raw_texts)
+
+                color = estimate_text_color(image, clean_polygon)
+                weight = estimate_text_weight(image, clean_polygon, font_size, text=normalized_text)
+                blur = 0.0  # Crisp digital rendering: prevent artificial blur
 
                 region = DetectedTextRegion(
                     regionId=f"ocr-{uuid.uuid4().hex[:8]}",
