@@ -58,7 +58,7 @@ describe('Lossless Compositor & Studio Export Pipeline', () => {
     const sampleResult: CompositorExportResult = {
       status: 'success',
       exportDataUrl: 'data:image/png;base64,test',
-      fileName: 'photext_studio_export.png',
+      fileName: 'retypo_studio_export.png',
       telemetry: {
         ssimUneditedRegion: 1.0,
         deltaEMax: 0.0,
