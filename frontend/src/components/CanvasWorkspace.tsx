@@ -125,10 +125,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     const canvas = new fabric.Canvas(canvasElRef.current, {
       width: containerRef.current.clientWidth,
       height: containerRef.current.clientHeight,
-      backgroundColor: '#0b0d13',
+      backgroundColor: '#f1f5f9',
       preserveObjectStacking: true,
-      selectionColor: 'rgba(59, 130, 246, 0.15)',
-      selectionBorderColor: '#3b82f6',
+      selectionColor: 'rgba(15, 23, 42, 0.08)',
+      selectionBorderColor: '#0f172a',
       selectionLineWidth: 1.5,
     });
 
@@ -396,7 +396,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     if (!canvas || !image) {
       if (canvas && !image) {
         canvas.clear();
-        canvas.backgroundColor = '#0b0d13';
+        canvas.backgroundColor = '#f1f5f9';
         canvas.renderAll();
       }
       return;
@@ -420,6 +420,12 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         selectable: false,
         evented: false,
         hoverCursor: 'default',
+        shadow: new fabric.Shadow({
+          color: 'rgba(15, 23, 42, 0.12)',
+          blur: 20,
+          offsetX: 0,
+          offsetY: 8,
+        }),
       });
 
       baseImageRef.current = fabImg;
@@ -801,7 +807,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           propsRef.current.onSelectLayer(null);
         }
       }}
-      className={`relative flex-1 h-full w-full overflow-hidden bg-[#0a0c12] ${
+      className={`relative flex-1 h-full w-full overflow-hidden bg-slate-100 ${
         isSpacePressed ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
       }`}
     >
@@ -810,16 +816,16 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       {/* Hover Tooltip for Detected Text Region */}
       {hoveredRegion && (
         <div
-          className="fixed z-40 pointer-events-none -translate-x-1/2 -translate-y-full mb-3 px-2.5 py-1.5 rounded-md bg-[#131722]/95 border border-emerald-500/50 shadow-xl backdrop-blur-sm text-xs select-none flex flex-col gap-0.5"
+          className="fixed z-40 pointer-events-none -translate-x-1/2 -translate-y-full mb-3 px-2.5 py-1.5 rounded-md bg-white/95 border border-slate-200 shadow-xl backdrop-blur-sm text-xs select-none flex flex-col gap-0.5"
           style={{ left: hoveredRegion.x, top: hoveredRegion.y - 12 }}
         >
           <div className="flex items-center gap-2">
-            <span className="text-white font-medium max-w-[220px] truncate">{hoveredRegion.text}</span>
-            <span className="text-[10px] font-mono px-1 rounded bg-emerald-500/20 text-emerald-300">
+            <span className="text-slate-900 font-semibold max-w-[220px] truncate">{hoveredRegion.text}</span>
+            <span className="text-[10px] font-mono px-1 rounded bg-slate-100 text-slate-700 border border-slate-200">
               {Math.round(hoveredRegion.confidence * 100)}%
             </span>
           </div>
-          <span className="text-[10px] text-emerald-400/90 font-medium">Click to edit on canvas</span>
+          <span className="text-[10px] text-slate-500 font-medium">Click to edit on canvas</span>
         </div>
       )}
 
@@ -827,7 +833,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       {image && isComparing && compareMode === 'split' && (
         <div className="absolute inset-0 pointer-events-none select-none">
           <div
-            className="absolute top-0 bottom-0 border-r-2 border-amber-400 z-30 shadow-lg flex items-center justify-center pointer-events-auto cursor-ew-resize"
+            className="absolute top-0 bottom-0 border-r-2 border-slate-900 z-30 shadow-lg flex items-center justify-center pointer-events-auto cursor-ew-resize"
             style={{ left: `${splitPosition}%` }}
             onTouchStart={(e) => {
               const startX = e.touches[0].clientX;
@@ -864,15 +870,15 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
               window.addEventListener('mouseup', handleMouseUp);
             }}
           >
-            <div className="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-amber-400 text-black flex items-center justify-center font-bold text-[11px] sm:text-[10px] shadow-md">
+            <div className="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-[11px] sm:text-[10px] shadow-md">
               ⇄
             </div>
           </div>
-          <div className="absolute top-3 left-4 px-2 py-1 rounded bg-black/70 text-amber-300 text-[10px] font-mono border border-amber-500/30">
-            BEFORE (ORIGINAL)
+          <div className="absolute top-3 left-4 px-2.5 py-1 rounded-full bg-white/90 text-slate-800 text-[10px] font-mono border border-slate-200 shadow-xs">
+            ORIGINAL
           </div>
-          <div className="absolute top-3 right-4 px-2 py-1 rounded bg-black/70 text-blue-300 text-[10px] font-mono border border-blue-500/30">
-            AFTER (RECONSTRUCTED)
+          <div className="absolute top-3 right-4 px-2.5 py-1 rounded-full bg-white/90 text-slate-800 text-[10px] font-mono border border-slate-200 shadow-xs">
+            EDITED
           </div>
         </div>
       )}
@@ -883,23 +889,23 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           <div
             className={`w-full max-w-lg p-6 sm:p-10 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center ${
               isDraggingOver
-                ? 'border-blue-500 bg-blue-500/10 scale-[1.02]'
-                : 'border-[#262c3d] bg-[#12151e]/80 hover:border-blue-500/40'
+                ? 'border-slate-800 bg-slate-200/50 scale-[1.02]'
+                : 'border-slate-300 bg-white shadow-sm hover:border-slate-400'
             }`}
           >
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-blue-600/20 to-indigo-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center mb-4 shadow-lg shadow-blue-500/10">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-100 text-slate-800 border border-slate-200 flex items-center justify-center mb-4 shadow-xs">
               <UploadCloud className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>
 
-            <h2 className="text-base sm:text-lg font-semibold text-white tracking-tight">
+            <h2 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
               Drag & Drop your Image here
             </h2>
-            <p className="text-xs text-gray-400 mt-1 max-w-sm px-2">
+            <p className="text-xs text-slate-500 mt-1 max-w-sm px-2">
               Supports PNG, JPG, JPEG, and WebP. Automatically detects text regions with PaddleOCR.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 mt-6 w-full sm:w-auto">
-              <label className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/20 cursor-pointer transition-all active:scale-95">
+              <label className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-sm cursor-pointer transition-all active:scale-95">
                 <UploadCloud className="w-4 h-4" />
                 Browse File
                 <input
@@ -916,9 +922,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
               <button
                 onClick={onLoadSample}
-                className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg bg-[#1a1f2e] hover:bg-[#242b3e] text-blue-300 border border-blue-500/30 transition-colors"
+                className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors"
               >
-                <ImageIcon className="w-4 h-4 text-blue-400" />
+                <ImageIcon className="w-4 h-4 text-slate-500" />
                 Load Sample Image
               </button>
             </div>
@@ -928,8 +934,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       {/* Floating Canvas Hint */}
       {image && (
-        <div className="absolute bottom-3 left-3 sm:left-4 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded bg-[#12151e]/85 backdrop-blur border border-[#212636] text-[10px] sm:text-[11px] text-gray-400 pointer-events-none select-none shadow z-10">
-          <HelpCircle className="w-3 h-3 text-blue-400 shrink-0" />
+        <div className="absolute bottom-3 left-3 sm:left-4 flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur border border-slate-200 text-[10px] sm:text-[11px] text-slate-600 pointer-events-none select-none shadow-xs z-10">
+          <HelpCircle className="w-3 h-3 text-slate-500 shrink-0" />
           <span className="hidden sm:inline">Hold Space + Drag to Pan • Mouse Wheel to Zoom</span>
           <span className="sm:hidden">Drag canvas to pan • Pinch to zoom</span>
         </div>
@@ -937,24 +943,24 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       {/* Floating Canvas Zoom Controls */}
       {image && (
-        <div className="absolute bottom-3 right-3 flex items-center bg-[#12151e]/90 backdrop-blur-md rounded-lg p-1 border border-[#212636] shadow-lg gap-1 z-20">
+        <div className="absolute bottom-3 right-3 flex items-center bg-white/95 backdrop-blur-md rounded-full p-1 border border-slate-200 shadow-md gap-1 z-20">
           <button
             onClick={() => onZoomChange(Math.max(0.1, _zoom * 0.85))}
-            className="p-1.5 text-gray-300 hover:text-white hover:bg-[#1f2536] rounded transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors"
             title="Zoom out"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => onZoomChange(1.0)}
-            className="px-1.5 text-[11px] font-mono text-gray-300 hover:text-white"
+            className="px-1.5 text-[11px] font-mono text-slate-700 hover:text-slate-900"
             title="Reset zoom"
           >
             {Math.round(_zoom * 100)}%
           </button>
           <button
             onClick={() => onZoomChange(Math.min(5.0, _zoom * 1.15))}
-            className="p-1.5 text-gray-300 hover:text-white hover:bg-[#1f2536] rounded transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors"
             title="Zoom in"
           >
             <ZoomIn className="w-3.5 h-3.5" />

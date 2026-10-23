@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { ImageMetadata, TextLayer, InpaintPatch, ExportFormat, CompositorVerificationTelemetry } from '../types';
 import { exportHighResImage, triggerDownload } from '../utils/exporter';
 import { renderStudioExport } from '../services/api';
-import { X, Download, AlertCircle, Loader2, Sliders, ShieldCheck, Sparkles, Cpu } from 'lucide-react';
+import { X, Download, AlertCircle, Loader2, Sliders, ShieldCheck, Cpu, Layers } from 'lucide-react';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -66,22 +66,22 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-4 select-none animate-in fade-in duration-150">
-      <div className="w-full max-w-lg max-h-[92dvh] bg-[#131620] border border-[#252c3e] rounded-xl shadow-2xl overflow-hidden flex flex-col text-gray-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-3 sm:p-4 select-none animate-in fade-in duration-150">
+      <div className="w-full max-w-lg max-h-[92dvh] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col text-slate-800">
         {/* Header */}
-        <div className="p-4 border-b border-[#212636] flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center">
+        <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-800 border border-slate-200 flex items-center justify-center shadow-2xs">
               <Download className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-white">Lossless Studio Export</h2>
-              <p className="text-[10px] text-gray-400">Non-destructive compositing at exact source resolution</p>
+              <h2 className="text-sm font-semibold text-slate-900">Lossless Studio Export</h2>
+              <p className="text-[10px] text-slate-500">Non-destructive compositing at exact source resolution</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-[#1f2536] transition-colors"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -91,40 +91,40 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         <div className="p-4 sm:p-5 space-y-4 text-xs overflow-y-auto flex-1">
           {/* Engine Selector */}
           <div className="space-y-1.5">
-            <label className="font-medium text-gray-300">Rendering Engine</label>
+            <label className="font-semibold text-slate-700">Rendering Engine</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setEngine('studio')}
-                className={`p-2.5 rounded-lg border text-left transition-all ${
+                className={`p-3 rounded-xl border text-left transition-all ${
                   engine === 'studio'
-                    ? 'bg-blue-600/20 border-blue-500 text-white shadow-sm ring-1 ring-blue-500/30'
-                    : 'bg-[#181d2a] border-[#252c3e] text-gray-400 hover:text-white hover:bg-[#1f2536]'
+                    ? 'bg-slate-50 border-2 border-slate-900 text-slate-900 shadow-xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
               >
-                <div className="flex items-center gap-1.5 font-medium text-xs">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                <div className="flex items-center gap-1.5 font-semibold text-xs text-slate-900">
+                  <Layers className="w-3.5 h-3.5 text-slate-700" />
                   Studio Compositor
                 </div>
-                <div className="text-[10px] text-gray-400 mt-1">
-                  100% Bitwise untouched fidelity & sub-pixel antialiasing
+                <div className="text-[10px] text-slate-500 mt-1">
+                  Bitwise untouched fidelity & sub-pixel antialiasing
                 </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => setEngine('client')}
-                className={`p-2.5 rounded-lg border text-left transition-all ${
+                className={`p-3 rounded-xl border text-left transition-all ${
                   engine === 'client'
-                    ? 'bg-blue-600/20 border-blue-500 text-white shadow-sm ring-1 ring-blue-500/30'
-                    : 'bg-[#181d2a] border-[#252c3e] text-gray-400 hover:text-white hover:bg-[#1f2536]'
+                    ? 'bg-slate-50 border-2 border-slate-900 text-slate-900 shadow-xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
               >
-                <div className="flex items-center gap-1.5 font-medium text-xs">
-                  <Cpu className="w-3.5 h-3.5 text-gray-400" />
+                <div className="flex items-center gap-1.5 font-semibold text-xs text-slate-900">
+                  <Cpu className="w-3.5 h-3.5 text-slate-600" />
                   Fast Canvas Export
                 </div>
-                <div className="text-[10px] text-gray-400 mt-1">
+                <div className="text-[10px] text-slate-500 mt-1">
                   Client-side HTML5 canvas rasterizer
                 </div>
               </button>
@@ -132,44 +132,44 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           </div>
 
           {/* Metadata Specs */}
-          <div className="bg-[#181d2a] border border-[#252c3e] rounded-lg p-3 space-y-2">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-gray-400">Native Resolution</span>
-              <span className="font-mono font-medium text-emerald-400">
+              <span className="text-slate-500 font-medium">Native Resolution</span>
+              <span className="font-mono font-semibold text-slate-900">
                 {image.width} × {image.height} px
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-400">Unedited Regions Guarantee</span>
-              <span className="text-emerald-400 font-mono flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5" />
+              <span className="text-slate-500 font-medium">Unedited Regions Guarantee</span>
+              <span className="text-slate-900 font-mono font-medium flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-slate-700" />
                 SSIM 1.000 (Bitwise Lossless)
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-400">Active Layers</span>
-              <span className="text-gray-200">
-                {patches.length} Inpaint Patches • {layers.filter((l) => l.isVisible).length} Typography Layers
+              <span className="text-slate-500 font-medium">Active Layers</span>
+              <span className="text-slate-800 font-medium">
+                {patches.length} Inpaint Patches • {layers.filter((l) => l.isVisible).length} Text Layers
               </span>
             </div>
           </div>
 
           {/* Format Picker */}
           <div className="space-y-1.5">
-            <label className="font-medium text-gray-300">Target Image Format</label>
+            <label className="font-semibold text-slate-700">Target Image Format</label>
             <div className="grid grid-cols-3 gap-2">
               {(['png', 'webp', 'jpeg'] as const).map((fmt) => (
                 <button
                   key={fmt}
                   type="button"
                   onClick={() => setFormat(fmt)}
-                  className={`py-2 px-3 rounded-lg border text-center font-medium uppercase tracking-wider text-xs transition-all ${
+                  className={`py-2 px-3 rounded-full border text-center font-semibold uppercase tracking-wider text-xs transition-all ${
                     format === fmt
-                      ? 'bg-blue-600/20 border-blue-500 text-blue-400 shadow-sm'
-                      : 'bg-[#181d2a] border-[#252c3e] text-gray-400 hover:text-white hover:bg-[#1f2536]'
+                      ? 'bg-slate-900 border-slate-900 text-white shadow-xs'
+                      : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  {fmt === 'jpeg' ? 'JPG (4:4:4)' : fmt === 'png' ? 'PNG (Lossless)' : 'WebP (Ultra)'}
+                  {fmt === 'jpeg' ? 'JPG (4:4:4)' : fmt === 'png' ? 'PNG (Lossless)' : 'WebP'}
                 </button>
               ))}
             </div>
@@ -177,13 +177,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
           {/* Quality Slider (for JPEG / WebP) */}
           {format !== 'png' && (
-            <div className="space-y-2 bg-[#181d2a] p-3 rounded-lg border border-[#252c3e]">
+            <div className="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
               <div className="flex justify-between items-center">
-                <span className="text-gray-400 flex items-center gap-1.5">
-                  <Sliders className="w-3 h-3 text-blue-400" />
+                <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                  <Sliders className="w-3 h-3 text-slate-700" />
                   Studio Quality Level
                 </span>
-                <span className="font-mono text-gray-200">{Math.round(quality * 100)}%</span>
+                <span className="font-mono text-slate-900 font-semibold">{Math.round(quality * 100)}%</span>
               </div>
               <input
                 type="range"
@@ -192,29 +192,29 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 step="0.05"
                 value={quality}
                 onChange={(e) => setQuality(Number(e.target.value))}
-                className="w-full accent-blue-500 cursor-pointer h-1.5 bg-[#252c3e] rounded-lg"
+                className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
               />
             </div>
           )}
 
           {/* Telemetry Result Card if available */}
           {telemetry && (
-            <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-lg p-3 space-y-1.5 text-[11px] font-mono text-emerald-300">
-              <div className="flex items-center gap-1.5 font-semibold text-emerald-400">
-                <ShieldCheck className="w-4 h-4" />
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1.5 text-[11px] font-mono text-slate-700">
+              <div className="flex items-center gap-1.5 font-semibold text-slate-900">
+                <ShieldCheck className="w-4 h-4 text-slate-700" />
                 Verified Lossless Compositing Telemetry
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-gray-300">
-                <div>Unedited SSIM: <span className="text-emerald-400 font-bold">{telemetry.ssimUneditedRegion}</span></div>
-                <div>Max Delta E: <span className="text-emerald-400 font-bold">{telemetry.deltaEMax}</span></div>
-                <div>Export Size: <span className="text-gray-200">{Math.round(telemetry.fileSizeBytes / 1024)} KB</span></div>
-                <div>Changed Area: <span className="text-gray-200">{telemetry.changedPixelPercentage}%</span></div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-slate-600">
+                <div>Unedited SSIM: <span className="text-slate-900 font-bold">{telemetry.ssimUneditedRegion}</span></div>
+                <div>Max Delta E: <span className="text-slate-900 font-bold">{telemetry.deltaEMax}</span></div>
+                <div>Export Size: <span className="text-slate-900">{Math.round(telemetry.fileSizeBytes / 1024)} KB</span></div>
+                <div>Changed Area: <span className="text-slate-900">{telemetry.changedPixelPercentage}%</span></div>
               </div>
             </div>
           )}
 
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-400">
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -222,8 +222,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-3 sm:p-4 bg-[#0f1118] border-t border-[#212636] flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-          <span className="text-[10px] text-gray-500 font-mono text-center sm:text-left">
+        <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+          <span className="text-[10px] text-slate-500 font-mono text-center sm:text-left">
             Output: {image.width}×{image.height}px • {format.toUpperCase()}
           </span>
 
@@ -231,7 +231,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <button
               onClick={onClose}
               disabled={isExporting}
-              className="px-3 sm:px-4 py-2 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-[#1a1f2e] transition-colors"
+              className="px-4 py-2 text-xs font-semibold rounded-full text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-colors"
             >
               Close
             </button>
@@ -239,7 +239,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <button
               onClick={handleExport}
               disabled={isExporting}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-50"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2 text-xs font-semibold rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all active:scale-95 disabled:opacity-50"
             >
               {isExporting ? (
                 <>
