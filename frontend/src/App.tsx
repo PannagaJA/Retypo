@@ -23,6 +23,7 @@ export const App: React.FC = () => {
   const [detectedRegions, setDetectedRegions] = useState<DetectedTextRegion[]>([]);
   const [isDetecting, setIsDetecting] = useState<boolean>(false);
   const [showDetectionOverlay, setShowDetectionOverlay] = useState<boolean>(true);
+  const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null);
   const [ocrLang, setOcrLang] = useState<string>('en');
 
   // Inpaint state
@@ -121,6 +122,7 @@ export const App: React.FC = () => {
       height: Math.max(region.bbox[3], 14),
       angle: region.angle || 0,
       opacity: 1,
+      blur: region.estimatedBlur ?? 0.6,
       isLocked: false,
       isVisible: true,
       origin: 'ocr_detected',
@@ -195,6 +197,7 @@ export const App: React.FC = () => {
       height: Math.max(region.bbox[3], 14),
       angle: region.angle || 0,
       opacity: 1,
+      blur: region.estimatedBlur ?? 0.6,
       isLocked: false,
       isVisible: true,
       origin: 'ocr_detected',
@@ -710,6 +713,9 @@ export const App: React.FC = () => {
           onDismissDetectedRegion={handleDismissDetectedRegion}
           onRunOCR={() => handleRunOCR()}
           isDetecting={isDetecting}
+          onShowDetectionOverlay={() => setShowDetectionOverlay(true)}
+          hoveredRegionId={hoveredRegionId}
+          onHoverRegion={setHoveredRegionId}
           onInpaintAllDetected={handleInpaintAllDetected}
           isInpaintingAll={isInpaintingAll}
         />
@@ -733,6 +739,10 @@ export const App: React.FC = () => {
           detectedRegions={detectedRegions}
           showDetectionOverlay={showDetectionOverlay}
           onConvertRegion={handleConvertRegion}
+          onHideDetectionOverlay={() => setShowDetectionOverlay(false)}
+          onShowDetectionOverlay={() => setShowDetectionOverlay(true)}
+          hoveredRegionId={hoveredRegionId}
+          onHoverRegion={setHoveredRegionId}
         />
 
         {/* Right: Typography & Inpainting Properties Inspector */}
