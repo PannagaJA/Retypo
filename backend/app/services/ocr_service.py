@@ -13,6 +13,7 @@ from app.services.geometry_service import (
     calculate_geometry_confidence,
     estimate_text_color,
     estimate_text_weight,
+    estimate_text_blur,
 )
 
 class OCRService:
@@ -150,10 +151,11 @@ class OCRService:
             try:
                 angle = calculate_polygon_angle(clean_polygon)
                 font_size = calculate_font_size(clean_polygon, image=image, text=text)
-                bbox = calculate_bounding_box(clean_polygon)
+                bbox = calculate_bounding_box(clean_polygon, image=image)
                 geom_conf = calculate_geometry_confidence(clean_polygon)
                 color = estimate_text_color(image, clean_polygon)
                 weight = estimate_text_weight(image, clean_polygon, font_size)
+                blur = estimate_text_blur(image, clean_polygon)
 
                 # Filter out UI icons, non-text symbols, and graphic glyphs
                 if self._is_icon_or_noise(text, bbox, round(score, 3)):
@@ -168,6 +170,7 @@ class OCRService:
                     estimatedFontSize=font_size,
                     estimatedColor=color,
                     estimatedWeight=weight,
+                    estimatedBlur=blur,
                     confidence=round(score, 3),
                     geometryConfidence=geom_conf,
                     isConverted=False
