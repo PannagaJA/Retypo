@@ -12,7 +12,9 @@ from typing import List, Optional, Tuple, Any, Dict
 # Concurrency lock to strictly serialize OCR execution on low-memory environments (Render 512MB)
 OCR_LOCK = threading.Lock()
 
-# Configure Paddle allocator flags before runtime initializes
+# Configure Paddle allocator flags before runtime initializes (disable MKLDNN to prevent oneDNN PIR conversion crashes)
+os.environ["FLAGS_use_mkldnn"] = "0"
+os.environ["PADDLE_PDX_ENABLE_MKLDNN_BYDEFAULT"] = "0"
 os.environ.setdefault("FLAGS_fraction_of_cpu_memory_to_use", "0.1")
 os.environ.setdefault("FLAGS_allocator_strategy", "naive_best_fit")
 os.environ.setdefault("FLAGS_eager_delete_scope", "True")
@@ -308,7 +310,10 @@ class OCRService:
         if engine is not None:
             try:
                 with OCR_LOCK:
-                    raw_ocr_out = engine.ocr(img_np)
+                    if hasattr(engine, "predict"):
+                        raw_ocr_out = engine.predict(img_np)
+                    else:
+                        raw_ocr_out = engine.ocr(img_np)
             except Exception as err:
                 print(f"PaddleOCR execution error ({lang}): {err}")
                 raw_ocr_out = None

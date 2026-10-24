@@ -2,6 +2,8 @@ import os
 import sys
 
 # Configure Paddle low-memory flags before importing any C++ frameworks
+os.environ["FLAGS_use_mkldnn"] = "0"
+os.environ["PADDLE_PDX_ENABLE_MKLDNN_BYDEFAULT"] = "0"
 os.environ.setdefault("FLAGS_fraction_of_cpu_memory_to_use", "0.1")
 os.environ.setdefault("FLAGS_allocator_strategy", "naive_best_fit")
 os.environ.setdefault("FLAGS_eager_delete_scope", "True")
