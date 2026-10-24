@@ -21,6 +21,19 @@ os.environ.setdefault("CPU_NUM", "1")
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("MKL_NUM_THREADS", "1")
 
+def clear_system_memory_caches():
+    """
+    Forces Python garbage collection and instructs Linux glibc (used in Render Docker)
+    to release all freed heap memory pages back to the operating system kernel immediately.
+    """
+    gc.collect()
+    try:
+        import ctypes
+        libc = ctypes.CDLL("libc.so.6")
+        libc.malloc_trim(0)
+    except Exception:
+        pass
+
 from app.core.models import DetectedTextRegion
 from app.services.geometry_service import (
     calculate_polygon_angle,
@@ -56,7 +69,7 @@ class OCRService:
         is_low_mem = os.getenv("RENDER") is not None or os.getenv("LOW_MEMORY_MODE", "true").lower() == "true"
         if is_low_mem and self._engines:
             self._engines.clear()
-            gc.collect()
+            clear_system_memory_caches()
 
         det_limit = 736 if is_low_mem else 960
 
@@ -301,7 +314,7 @@ class OCRService:
                 print(f"PaddleOCR execution error ({lang}): {err}")
                 raw_ocr_out = None
             finally:
-                gc.collect()
+                clear_system_memory_caches()
 
         extracted_items = self._extract_ocr_items(raw_ocr_out, scale=scale)
         all_raw_texts = [item[1] for item in extracted_items]
@@ -346,5 +359,8 @@ class OCRService:
 
         # Sort detected regions in reading order: top-to-bottom, left-to-right
         regions.sort(key=lambda r: (round(r.bbox[1] / max(10, r.estimatedFontSize)), r.bbox[0]))
+
+        # Final memory cache cleanup before returning
+        clear_system_memory_caches()
         return regions
 

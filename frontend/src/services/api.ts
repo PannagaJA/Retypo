@@ -5,35 +5,41 @@ const CONFIGURED_API_URL = ((import.meta.env.VITE_API_URL as string) || '').trim
 
 export function getBaseApiUrl(): string {
   if (CONFIGURED_API_URL) return CONFIGURED_API_URL;
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return PRODUCTION_BACKEND;
+  // In local development, default to local backend port 8000
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://127.0.0.1:8000';
   }
-  return 'http://127.0.0.1:8000';
+  // On production (Vercel), empty string routes through Vercel's rewrite proxy (same-origin, eliminates CORS completely)
+  return '';
 }
 
 /**
  * Universal API fetch helper.
- * On production (Vercel), routes directly to the cloud backend (Render).
- * In local development, handles local dev proxy or direct local fallback.
+ * On production (Vercel), routes through Vercel's rewrites to the cloud backend (Render)
+ * with zero CORS issues, falling back directly to remote backend if needed.
  */
 async function callApi(endpoint: string, init?: RequestInit): Promise<Response> {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const baseUrl = getBaseApiUrl();
 
-  // On production (e.g. Vercel) or when custom remote URL is set, call remote backend directly
-  if (baseUrl && !baseUrl.includes('127.0.0.1') && !baseUrl.includes('localhost')) {
+  // If explicit remote URL is configured, use it directly
+  if (baseUrl) {
     return await fetch(`${baseUrl}${cleanEndpoint}`, init);
   }
 
-  // In local dev, try relative path first, fallback to local backend on 404 or network failure
+  // On production (e.g. Vercel):
+  // 1. First try relative path /api/... which uses Vercel's server-side rewrite (same-origin, 0 CORS)
   try {
     const res = await fetch(cleanEndpoint, init);
-    if (res.status === 404) {
-      return await fetch(`http://127.0.0.1:8000${cleanEndpoint}`, init);
+    // If Vercel rewrite returns 404/502, try direct fallback
+    if (res.status === 404 || res.status === 502) {
+      console.warn(`[API] Rewrite endpoint ${cleanEndpoint} returned ${res.status}. Falling back to direct backend...`);
+      return await fetch(`${PRODUCTION_BACKEND}${cleanEndpoint}`, init);
     }
     return res;
-  } catch {
-    return await fetch(`http://127.0.0.1:8000${cleanEndpoint}`, init);
+  } catch (err) {
+    console.warn(`[API] Rewrite endpoint ${cleanEndpoint} failed. Falling back to direct backend...`, err);
+    return await fetch(`${PRODUCTION_BACKEND}${cleanEndpoint}`, init);
   }
 }
 

@@ -35,13 +35,43 @@ app = FastAPI(
     version="1.2.0"
 )
 
-# Enable CORS for local Vite development
+# Allowed production and local development origins
+ALLOWED_ORIGINS = [
+    "https://retypo-image.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+# Ensure CORS headers are attached on every response, including internal exceptions
+@app.middleware("http")
+async def ensure_cors_headers(request, call_next):
+    origin = request.headers.get("origin")
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        from fastapi.responses import JSONResponse
+        response = JSONResponse(
+            status_code=500,
+            content={"status": "error", "detail": f"Internal server error: {str(exc)}"}
+        )
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
+# Enable CORS for Vercel production domains and local development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 @app.get("/api/health")
