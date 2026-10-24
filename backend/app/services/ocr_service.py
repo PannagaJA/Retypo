@@ -20,6 +20,7 @@ os.environ.setdefault("FLAGS_fast_eager_deletion_mode", "True")
 os.environ.setdefault("CPU_NUM", "1")
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
 
 def clear_system_memory_caches():
     """
@@ -77,6 +78,8 @@ class OCRService:
             from paddleocr import PaddleOCR
             engine = PaddleOCR(
                 lang=clean_lang,
+                text_detection_model_name="PP-OCRv6_small_det",
+                text_recognition_model_name="PP-OCRv6_small_rec",
                 use_doc_orientation_classify=False,
                 use_doc_unwarping=False,
                 use_textline_orientation=False,
@@ -88,7 +91,7 @@ class OCRService:
                 device="cpu",
             )
             self._engines[clean_lang] = engine
-            print(f"PaddleOCR engine initialized (lang='{clean_lang}', low_mem={is_low_mem}, det_limit={det_limit}).")
+            print(f"PaddleOCR small mobile engine initialized (lang='{clean_lang}', low_mem={is_low_mem}, det_limit={det_limit}).")
             return engine
         except Exception as e:
             print(f"Warning: PaddleOCR failed for lang='{clean_lang}': {e}")
@@ -98,6 +101,8 @@ class OCRService:
                 from paddleocr import PaddleOCR
                 engine = PaddleOCR(
                     lang="en",
+                    text_detection_model_name="PP-OCRv6_small_det",
+                    text_recognition_model_name="PP-OCRv6_small_rec",
                     use_doc_orientation_classify=False,
                     use_doc_unwarping=False,
                     use_textline_orientation=False,

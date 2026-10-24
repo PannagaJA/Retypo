@@ -5,6 +5,7 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PORT=8000 \
+    PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True \
     MALLOC_TRIM_THRESHOLD_=100000 \
     OMP_NUM_THREADS=1 \
     OPENBLAS_NUM_THREADS=1 \
@@ -29,6 +30,9 @@ WORKDIR /app
 # Install python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Bake OCR models into the image at build time (eliminates runtime cold start downloads & Cloudflare 502 timeouts)
+RUN python -c "from paddleocr import PaddleOCR; PaddleOCR(text_detection_model_name='PP-OCRv6_small_det', text_recognition_model_name='PP-OCRv6_small_rec', use_doc_orientation_classify=False, use_doc_unwarping=False, use_textline_orientation=False, device='cpu')"
 
 # Copy backend application code and assets
 COPY app ./app
