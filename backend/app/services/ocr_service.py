@@ -77,7 +77,7 @@ class OCRService:
             self._engines.clear()
             clear_system_memory_caches()
 
-        det_limit = 736 if is_low_mem else 960
+        det_limit = 640 if is_low_mem else 960
 
         try:
             from paddleocr import PaddleOCR
@@ -89,13 +89,14 @@ class OCRService:
                 use_textline_orientation=False,
                 text_det_limit_side_len=det_limit,
                 text_det_limit_type="max",
-                text_det_unclip_ratio=1.9,
-                text_det_box_thresh=0.45,
-                text_det_thresh=0.20,
+                text_recognition_batch_size=8,
+                text_det_unclip_ratio=1.6,
+                text_det_box_thresh=0.55 if is_low_mem else 0.50,
+                text_det_thresh=0.30 if is_low_mem else 0.25,
                 device="cpu",
             )
             self._engines[clean_lang] = engine
-            print(f"PaddleOCR small mobile engine initialized (lang='{clean_lang}', low_mem={is_low_mem}, det_limit={det_limit}).")
+            print(f"PaddleOCR small mobile engine initialized (lang='{clean_lang}', low_mem={is_low_mem}, det_limit={det_limit}, batch_size=8).")
             return engine
         except Exception as e:
             print(f"Warning: PaddleOCR failed for lang='{clean_lang}': {e}")
@@ -111,9 +112,10 @@ class OCRService:
                     use_textline_orientation=False,
                     text_det_limit_side_len=det_limit,
                     text_det_limit_type="max",
-                    text_det_unclip_ratio=1.9,
-                    text_det_box_thresh=0.45,
-                    text_det_thresh=0.20,
+                    text_recognition_batch_size=8,
+                    text_det_unclip_ratio=1.6,
+                    text_det_box_thresh=0.55 if is_low_mem else 0.50,
+                    text_det_thresh=0.30 if is_low_mem else 0.25,
                     device="cpu",
                 )
                 self._engines["en"] = engine
