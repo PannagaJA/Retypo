@@ -139,7 +139,12 @@ class TypographyService:
             if not os.path.isdir(base):
                 continue
             for p in patterns:
-                matches = glob.glob(os.path.join(base, p))
+                # Search directly in base and recursively in subfolders
+                direct = os.path.join(base, p)
+                if os.path.isfile(direct):
+                    self._resolved_paths[cache_key] = direct
+                    return direct
+                matches = glob.glob(os.path.join(base, "**", p), recursive=True)
                 if matches:
                     resolved = matches[0]
                     self._resolved_paths[cache_key] = resolved
@@ -163,6 +168,16 @@ class TypographyService:
         if font_path and os.path.exists(font_path):
             try:
                 font = ImageFont.truetype(font_path, size)
+                self._font_cache[cache_key] = font
+                return font
+            except Exception:
+                pass
+
+        # Scalable TTF fallback: Use bundled Inter font if specific font is not installed
+        bundled_fallback = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "fonts", "Inter-Regular.ttf")
+        if os.path.exists(bundled_fallback):
+            try:
+                font = ImageFont.truetype(bundled_fallback, size)
                 self._font_cache[cache_key] = font
                 return font
             except Exception:
@@ -232,21 +247,21 @@ class TypographyService:
         if len(dist_vals) == 0:
             return 3.0, "400"
 
-        stroke_radius = float(np.percentile(dist_vals, 85))
+        stroke_radius = float(np.percentile(dist_vals, 92))
         stroke_width = max(1.0, 2.0 * stroke_radius)
 
         effective_h = max(12.0, font_size)
         tau = stroke_width / effective_h
 
-        if tau < 0.08:
+        if tau < 0.10:
             weight = "300"
-        elif tau < 0.125:
+        elif tau < 0.14:
             weight = "400"
-        elif tau < 0.165:
+        elif tau < 0.17:
             weight = "500"
-        elif tau < 0.205:
+        elif tau < 0.21:
             weight = "600"
-        elif tau < 0.25:
+        elif tau < 0.26:
             weight = "700"
         else:
             weight = "800"
@@ -275,10 +290,12 @@ class TypographyService:
         total_corners = int(corners.sum())
         corner_density = total_corners / total_white
 
-        # Calibrated threshold: On small raster glyphs, stairstepping generates false corners.
-        # Real serifs produce corner density > 0.38 with distinct horizontal terminals.
-        is_serif = corner_density > 0.40 and total_white > 500
-        serif_confidence = min(1.0, max(0.0, (corner_density - 0.30) / 0.20))
+        # Calibrated threshold on text mask:
+        # Sans-serif (Arial, Helvetica, Inter, Verdana) produces corner density 0.12 - 0.19.
+        # Real serifs (Georgia, Times, Playfair, Merriweather) produce corner density 0.25 - 0.45.
+        # Monospace serifs (Courier) produce corner density > 0.50.
+        is_serif = corner_density > 0.22 and total_white > 120
+        serif_confidence = min(1.0, max(0.0, (corner_density - 0.18) / 0.15))
 
         return is_serif, round(serif_confidence, 2)
 

@@ -41,6 +41,8 @@ export interface DetectedTextRegion {
   estimatedColor: string;
   estimatedWeight?: string;
   estimatedBlur?: number;
+  estimatedFontFamily?: string;
+  fontCategory?: string;
   confidence: number;
   geometryConfidence: number;
   isConverted: boolean;

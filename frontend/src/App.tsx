@@ -112,7 +112,7 @@ export const App: React.FC = () => {
     const newLayer: TextLayer = {
       id: newId,
       text: region.text,
-      fontFamily: 'Inter',
+      fontFamily: region.estimatedFontFamily || 'Inter',
       fontSize: region.estimatedFontSize,
       fontWeight: region.estimatedWeight || '400',
       fontStyle: 'normal',
@@ -187,7 +187,7 @@ export const App: React.FC = () => {
     const newLayers: TextLayer[] = unconverted.map((region, i) => ({
       id: `layer-ocr-${baseTimestamp}-${i}`,
       text: region.text,
-      fontFamily: 'Inter',
+      fontFamily: region.estimatedFontFamily || 'Inter',
       fontSize: region.estimatedFontSize,
       fontWeight: region.estimatedWeight || '400',
       fontStyle: 'normal',

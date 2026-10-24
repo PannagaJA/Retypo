@@ -1,0 +1,111 @@
+{
+  "timestamp": "2026-10-24T16:07:16Z",
+  "system": {
+    "ram_base_mb": 73.9,
+    "render_limit_mb": 512.0,
+    "target_headroom_mb": 438.1
+  },
+  "ocr_benchmarks": [],
+  "categories_tested": [],
+  "inpaint_benchmarks": [],
+  "compositor_benchmarks": [],
+  "repeated_requests_stability": [],
+  "category_metrics": [
+    {
+      "category": "UI Screenshot",
+      "dimensions": "900x500",
+      "expected_items": 4,
+      "detected_regions": 4,
+      "recall": 1.0,
+      "avg_cer": 0.043,
+      "avg_wer": 0.4,
+      "latency_ms": 899.5,
+      "ram_mb": 613.4,
+      "ram_delta_mb": 176.02
+    },
+    {
+      "category": "Marketing Poster",
+      "dimensions": "1000x700",
+      "expected_items": 3,
+      "detected_regions": 2,
+      "recall": 0.667,
+      "avg_cer": 0.333,
+      "avg_wer": 0.333,
+      "latency_ms": 665.3,
+      "ram_mb": 786.2,
+      "ram_delta_mb": 172.8
+    },
+    {
+      "category": "Gradient Background",
+      "dimensions": "800x400",
+      "expected_items": 2,
+      "detected_regions": 2,
+      "recall": 1.0,
+      "avg_cer": 0.0,
+      "avg_wer": 0.0,
+      "latency_ms": 508.9,
+      "ram_mb": 797.0,
+      "ram_delta_mb": 10.83
+    },
+    {
+      "category": "Small Lettering",
+      "dimensions": "700x350",
+      "expected_items": 3,
+      "detected_regions": 3,
+      "recall": 1.0,
+      "avg_cer": 0.013,
+      "avg_wer": 0.083,
+      "latency_ms": 667.6,
+      "ram_mb": 797.2,
+      "ram_delta_mb": 0.16
+    },
+    {
+      "category": "Rotated Typography",
+      "dimensions": "800x500",
+      "expected_items": 1,
+      "detected_regions": 1,
+      "recall": 1.0,
+      "avg_cer": 0.05,
+      "avg_wer": 0.667,
+      "latency_ms": 412.9,
+      "ram_mb": 806.0,
+      "ram_delta_mb": 8.81
+    },
+    {
+      "category": "Shadowed Text",
+      "dimensions": "800x450",
+      "expected_items": 2,
+      "detected_regions": 2,
+      "recall": 1.0,
+      "avg_cer": 0.075,
+      "avg_wer": 0.834,
+      "latency_ms": 490.4,
+      "ram_mb": 751.7,
+      "ram_delta_mb": -54.27
+    },
+    {
+      "category": "Textured Background",
+      "dimensions": "700x400",
+      "expected_items": 2,
+      "detected_regions": 2,
+      "recall": 1.0,
+      "avg_cer": 0.019,
+      "avg_wer": 0.334,
+      "latency_ms": 573.7,
+      "ram_mb": 755.5,
+      "ram_delta_mb": 3.73
+    }
+  ],
+  "summary": {
+    "overall_recall": 0.952,
+    "overall_cer": 0.076,
+    "overall_wer": 0.379,
+    "avg_latency_ms": 602.6,
+    "peak_ram_mb": 806.0,
+    "final_ram_mb": 772.2,
+    "memory_creep_5_requests_mb": 354.27,
+    "inpainting_strategy_used": "solid",
+    "inpainting_latency_ms": 9.9,
+    "render_512mb_safe": false
+  }
+}

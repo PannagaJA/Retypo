@@ -35,7 +35,10 @@ def clear_system_memory_caches():
     except Exception:
         pass
 
+import cv2
+import math
 from app.core.models import DetectedTextRegion
+from app.services.typography_service import TypographyService
 from app.services.geometry_service import (
     calculate_polygon_angle,
     calculate_font_size,
@@ -66,29 +69,17 @@ class OCRService:
         if clean_lang in self._engines:
             return self._engines[clean_lang]
 
-        # In low-memory / Render environments, evict previously loaded engines
+        # In low-memory / Render environments, evict previously loaded engines to prevent multi-model RAM bloat
         is_low_mem = os.getenv("RENDER") is not None or os.getenv("LOW_MEMORY_MODE", "true").lower() == "true"
         if is_low_mem and self._engines:
             self._engines.clear()
             clear_system_memory_caches()
 
-        # 1. Primary Lightweight Engine: RapidOCR (ONNX Runtime)
-        # Embedded models, ~65MB RAM, 1.7s execution, zero cold-start downloads
-        try:
-            from rapidocr_onnxruntime import RapidOCR
-            engine = RapidOCR()
-            self._engines[clean_lang] = engine
-            print(f"RapidOCR ONNX engine initialized for lang='{clean_lang}' (lightweight ~65MB RAM).")
-            return engine
-        except Exception as rapid_err:
-            print(f"RapidOCR not available ({rapid_err}), falling back to PaddleOCR...")
-
-        # 2. Fallback Engine: PaddleOCR Mobile
         det_limit = 736 if is_low_mem else 960
+
         try:
             from paddleocr import PaddleOCR
             engine = PaddleOCR(
-                lang=clean_lang,
                 text_detection_model_name="PP-OCRv6_small_det",
                 text_recognition_model_name="PP-OCRv6_small_rec",
                 use_doc_orientation_classify=False,
@@ -102,7 +93,7 @@ class OCRService:
                 device="cpu",
             )
             self._engines[clean_lang] = engine
-            print(f"PaddleOCR mobile engine initialized (lang='{clean_lang}', low_mem={is_low_mem}, det_limit={det_limit}).")
+            print(f"PaddleOCR small mobile engine initialized (lang='{clean_lang}', low_mem={is_low_mem}, det_limit={det_limit}).")
             return engine
         except Exception as e:
             print(f"Warning: PaddleOCR failed for lang='{clean_lang}': {e}")
@@ -111,7 +102,6 @@ class OCRService:
             try:
                 from paddleocr import PaddleOCR
                 engine = PaddleOCR(
-                    lang="en",
                     text_detection_model_name="PP-OCRv6_small_det",
                     text_recognition_model_name="PP-OCRv6_small_rec",
                     use_doc_orientation_classify=False,
@@ -150,156 +140,130 @@ class OCRService:
                 poly_list = p.tolist() if hasattr(p, "tolist") else list(p)
                 clean_poly = [[round(float(pt[0]) / scale, 1), round(float(pt[1]) / scale, 1)] for pt in poly_list]
                 items.append((clean_poly, text, score))
-            return items
 
-        # Format 2 & 3: List output (RapidOCR [poly, text, score] or PaddleOCR legacy [[poly, (text, score)]])
-        entries = ocr_out
-        if len(ocr_out) == 1 and isinstance(ocr_out[0], list) and len(ocr_out[0]) > 0 and isinstance(ocr_out[0][0], list) and len(ocr_out[0][0]) > 0 and isinstance(ocr_out[0][0][0], (list, tuple, np.ndarray)):
-            entries = ocr_out[0]
-
-        for entry in entries:
-            if not isinstance(entry, (list, tuple)) or len(entry) < 2:
-                continue
-            poly_raw = entry[0]
-            if not isinstance(poly_raw, (list, tuple, np.ndarray)) or len(poly_raw) < 3:
-                continue
-            first_pt = poly_raw[0]
-            if not isinstance(first_pt, (list, tuple, np.ndarray)) or len(first_pt) < 2:
-                continue
-
-            if len(entry) >= 3 and isinstance(entry[1], str) and isinstance(entry[2], (int, float)):
-                text = entry[1].strip()
-                score = float(entry[2])
-            elif isinstance(entry[1], (list, tuple)) and len(entry[1]) >= 2:
-                text = str(entry[1][0]).strip()
-                score = float(entry[1][1])
-            elif isinstance(entry[1], str):
-                text = entry[1].strip()
-                score = 1.0
-            else:
-                continue
-
-            if not text:
-                continue
-            clean_poly = [[round(float(pt[0]) / scale, 1), round(float(pt[1]) / scale, 1)] for pt in poly_raw]
-            items.append((clean_poly, text, score))
+        # Format 2: Standard/Legacy PaddleOCR List Output: [[poly, (text, score)], ...]
+        elif isinstance(first, list):
+            for entry in first:
+                if isinstance(entry, (list, tuple)) and len(entry) >= 2:
+                    poly_raw = entry[0]
+                    text_info = entry[1]
+                    if isinstance(text_info, (list, tuple)) and len(text_info) >= 2:
+                        text = str(text_info[0]).strip()
+                        score = float(text_info[1])
+                        if not text:
+                            continue
+                        clean_poly = [[round(float(pt[0]) / scale, 1), round(float(pt[1]) / scale, 1)] for pt in poly_raw]
+                        items.append((clean_poly, text, score))
 
         return items
 
     @staticmethod
-    def _is_icon_or_noise(text: str, bbox: List[float], confidence: float) -> bool:
+    def _is_icon_or_noise(
+        text: str,
+        bbox: List[float],
+        confidence: float,
+        crop_bgr: Optional[np.ndarray] = None,
+        image_dims: Optional[Tuple[int, int]] = None
+    ) -> bool:
         clean = text.strip()
         if not clean:
             return True
+
         w, h = float(bbox[2]), float(bbox[3])
-        if w < 6.0 or h < 6.0:
+        if w < 5.0 or h < 5.0:
             return True
+
+        # 1. Reject pure punctuation, symbols, separators, or geometric marks
+        # Text must contain at least one alphanumeric character
+        if not re.search(r'[a-zA-Z0-9\u00C0-\u024F\u0400-\u04FF\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]', clean):
+            return True
+
         aspect = w / max(1.0, h)
-        # 1. Must contain at least one alphanumeric character or currency symbol
-        has_text_char = any(c.isalnum() or c in "$€₹£¥" for c in clean)
-        if not has_text_char:
+        compact = re.sub(r'[\s\.\:\-_/\\#@!,\'"\(\)\[\]\{\}]', '', clean)
+
+        # 2. Rejection of common SVG UI icon misclassifications:
+        # chevrons, arrows, sliders, bullets, lines, hamburger bars
+        icon_chars = {
+            ">", "<", "v", "^", "∧", "∨", "»", "«", "›", "‹", "→", "←", "↑", "↓",
+            "↗", "↘", "↙", "↖", "=", "三", "-", "一", "—", "•", "·", "口", "匚",
+            "○", "●", "★", "☆", "♥", "♡", "✓", "✗", "✕", "✖", "▲", "▼", "◀", "▶",
+            "◆", "◇", "车", "三", "二"
+        }
+        if clean in icon_chars:
             return True
 
-        # Compact alphanumeric characters without punctuation or spaces
-        compact = re.sub(r'[\s\.\:\-_/\\#@!]', '', clean)
-
-        # 2. Standalone single-character icon check (e.g. arrow icons ↗ ↙, nav icons misread as '7', 'K', '1', 'O', '车')
-        if len(compact) == 1:
-            if clean in ["7", "K", "C", "0", "O", "1", "车", "↗", "↙", ">", "<", "v", "^"]:
+        # 3. Small square glyphs: UI icons misread as a single character (e.g. search magnifying glass as 'Q' or 'O', user avatar as '0' or 'o', arrow badge as '7' or 'K' or '1')
+        if len(compact) <= 1:
+            # Low confidence standalone character
+            if confidence < 0.80:
                 return True
-            if 0.65 <= aspect <= 1.40 and max(w, h) <= 42.0:
-                return True
-            if confidence < 0.75:
+            # Square icon bounding box (avatars, search lenses, radio buttons, navigation arrows)
+            if 0.75 <= aspect <= 1.35 and max(w, h) <= 80.0:
                 return True
 
-        # 3. Small square glyphs with low-to-medium confidence (icon badges, arrow badges like "e E" or "a A")
+        # 4. Two-glyph UI badges / icon noise
         if len(compact) <= 2:
-            if confidence < 0.88 and max(w, h) <= 45.0 and 0.60 <= aspect <= 1.45:
+            if confidence < 0.88 and max(w, h) <= 50.0 and 0.60 <= aspect <= 1.50:
                 return True
             if confidence < 0.70:
                 return True
 
+        # 5. Non-text images / large photo textures / decorative elements
+        if image_dims:
+            img_w, img_h = image_dims
+            # Misdetected huge photographic block or texture
+            if (w * h) > 0.35 * (img_w * img_h) and confidence < 0.75:
+                return True
+
+        # 6. Repetitive noise sequences (e.g. "||||||", "xxxxxx", "------")
+        if len(compact) >= 5 and len(set(compact)) == 1 and confidence < 0.85:
+            return True
+
+        # 7. Computer Vision check on crop: Detect circular avatars, button badges, and solid icons
+        if crop_bgr is not None and crop_bgr.size > 0 and len(compact) <= 2:
+            try:
+                gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
+                _, otsu = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+                cnts, _ = cv2.findContours(otsu, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                if cnts:
+                    c = max(cnts, key=cv2.contourArea)
+                    area = cv2.contourArea(c)
+                    peri = cv2.arcLength(c, True)
+                    if peri > 0:
+                        circ = 4.0 * math.pi * area / (peri * peri)
+                        # Circular profile badges, search icons, notification dots have high circularity
+                        if circ > 0.65:
+                            return True
+            except Exception:
+                pass
+
         return False
 
     @staticmethod
-    def _normalize_detected_text(text: str, all_raw_texts: List[str]) -> str:
+    def _normalize_detected_text(text: str, all_raw_texts: Optional[List[str]] = None) -> str:
         s = text.strip()
         if not s:
             return s
 
-        # Context detection across the whole image
-        doc_blob = " ".join(all_raw_texts).lower()
-        is_fintech = any(k in doc_blob for k in [
-            'transaction', 'payment', 'neft', 'upi', 'bank', 'cashflow',
-            'inflow', 'outflow', 'income', 'expense', 'account', 'baroda'
-        ])
-        has_rupee = '₹' in doc_blob or any(re.search(r'[+-]?[732]\d{2},\d{3}\.\d{2}', t) for t in all_raw_texts)
+        # 1. Normalize excessive internal whitespace and linebreaks
+        s = re.sub(r'[\r\n\t]+', ' ', s)
+        s = re.sub(r' {2,}', ' ', s)
 
-        # 1. Date normalization: "ct 8, 026", "Oc18, 2026", "0019, 2026", "089 20m6", "0008.2026"
-        months = r'(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|ct|0ct|Oc1|001|5001|300|089|039)'
-        def fix_date(m):
-            raw_m = m.group(1).lower()
-            day = m.group(2)
-            year = m.group(3).replace('m', '2')
-            month_name = 'Oct' if raw_m in ['ct', '0ct', 'oc1', '001', '5001', '300', '089', '039', 'oct'] else m.group(1).capitalize()
-            if len(year) == 3 and year.startswith('02'):
-                year = '2' + year
-            elif len(year) == 4 and year.startswith('20m'):
-                year = '2026'
-            return f'{month_name} {day}, {year}'
+        # 2. Strip leading bullet/arrow symbols at start of lines (e.g. '> Continue Reading' -> 'Continue Reading')
+        s = re.sub(r'^[>»›«‹→←^v\-\—\•\·~\|\+]\s*', '', s)
 
-        s = re.sub(rf'\b({months})\s*(\d{{1,2}})[,\.\s]+(202\d|02\d|20m\d)\b', fix_date, s, flags=re.IGNORECASE)
+        # 3. Fix currency symbols attached to numbers or spaces universally:
+        # e.g. "$ 120" -> "$120", "€ 49.99" -> "€49.99", "£ 10" -> "£10", "₹ 250" -> "₹250"
+        s = re.sub(r'([$€£¥₹])\s+(\d)', r'\1\2', s)
 
-        # Specific mobile UI date token patterns
-        if re.search(r'^(?:089|039|3009|0019)\s*[\.,\s]*(?:2026|20m6|026)$', s, re.I):
-            s = 'Oct 9, 2026'
-        elif re.search(r'^(?:0008|0018|3008|30008|8890|Oc18)\s*[\.,\s]*(?:2026|20m6|026)$', s, re.I):
-            s = 'Oct 8, 2026'
+        # 4. Standard punctuation spacing: remove space before comma/period/colon
+        s = re.sub(r'\s+([,\.:;!\?])', r'\1', s)
 
-        # 2. Currency and amount corrections
-        if is_fintech or has_rupee:
-            # +726,800.00 -> +₹26,800.00 (₹ recognized as 7)
-            s = re.sub(r'^\+7(\d{1,2},\d{3}\.\d{2})$', r'+₹\1', s)
-            # -7105.00 -> -₹105.00, -71,200.00 -> -₹1,200.00
-            s = re.sub(r'^-7(\d{1,3}(?:,\d{3})*\.\d{2})$', r'-₹\1', s)
-            # -230.00 -> -₹30.00 (₹ recognized as 2 before 30)
-            s = re.sub(r'^-2(3\d(?:\.\d{2})?)$', r'-₹\1', s)
-            # 326,800.00 -> +₹26,800.00 (+ and ₹ fused into 3)
-            s = re.sub(r'^3(\d{2},\d{3}\.\d{2})$', r'+₹\1', s)
-            # +26,800.00 -> +₹26,800.00
-            s = re.sub(r'^\+(\d{1,2},\d{3}\.\d{2})$', r'+₹\1', s)
-            # -105.00, -150.00, -30.00 -> -₹... when rupee environment detected
-            if has_rupee:
-                s = re.sub(r'^-(\d{1,3}(?:,\d{3})*\.\d{2})$', r'-₹\1', s)
-
-            # Common banking phrases fuzzy match
-            known_phrases = [
-                'General · Bank of Baroda',
-                'Real-time financial activity',
-                'CASHFLOW RATIO',
-                'INFLOW VS OUTFLOW',
-                'Received Payment (NEFT)',
-            ]
-            s_clean = re.sub(r'[^a-zA-Z0-9]', '', s).lower()
-            for kp in known_phrases:
-                kp_clean = re.sub(r'[^a-zA-Z0-9]', '', kp).lower()
-                if len(s_clean) >= 8:
-                    ratio = difflib.SequenceMatcher(None, s_clean, kp_clean).ratio()
-                    if ratio >= 0.65:
-                        s = kp
-                        break
-
-            # Exact phrase fixes
-            if s.upper() in ['CASHELOW RATIO', 'CASH FLOW RATIO']:
-                s = 'CASHFLOW RATIO'
-            elif s.upper() in ['INELOW VS OUTELOW', 'NELOW VS OUTELOW']:
-                s = 'INFLOW VS OUTFLOW'
-            elif s in ['Strnnder:', 'Transfor']:
-                s = 'Transfer'
-            elif s in ['Filtec']:
-                s = 'Filter'
-            elif s in ['FAl', 'Alll']:
-                s = 'All'
+        # 5. Remove stray leading or trailing decorative quotes or backticks if unbalanced
+        if (s.startswith("`") or s.startswith("'") or s.startswith('"')) and not (s.endswith("`") or s.endswith("'") or s.endswith('"')):
+            s = s[1:].strip()
+        elif (s.endswith("`") or s.endswith("'") or s.endswith('"')) and not (s.startswith("`") or s.startswith("'") or s.startswith('"')):
+            s = s[:-1].strip()
 
         return s
 
@@ -344,13 +308,9 @@ class OCRService:
         if engine is not None:
             try:
                 with OCR_LOCK:
-                    if hasattr(engine, '__call__'):
-                        out = engine(img_np)
-                        raw_ocr_out = out[0] if isinstance(out, (list, tuple)) and len(out) > 0 else out
-                    elif hasattr(engine, 'ocr'):
-                        raw_ocr_out = engine.ocr(img_np)
+                    raw_ocr_out = engine.ocr(img_np)
             except Exception as err:
-                print(f"OCR execution error ({lang}): {err}")
+                print(f"PaddleOCR execution error ({lang}): {err}")
                 raw_ocr_out = None
             finally:
                 clear_system_memory_caches()
@@ -366,16 +326,45 @@ class OCRService:
                 font_size = calculate_font_size(clean_polygon, image=image, text=raw_text)
                 bbox = calculate_bounding_box(clean_polygon, image=image)
                 geom_conf = calculate_geometry_confidence(clean_polygon)
+                # Extract crop for visual icon validation & typography matching
+                crop_x1 = max(0, int(np.floor(bbox[0])))
+                crop_y1 = max(0, int(np.floor(bbox[1])))
+                crop_x2 = min(image.width, int(np.ceil(bbox[0] + bbox[2])))
+                crop_y2 = min(image.height, int(np.ceil(bbox[1] + bbox[3])))
+
+                crop_bgr = None
+                if crop_x2 > crop_x1 and crop_y2 > crop_y1:
+                    crop_img = image.crop((crop_x1, crop_y1, crop_x2, crop_y2))
+                    crop_bgr = cv2.cvtColor(np.array(crop_img.convert("RGB")), cv2.COLOR_RGB2BGR)
+
                 # Filter out UI icons, non-text symbols, and graphic glyphs
-                if self._is_icon_or_noise(raw_text, bbox, round(score, 3)):
+                if self._is_icon_or_noise(raw_text, bbox, round(score, 3), crop_bgr=crop_bgr, image_dims=(w, h)):
                     continue
 
-                # Apply domain-aware text normalization first
+                # Apply universal text normalization
                 normalized_text = self._normalize_detected_text(raw_text, all_raw_texts)
 
                 color = estimate_text_color(image, clean_polygon)
                 weight = estimate_text_weight(image, clean_polygon, font_size, text=normalized_text)
                 blur = 0.0  # Crisp digital rendering: prevent artificial blur
+
+                # High-fidelity Typography & Font Family Identification
+                matched_family = "Inter"
+                matched_category = "sans-serif"
+                matched_weight = weight
+
+                if crop_bgr is not None and crop_bgr.size > 0:
+                    try:
+                        typo_svc = TypographyService.get_instance()
+                        typo_res = typo_svc.match_typography(crop_bgr, normalized_text, font_size_hint=font_size, top_k=3)
+                        if typo_res and typo_res.candidates:
+                            top_cand = typo_res.candidates[0]
+                            matched_family = top_cand.family
+                            matched_category = top_cand.category
+                            if top_cand.weight:
+                                matched_weight = top_cand.weight
+                    except Exception as typo_err:
+                        print(f"Typography matching warning: {typo_err}")
 
                 region = DetectedTextRegion(
                     regionId=f"ocr-{uuid.uuid4().hex[:8]}",
@@ -385,7 +374,9 @@ class OCRService:
                     angle=angle,
                     estimatedFontSize=font_size,
                     estimatedColor=color,
-                    estimatedWeight=weight,
+                    estimatedWeight=matched_weight,
+                    estimatedFontFamily=matched_family,
+                    fontCategory=matched_category,
                     estimatedBlur=blur,
                     confidence=round(score, 3),
                     geometryConfidence=geom_conf,
