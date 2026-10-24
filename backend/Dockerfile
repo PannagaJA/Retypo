@@ -31,8 +31,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Bake OCR models into the image at build time (eliminates runtime cold start downloads & Cloudflare 502 timeouts)
-RUN python -c "from paddleocr import PaddleOCR; PaddleOCR(text_detection_model_name='PP-OCRv6_small_det', text_recognition_model_name='PP-OCRv6_small_rec', use_doc_orientation_classify=False, use_doc_unwarping=False, use_textline_orientation=False, device='cpu')"
+# Pre-verify RapidOCR embedded ONNX models (zero network downloads required)
+RUN python -c "from rapidocr_onnxruntime import RapidOCR; RapidOCR()"
 
 # Copy backend application code and assets
 COPY app ./app

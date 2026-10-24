@@ -66,14 +66,25 @@ class OCRService:
         if clean_lang in self._engines:
             return self._engines[clean_lang]
 
-        # In low-memory / Render environments, evict previously loaded engines to prevent multi-model RAM bloat
+        # In low-memory / Render environments, evict previously loaded engines
         is_low_mem = os.getenv("RENDER") is not None or os.getenv("LOW_MEMORY_MODE", "true").lower() == "true"
         if is_low_mem and self._engines:
             self._engines.clear()
             clear_system_memory_caches()
 
-        det_limit = 736 if is_low_mem else 960
+        # 1. Primary Lightweight Engine: RapidOCR (ONNX Runtime)
+        # Embedded models, ~65MB RAM, 1.7s execution, zero cold-start downloads
+        try:
+            from rapidocr_onnxruntime import RapidOCR
+            engine = RapidOCR()
+            self._engines[clean_lang] = engine
+            print(f"RapidOCR ONNX engine initialized for lang='{clean_lang}' (lightweight ~65MB RAM).")
+            return engine
+        except Exception as rapid_err:
+            print(f"RapidOCR not available ({rapid_err}), falling back to PaddleOCR...")
 
+        # 2. Fallback Engine: PaddleOCR Mobile
+        det_limit = 736 if is_low_mem else 960
         try:
             from paddleocr import PaddleOCR
             engine = PaddleOCR(
@@ -91,7 +102,7 @@ class OCRService:
                 device="cpu",
             )
             self._engines[clean_lang] = engine
-            print(f"PaddleOCR small mobile engine initialized (lang='{clean_lang}', low_mem={is_low_mem}, det_limit={det_limit}).")
+            print(f"PaddleOCR mobile engine initialized (lang='{clean_lang}', low_mem={is_low_mem}, det_limit={det_limit}).")
             return engine
         except Exception as e:
             print(f"Warning: PaddleOCR failed for lang='{clean_lang}': {e}")
@@ -139,20 +150,39 @@ class OCRService:
                 poly_list = p.tolist() if hasattr(p, "tolist") else list(p)
                 clean_poly = [[round(float(pt[0]) / scale, 1), round(float(pt[1]) / scale, 1)] for pt in poly_list]
                 items.append((clean_poly, text, score))
+            return items
 
-        # Format 2: Standard/Legacy PaddleOCR List Output: [[poly, (text, score)], ...]
-        elif isinstance(first, list):
-            for entry in first:
-                if isinstance(entry, (list, tuple)) and len(entry) >= 2:
-                    poly_raw = entry[0]
-                    text_info = entry[1]
-                    if isinstance(text_info, (list, tuple)) and len(text_info) >= 2:
-                        text = str(text_info[0]).strip()
-                        score = float(text_info[1])
-                        if not text:
-                            continue
-                        clean_poly = [[round(float(pt[0]) / scale, 1), round(float(pt[1]) / scale, 1)] for pt in poly_raw]
-                        items.append((clean_poly, text, score))
+        # Format 2 & 3: List output (RapidOCR [poly, text, score] or PaddleOCR legacy [[poly, (text, score)]])
+        entries = ocr_out
+        if len(ocr_out) == 1 and isinstance(ocr_out[0], list) and len(ocr_out[0]) > 0 and isinstance(ocr_out[0][0], list) and len(ocr_out[0][0]) > 0 and isinstance(ocr_out[0][0][0], (list, tuple, np.ndarray)):
+            entries = ocr_out[0]
+
+        for entry in entries:
+            if not isinstance(entry, (list, tuple)) or len(entry) < 2:
+                continue
+            poly_raw = entry[0]
+            if not isinstance(poly_raw, (list, tuple, np.ndarray)) or len(poly_raw) < 3:
+                continue
+            first_pt = poly_raw[0]
+            if not isinstance(first_pt, (list, tuple, np.ndarray)) or len(first_pt) < 2:
+                continue
+
+            if len(entry) >= 3 and isinstance(entry[1], str) and isinstance(entry[2], (int, float)):
+                text = entry[1].strip()
+                score = float(entry[2])
+            elif isinstance(entry[1], (list, tuple)) and len(entry[1]) >= 2:
+                text = str(entry[1][0]).strip()
+                score = float(entry[1][1])
+            elif isinstance(entry[1], str):
+                text = entry[1].strip()
+                score = 1.0
+            else:
+                continue
+
+            if not text:
+                continue
+            clean_poly = [[round(float(pt[0]) / scale, 1), round(float(pt[1]) / scale, 1)] for pt in poly_raw]
+            items.append((clean_poly, text, score))
 
         return items
 
@@ -314,9 +344,13 @@ class OCRService:
         if engine is not None:
             try:
                 with OCR_LOCK:
-                    raw_ocr_out = engine.ocr(img_np)
+                    if hasattr(engine, '__call__'):
+                        out = engine(img_np)
+                        raw_ocr_out = out[0] if isinstance(out, (list, tuple)) and len(out) > 0 else out
+                    elif hasattr(engine, 'ocr'):
+                        raw_ocr_out = engine.ocr(img_np)
             except Exception as err:
-                print(f"PaddleOCR execution error ({lang}): {err}")
+                print(f"OCR execution error ({lang}): {err}")
                 raw_ocr_out = None
             finally:
                 clear_system_memory_caches()
