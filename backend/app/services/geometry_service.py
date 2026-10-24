@@ -34,12 +34,12 @@ def calculate_font_size(
 ) -> float:
     """
     Estimates CSS / Fabric.js fontSize in native image pixels.
-    PaddleOCR bounding quads tightly encompass the text line.
-    When the image is available, we measure foreground glyph pixel height directly.
-    - If the word contains lowercase descenders (g, j, p, q, y), inner height covers
-      cap-height + descenders (~0.92 of font em-size).
-    - If the word has no descenders (e.g. All, Income, Filter), inner height is cap-height (~0.72 of em-size).
-    Clamped strictly to the detected quad height so text never blows up or overflows containers.
+    In typography and Fabric.js, fontSize corresponds to the font's em-box:
+    - Capital letters (cap-height) occupy ~70% to 72% of the fontSize.
+    - Ascenders + descenders cover ~88% to 92% of the fontSize.
+    To ensure the rendered Fabric text matches the exact visual height of the original letters:
+      fontSize = glyph_height / 0.72 (if no descenders)
+      fontSize = glyph_height / 0.90 (if descenders present)
     """
     if len(polygon) < 4:
         return 16.0
@@ -47,7 +47,12 @@ def calculate_font_size(
 
     h_left = math.hypot(p4[0] - p1[0], p4[1] - p1[1])
     h_right = math.hypot(p3[0] - p2[0], p3[1] - p2[1])
-    glyph_height = (h_left + h_right) / 2.0
+    glyph_height = max(6.0, (h_left + h_right) / 2.0)
+
+    clean_text = (text or "").strip()
+    has_desc = any(c in DESCENDERS_SET for c in clean_text)
+    divisor = 0.90 if has_desc else 0.72
+    calibrated_size = glyph_height / divisor
 
     if image is not None:
         try:
@@ -65,20 +70,13 @@ def calculate_font_size(
                     fg_ys = np.where(th == 255)[0]
                     if len(fg_ys) >= 4:
                         inner_h = float(np.max(fg_ys) - np.min(fg_ys) + 1)
-                        has_desc = any(c in DESCENDERS_SET for c in (text or ""))
-                        divisor = 0.92 if has_desc else 0.72
-                        est_size = inner_h / divisor
-                        clamped_size = max(glyph_height * 0.6, min(glyph_height * 1.0, est_size))
-                        return round(clamped_size, 1)
+                        if inner_h >= 6.0:
+                            inner_calibrated = inner_h / divisor
+                            return max(10.0, round(inner_calibrated, 1))
         except Exception:
             pass
 
-    if text is not None:
-        has_desc = any(c in DESCENDERS_SET for c in text)
-        scale = 0.78 if has_desc else 0.82
-        return max(8.0, round(glyph_height * scale, 1))
-
-    return max(8.0, round(glyph_height, 1))
+    return max(10.0, round(calibrated_size, 1))
 
 def estimate_text_weight(
     image: Optional[Image.Image],
@@ -252,7 +250,8 @@ def calculate_geometry_confidence(polygon: List[List[float]]) -> float:
 def estimate_text_color(image: Image.Image, polygon: List[List[float]]) -> str:
     """
     Estimates the dominant foreground text color in HEX (#RRGGBB).
-    Uses Otsu binarization to isolate high-contrast foreground text pixels.
+    Uses 3D Euclidean background contrast separation and luminance clustering.
+    Prevents washed-out antialiased gray artifacts on white UI text or dark typography.
     """
     if len(polygon) < 4:
         return "#ffffff"
@@ -276,36 +275,56 @@ def estimate_text_color(image: Image.Image, polygon: List[List[float]]) -> str:
         rgb = np.stack([gray, gray, gray], axis=-1)
     else:
         rgb = crop_np[:, :, :3]
-        gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
 
-    _, otsu_thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    h, w = rgb.shape[:2]
+    if h == 0 or w == 0:
+        return "#ffffff"
 
-    border_pixels = np.concatenate([
-        gray[0, :], gray[-1, :], gray[:, 0], gray[:, -1]
-    ])
-    border_mean = np.mean(border_pixels) if len(border_pixels) > 0 else 128
+    # Sample outer 1-pixel perimeter to accurately model background color
+    border = np.concatenate([rgb[0, :, :], rgb[h-1, :, :], rgb[:, 0, :], rgb[:, w-1, :]], axis=0)
+    bg_rgb = np.median(border, axis=0)
+    bg_lum = 0.299 * bg_rgb[0] + 0.587 * bg_rgb[1] + 0.114 * bg_rgb[2]
 
-    if border_mean > 127:
-        text_mask = (otsu_thresh == 0)
+    # Measure Euclidean distance in 3D RGB color space from background
+    diff = np.linalg.norm(rgb.astype(float) - bg_rgb.astype(float), axis=-1)
+    max_diff = float(np.max(diff))
+
+    # Low contrast threshold fallback
+    if max_diff < 15.0:
+        return "#ffffff" if bg_lum < 128 else "#111827"
+
+    # Extract high-contrast text pixels
+    text_mask = diff >= max(18.0, 0.35 * max_diff)
+    if np.sum(text_mask) < 4:
+        text_mask = diff >= np.percentile(diff, 80)
+
+    text_pixels = rgb[text_mask]
+    if len(text_pixels) == 0:
+        return "#ffffff" if bg_lum < 128 else "#111827"
+
+    pixel_lums = 0.299 * text_pixels[:, 0] + 0.587 * text_pixels[:, 1] + 0.114 * text_pixels[:, 2]
+
+    if bg_lum < 128:
+        # Dark Background -> Light text: select brightest core pixels
+        core_mask = pixel_lums >= np.percentile(pixel_lums, 65)
+        core_pixels = text_pixels[core_mask] if np.sum(core_mask) > 0 else text_pixels
+        median_c = np.median(core_pixels, axis=0)
+        r, g, b = median_c
+        max_ch = max(r, g, b)
+        spread = max(abs(r - g), abs(g - b), abs(r - b))
+        # Snap near-white anti-aliased digital UI text to crisp pure white
+        if max_ch >= 195 and spread <= 22:
+            return "#ffffff"
+        return f"#{int(r):02x}{int(g):02x}{int(b):02x}"
     else:
-        text_mask = (otsu_thresh == 255)
-
-    if not np.any(text_mask):
-        text_pixels = rgb.reshape(-1, 3)
-    else:
-        text_pixels = rgb[text_mask]
-
-    # Calculate core text color (exclude antialiased boundary transition pixels)
-    lum = 0.299 * text_pixels[:, 0] + 0.587 * text_pixels[:, 1] + 0.114 * text_pixels[:, 2]
-    if border_mean > 127:
-        # Light background: the true text core is the deepest/darkest 30% of text pixels
-        core_idx = np.where(lum <= np.percentile(lum, 30))[0]
-        core_pixels = text_pixels[core_idx] if len(core_idx) > 0 else text_pixels
-    else:
-        # Dark background: the true text core is the brightest 30% of text pixels
-        core_idx = np.where(lum >= np.percentile(lum, 70))[0]
-        core_pixels = text_pixels[core_idx] if len(core_idx) > 0 else text_pixels
-
-    median_rgb = np.median(core_pixels, axis=0).astype(int)
-    hex_color = f"#{median_rgb[0]:02x}{median_rgb[1]:02x}{median_rgb[2]:02x}"
-    return hex_color
+        # Light Background -> Dark text: select deepest/darkest core pixels
+        core_mask = pixel_lums <= np.percentile(pixel_lums, 35)
+        core_pixels = text_pixels[core_mask] if np.sum(core_mask) > 0 else text_pixels
+        median_c = np.median(core_pixels, axis=0)
+        r, g, b = median_c
+        min_ch = min(r, g, b)
+        spread = max(abs(r - g), abs(g - b), abs(r - b))
+        # Snap near-black anti-aliased digital UI text to deep dark
+        if min_ch <= 55 and spread <= 20:
+            return "#111827"
+        return f"#{int(r):02x}{int(g):02x}{int(b):02x}"

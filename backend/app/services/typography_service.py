@@ -291,11 +291,11 @@ class TypographyService:
         corner_density = total_corners / total_white
 
         # Calibrated threshold on text mask:
-        # Sans-serif (Arial, Helvetica, Inter, Verdana) produces corner density 0.12 - 0.19.
-        # Real serifs (Georgia, Times, Playfair, Merriweather) produce corner density 0.25 - 0.45.
-        # Monospace serifs (Courier) produce corner density > 0.50.
-        is_serif = corner_density > 0.22 and total_white > 120
-        serif_confidence = min(1.0, max(0.0, (corner_density - 0.18) / 0.15))
+        # Sans-serif (Arial, Helvetica, Inter, Roboto) produces corner density 0.30 - 0.42.
+        # Real serifs (Georgia, Times, Playfair, Merriweather) produce corner density 0.65 - 0.98.
+        # Monospace serifs (Courier) produce corner density > 1.20.
+        is_serif = corner_density >= 0.55 and total_white > 120
+        serif_confidence = min(1.0, max(0.0, (corner_density - 0.45) / 0.25))
 
         return is_serif, round(serif_confidence, 2)
 
@@ -357,7 +357,8 @@ class TypographyService:
         aspect_ratio = orig_w / max(1.0, orig_h)
         char_aspect = aspect_ratio / max(1, len(text))
 
-        if detected_serif:
+        # Only apply serif if font is large enough to resolve true serif brackets (>16px)
+        if detected_serif and effective_font_size >= 16:
             category = "serif"
             if effective_font_size >= 36 or char_aspect > 0.65:
                 family = "Playfair Display"
@@ -367,14 +368,18 @@ class TypographyService:
                 family = "Georgia"
         else:
             category = "sans-serif"
-            if char_aspect > 0.62:
-                family = "Montserrat"
-            elif effective_font_size >= 28:
-                family = "Outfit"
+            # High-fidelity digital UI & graphic typography matching
+            if int(detected_weight) >= 700:
+                family = "Montserrat" if char_aspect > 0.62 else "Inter"
             elif int(detected_weight) >= 600:
                 family = "Roboto"
             else:
-                family = "Inter"
+                if char_aspect > 0.65:
+                    family = "Montserrat"
+                elif effective_font_size >= 28:
+                    family = "Outfit"
+                else:
+                    family = "Inter"
 
         return family, category, detected_weight
 

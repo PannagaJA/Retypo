@@ -21,8 +21,8 @@ def test_calculate_polygon_angle():
 def test_calculate_font_size():
     # Height is 30px
     quad = [[10.0, 20.0], [110.0, 20.0], [110.0, 50.0], [10.0, 50.0]]
-    # Direct quad height matches 30px font em-size directly
-    assert calculate_font_size(quad) == 30.0
+    # 30px visual glyph height calibrates to 41.7px font em-size (30.0 / 0.72)
+    assert calculate_font_size(quad) == 41.7
 
 def test_calculate_bounding_box():
     quad = [[10.0, 20.0], [110.0, 20.0], [110.0, 50.0], [10.0, 50.0]]
