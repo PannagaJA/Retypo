@@ -1,6 +1,41 @@
 import type { DetectedTextRegion, TypographyMatchResponse, TextLayer, InpaintPatch, CompositorExportResult } from '../types';
 
-const API_BASE = 'http://127.0.0.1:8000';
+const PRODUCTION_BACKEND = 'https://retypo-backend.onrender.com';
+const CONFIGURED_API_URL = ((import.meta.env.VITE_API_URL as string) || '').trim().replace(/\/+$/, '');
+
+export function getBaseApiUrl(): string {
+  if (CONFIGURED_API_URL) return CONFIGURED_API_URL;
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return PRODUCTION_BACKEND;
+  }
+  return 'http://127.0.0.1:8000';
+}
+
+/**
+ * Universal API fetch helper.
+ * On production (Vercel), routes directly to the cloud backend (Render).
+ * In local development, handles local dev proxy or direct local fallback.
+ */
+async function callApi(endpoint: string, init?: RequestInit): Promise<Response> {
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const baseUrl = getBaseApiUrl();
+
+  // On production (e.g. Vercel) or when custom remote URL is set, call remote backend directly
+  if (baseUrl && !baseUrl.includes('127.0.0.1') && !baseUrl.includes('localhost')) {
+    return await fetch(`${baseUrl}${cleanEndpoint}`, init);
+  }
+
+  // In local dev, try relative path first, fallback to local backend on 404 or network failure
+  try {
+    const res = await fetch(cleanEndpoint, init);
+    if (res.status === 404) {
+      return await fetch(`http://127.0.0.1:8000${cleanEndpoint}`, init);
+    }
+    return res;
+  } catch {
+    return await fetch(`http://127.0.0.1:8000${cleanEndpoint}`, init);
+  }
+}
 
 export interface OCRAnalysisResult {
   status: string;
@@ -40,19 +75,12 @@ export interface MaskInspectResult {
 
 export async function checkBackendHealth(): Promise<{ isHealthy: boolean; engine?: string }> {
   try {
-    const res = await fetch('/api/health', { method: 'GET' });
+    const res = await callApi('/api/health', { method: 'GET' });
     if (!res.ok) return { isHealthy: false };
     const data = await res.json();
     return { isHealthy: data.status === 'healthy', engine: data.ocr_engine };
-  } catch (err) {
-    try {
-      const res2 = await fetch(`${API_BASE}/api/health`, { method: 'GET' });
-      if (!res2.ok) return { isHealthy: false };
-      const data2 = await res2.json();
-      return { isHealthy: data2.status === 'healthy', engine: data2.ocr_engine };
-    } catch {
-      return { isHealthy: false };
-    }
+  } catch {
+    return { isHealthy: false };
   }
 }
 
@@ -61,18 +89,10 @@ export async function analyzeImageOCR(file: File | Blob, fileName: string = 'ima
   formData.append('file', file, fileName);
   formData.append('lang', lang);
 
-  let response: Response;
-  try {
-    response = await fetch('/api/ocr/analyze', {
-      method: 'POST',
-      body: formData,
-    });
-  } catch {
-    response = await fetch(`${API_BASE}/api/ocr/analyze`, {
-      method: 'POST',
-      body: formData,
-    });
-  }
+  const response = await callApi('/api/ocr/analyze', {
+    method: 'POST',
+    body: formData,
+  });
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -97,18 +117,10 @@ export async function restoreBackground(
   formData.append('strategy', strategy);
   formData.append('padding', String(padding));
 
-  let response: Response;
-  try {
-    response = await fetch('/api/inpaint/restore', {
-      method: 'POST',
-      body: formData,
-    });
-  } catch {
-    response = await fetch(`${API_BASE}/api/inpaint/restore`, {
-      method: 'POST',
-      body: formData,
-    });
-  }
+  const response = await callApi('/api/inpaint/restore', {
+    method: 'POST',
+    body: formData,
+  });
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -117,7 +129,6 @@ export async function restoreBackground(
 
   return response.json();
 }
-
 
 export async function matchTypography(
   fileOrCrop: { file?: File | Blob; cropBase64?: string },
@@ -146,18 +157,10 @@ export async function matchTypography(
   }
   formData.append('topK', String(topK));
 
-  let response: Response;
-  try {
-    response = await fetch('/api/typography/match', {
-      method: 'POST',
-      body: formData,
-    });
-  } catch {
-    response = await fetch(`${API_BASE}/api/typography/match`, {
-      method: 'POST',
-      body: formData,
-    });
-  }
+  const response = await callApi('/api/typography/match', {
+    method: 'POST',
+    body: formData,
+  });
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -166,7 +169,6 @@ export async function matchTypography(
 
   return response.json();
 }
-
 
 export async function renderStudioExport(
   fileOrBase64: { file?: File | Blob; imageBase64?: string },
@@ -191,18 +193,10 @@ export async function renderStudioExport(
   formData.append('inpaintPatches', JSON.stringify(inpaintPatches));
   formData.append('preserveIcc', String(options.preserveIcc ?? true));
 
-  let response: Response;
-  try {
-    response = await fetch('/api/export/render', {
-      method: 'POST',
-      body: formData,
-    });
-  } catch {
-    response = await fetch(`${API_BASE}/api/export/render`, {
-      method: 'POST',
-      body: formData,
-    });
-  }
+  const response = await callApi('/api/export/render', {
+    method: 'POST',
+    body: formData,
+  });
 
   if (!response.ok) {
     const errorText = await response.text();
