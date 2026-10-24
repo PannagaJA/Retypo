@@ -277,6 +277,7 @@ class OCRService:
         estimates typography parameters, and returns structured DetectedTextRegion list.
         Applies adaptive resolution scaling, noise filtering, and smart text normalization.
         """
+        w, h = image.width, image.height
         extracted_items = None
         try:
             from app.services.google_vision_service import GoogleVisionService
@@ -292,7 +293,6 @@ class OCRService:
             engine = self._get_paddle_engine(lang)
 
             is_low_mem = os.getenv("RENDER") is not None or os.getenv("LOW_MEMORY_MODE", "true").lower() == "true"
-            w, h = image.width, image.height
             scale = 1.0
 
             if is_low_mem:
