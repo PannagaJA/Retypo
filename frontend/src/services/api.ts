@@ -9,8 +9,8 @@ export function getBaseApiUrl(): string {
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return 'http://127.0.0.1:8000';
   }
-  // On production (Vercel), empty string routes through Vercel's rewrite proxy (same-origin, eliminates CORS completely)
-  return '';
+  // On production (e.g. Vercel), connect directly to Render backend with full CORS headers
+  return PRODUCTION_BACKEND;
 }
 
 /**

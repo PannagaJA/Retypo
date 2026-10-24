@@ -282,9 +282,9 @@ class OCRService:
         scale = 1.0
 
         if is_low_mem:
-            # On 512MB RAM, cap maximum resolution to 1200px to prevent DBNet tensor memory spikes
-            if max(w, h) > 1200:
-                scale = 1200.0 / float(max(w, h))
+            # On 512MB RAM and 0.1 CPU, cap maximum resolution to 1024px to guarantee fast sub-5s DBNet inference
+            if max(w, h) > 1024:
+                scale = 1024.0 / float(max(w, h))
                 scaled_w = int(round(w * scale))
                 scaled_h = int(round(h * scale))
                 scaled_img = image.resize((scaled_w, scaled_h), Image.Resampling.BILINEAR)

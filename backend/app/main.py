@@ -2,6 +2,17 @@ import os
 os.environ["FLAGS_use_mkldnn"] = "0"
 os.environ["PADDLE_PDX_ENABLE_MKLDNN_BYDEFAULT"] = "0"
 
+# Neutralize any uvicorn request limit to prevent container self-termination crash loops under continuous Render health checks
+try:
+    from uvicorn.server import Server
+    _orig_on_tick = Server.on_tick
+    async def _safe_on_tick(self, counter: int) -> bool:
+        self.limit_max_requests = None
+        return await _orig_on_tick(self, counter)
+    Server.on_tick = _safe_on_tick
+except Exception:
+    pass
+
 import json
 import time
 import uuid
