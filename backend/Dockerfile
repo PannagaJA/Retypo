@@ -1,10 +1,20 @@
 # Retypo Backend Dockerfile for Render / Cloud Containers
 FROM python:3.11-slim
 
-# Prevent python from buffering stdout/stderr and writing bytecode
+# Prevent python from buffering stdout/stderr and writing bytecode, and configure low memory flags
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PORT=8000
+    PORT=8000 \
+    MALLOC_TRIM_THRESHOLD_=100000 \
+    OMP_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    CPU_NUM=1 \
+    FLAGS_fraction_of_cpu_memory_to_use=0.1 \
+    FLAGS_allocator_strategy=naive_best_fit \
+    FLAGS_eager_delete_scope=True \
+    FLAGS_fast_eager_deletion_mode=True \
+    LOW_MEMORY_MODE=true
 
 # Install system dependencies required by OpenCV and PaddlePaddle
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -31,5 +41,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 
 EXPOSE 8000
 
-# Start Uvicorn bound to dynamic $PORT
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Start Uvicorn bound to dynamic $PORT with single worker & request limit to prevent memory creep
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --limit-max-requests 20"]

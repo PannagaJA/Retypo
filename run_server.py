@@ -1,6 +1,17 @@
 import os
 import sys
 
+# Configure Paddle low-memory flags before importing any C++ frameworks
+os.environ.setdefault("FLAGS_fraction_of_cpu_memory_to_use", "0.1")
+os.environ.setdefault("FLAGS_allocator_strategy", "naive_best_fit")
+os.environ.setdefault("FLAGS_eager_delete_scope", "True")
+os.environ.setdefault("FLAGS_fast_eager_deletion_mode", "True")
+os.environ.setdefault("CPU_NUM", "1")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+os.environ.setdefault("MALLOC_TRIM_THRESHOLD_", "100000")
+
 # Auto-detect and switch to dedicated OCR conda environment if current python lacks dependencies
 OCR_PYTHON = "/opt/homebrew/Caskroom/miniconda/base/envs/ocr/bin/python"
 try:
@@ -24,4 +35,12 @@ if __name__ == '__main__':
     host = os.getenv("HOST", "127.0.0.1")
     port = int(os.getenv("PORT", 8000))
     is_prod = os.getenv("RENDER") is not None or os.getenv("ENVIRONMENT") == "production"
-    uvicorn.run('app.main:app', host=host, port=port, reload=not is_prod, app_dir=backend_dir)
+    uvicorn.run(
+        'app.main:app',
+        host=host,
+        port=port,
+        reload=not is_prod,
+        app_dir=backend_dir,
+        workers=1,
+        limit_max_requests=20 if is_prod else None
+    )

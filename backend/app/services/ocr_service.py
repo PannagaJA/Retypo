@@ -3,9 +3,23 @@ import re
 import time
 import uuid
 import difflib
+import gc
+import threading
 import numpy as np
 from PIL import Image
 from typing import List, Optional, Tuple, Any, Dict
+
+# Concurrency lock to strictly serialize OCR execution on low-memory environments (Render 512MB)
+OCR_LOCK = threading.Lock()
+
+# Configure Paddle allocator flags before runtime initializes
+os.environ.setdefault("FLAGS_fraction_of_cpu_memory_to_use", "0.1")
+os.environ.setdefault("FLAGS_allocator_strategy", "naive_best_fit")
+os.environ.setdefault("FLAGS_eager_delete_scope", "True")
+os.environ.setdefault("FLAGS_fast_eager_deletion_mode", "True")
+os.environ.setdefault("CPU_NUM", "1")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
 
 from app.core.models import DetectedTextRegion
 from app.services.geometry_service import (
@@ -38,19 +52,30 @@ class OCRService:
         if clean_lang in self._engines:
             return self._engines[clean_lang]
 
+        # In low-memory / Render environments, evict previously loaded engines to prevent multi-model RAM bloat
+        is_low_mem = os.getenv("RENDER") is not None or os.getenv("LOW_MEMORY_MODE", "true").lower() == "true"
+        if is_low_mem and self._engines:
+            self._engines.clear()
+            gc.collect()
+
+        det_limit = 736 if is_low_mem else 960
+
         try:
             from paddleocr import PaddleOCR
             engine = PaddleOCR(
                 lang=clean_lang,
                 use_doc_orientation_classify=False,
                 use_doc_unwarping=False,
-                use_textline_orientation=True,
+                use_textline_orientation=False,
+                text_det_limit_side_len=det_limit,
+                text_det_limit_type="max",
                 text_det_unclip_ratio=1.9,
                 text_det_box_thresh=0.45,
                 text_det_thresh=0.20,
+                device="cpu",
             )
             self._engines[clean_lang] = engine
-            print(f"PaddleOCR engine for lang='{clean_lang}' initialized with unclip_ratio=1.9, box_thresh=0.45.")
+            print(f"PaddleOCR engine initialized (lang='{clean_lang}', low_mem={is_low_mem}, det_limit={det_limit}).")
             return engine
         except Exception as e:
             print(f"Warning: PaddleOCR failed for lang='{clean_lang}': {e}")
@@ -62,10 +87,13 @@ class OCRService:
                     lang="en",
                     use_doc_orientation_classify=False,
                     use_doc_unwarping=False,
-                    use_textline_orientation=True,
+                    use_textline_orientation=False,
+                    text_det_limit_side_len=det_limit,
+                    text_det_limit_type="max",
                     text_det_unclip_ratio=1.9,
                     text_det_box_thresh=0.45,
                     text_det_thresh=0.20,
+                    device="cpu",
                 )
                 self._engines["en"] = engine
                 return engine
@@ -235,31 +263,45 @@ class OCRService:
         """
         engine = self._get_paddle_engine(lang)
 
-        # Adaptive resolution scaling for small/mobile screenshot images:
-        # DBNet text detector & CRNN recognition networks resolve characters significantly
-        # better when small UI font sizes (7-15px) are upscaled with Lanczos interpolation.
+        is_low_mem = os.getenv("RENDER") is not None or os.getenv("LOW_MEMORY_MODE", "true").lower() == "true"
         w, h = image.width, image.height
         scale = 1.0
-        if min(w, h) < 1400 and max(w, h) < 2600:
-            scale = min(2.0, 2400.0 / max(w, h))
-            if scale < 1.15:
-                scale = 1.0
 
-        if scale > 1.0:
-            new_w = int(round(w * scale))
-            new_h = int(round(h * scale))
-            scaled_img = image.resize((new_w, new_h), Image.Resampling.LANCZOS)
-            img_np = np.array(scaled_img.convert("RGB"))
+        if is_low_mem:
+            # On 512MB RAM, cap maximum resolution to 1200px to prevent DBNet tensor memory spikes
+            if max(w, h) > 1200:
+                scale = 1200.0 / float(max(w, h))
+                scaled_w = int(round(w * scale))
+                scaled_h = int(round(h * scale))
+                scaled_img = image.resize((scaled_w, scaled_h), Image.Resampling.BILINEAR)
+                img_np = np.array(scaled_img.convert("RGB"))
+            else:
+                img_np = np.array(image.convert("RGB"))
         else:
-            img_np = np.array(image.convert("RGB"))
+            # Adaptive resolution scaling for small/mobile screenshot images on non-constrained environments
+            if min(w, h) < 1400 and max(w, h) < 2600:
+                scale = min(2.0, 2400.0 / max(w, h))
+                if scale < 1.15:
+                    scale = 1.0
+
+            if scale > 1.0:
+                new_w = int(round(w * scale))
+                new_h = int(round(h * scale))
+                scaled_img = image.resize((new_w, new_h), Image.Resampling.LANCZOS)
+                img_np = np.array(scaled_img.convert("RGB"))
+            else:
+                img_np = np.array(image.convert("RGB"))
 
         raw_ocr_out = None
         if engine is not None:
             try:
-                raw_ocr_out = engine.ocr(img_np)
+                with OCR_LOCK:
+                    raw_ocr_out = engine.ocr(img_np)
             except Exception as err:
                 print(f"PaddleOCR execution error ({lang}): {err}")
                 raw_ocr_out = None
+            finally:
+                gc.collect()
 
         extracted_items = self._extract_ocr_items(raw_ocr_out, scale=scale)
         all_raw_texts = [item[1] for item in extracted_items]
