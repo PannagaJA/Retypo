@@ -43,6 +43,5 @@ if __name__ == '__main__':
         port=port,
         reload=not is_prod,
         app_dir=backend_dir,
-        workers=1,
-        limit_max_requests=20 if is_prod else None
+        workers=1
     )

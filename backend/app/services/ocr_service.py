@@ -361,13 +361,9 @@ class OCRService:
                 if crop_bgr is not None and crop_bgr.size > 0:
                     try:
                         typo_svc = TypographyService.get_instance()
-                        typo_res = typo_svc.match_typography(crop_bgr, normalized_text, font_size_hint=font_size, top_k=3)
-                        if typo_res and typo_res.candidates:
-                            top_cand = typo_res.candidates[0]
-                            matched_family = top_cand.family
-                            matched_category = top_cand.category
-                            if top_cand.weight:
-                                matched_weight = top_cand.weight
+                        matched_family, matched_category, matched_weight = typo_svc.quick_estimate_typography(
+                            crop_bgr, normalized_text, font_size_hint=font_size
+                        )
                     except Exception as typo_err:
                         print(f"Typography matching warning: {typo_err}")
 

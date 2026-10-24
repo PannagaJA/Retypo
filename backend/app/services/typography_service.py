@@ -333,6 +333,51 @@ class TypographyService:
         draw.text((pos_x, pos_y), text, fill=255, font=font)
         return np.array(img, dtype=np.uint8)
 
+    def quick_estimate_typography(
+        self,
+        crop_bgr: np.ndarray,
+        text: str,
+        font_size_hint: Optional[float] = None
+    ) -> Tuple[str, str, str]:
+        """
+        Ultra-fast (<5ms) heuristic typography estimation for initial OCR scanning.
+        Extracts stroke weight and serif classification without heavy multi-font cross-correlation.
+        Returns: (font_family, category, css_weight)
+        """
+        if crop_bgr is None or crop_bgr.size == 0 or not text.strip():
+            return "Inter", "sans-serif", "400"
+
+        orig_mask = self.extract_text_mask(crop_bgr)
+        effective_font_size = font_size_hint if font_size_hint and font_size_hint > 8 else float(crop_bgr.shape[0] * 0.75)
+
+        stroke_width, detected_weight = self.estimate_stroke_weight(orig_mask, effective_font_size)
+        detected_serif, _ = self.classify_serif(orig_mask)
+
+        orig_h, orig_w = crop_bgr.shape[:2]
+        aspect_ratio = orig_w / max(1.0, orig_h)
+        char_aspect = aspect_ratio / max(1, len(text))
+
+        if detected_serif:
+            category = "serif"
+            if effective_font_size >= 36 or char_aspect > 0.65:
+                family = "Playfair Display"
+            elif int(detected_weight) >= 600:
+                family = "Merriweather"
+            else:
+                family = "Georgia"
+        else:
+            category = "sans-serif"
+            if char_aspect > 0.62:
+                family = "Montserrat"
+            elif effective_font_size >= 28:
+                family = "Outfit"
+            elif int(detected_weight) >= 600:
+                family = "Roboto"
+            else:
+                family = "Inter"
+
+        return family, category, detected_weight
+
     def match_typography(
         self,
         crop_bgr: np.ndarray,

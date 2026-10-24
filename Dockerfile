@@ -49,5 +49,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 
 EXPOSE 8000
 
-# Start Uvicorn bound to dynamic $PORT with single worker & request limit to prevent memory creep
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --limit-max-requests 20"]
+# Start Uvicorn bound to dynamic $PORT with single worker
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]

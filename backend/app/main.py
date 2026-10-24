@@ -8,6 +8,7 @@ import uuid
 from typing import Optional
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 
 from app.core.models import (
     TextLayerModel,
@@ -33,10 +34,24 @@ from PIL import Image
 import cv2
 import numpy as np
 
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Warm up OCR mobile engine on background worker thread during container boot."""
+    try:
+        ocr_service = OCRService.get_instance()
+        await run_in_threadpool(ocr_service._get_paddle_engine, "en")
+        print("[Startup] PaddleOCR mobile engine pre-warmed successfully.")
+    except Exception as e:
+        print(f"[Startup] Warmup warning: {e}")
+    yield
+
 app = FastAPI(
     title="Retypo API",
     description="Retypo AI Image Text Editor & High-Fidelity Typography Reconstruction Engine",
-    version="1.2.0"
+    version="1.2.0",
+    lifespan=lifespan
 )
 
 # Allowed production and local development origins
@@ -130,7 +145,7 @@ async def analyze_ocr(file: UploadFile = File(...), lang: str = Form('en')):
         raise HTTPException(status_code=400, detail="Image dimensions exceed maximum allowable limits")
 
     ocr_service = OCRService.get_instance()
-    detected_regions = ocr_service.analyze_image(image, lang=lang)
+    detected_regions = await run_in_threadpool(ocr_service.analyze_image, image, lang=lang)
 
     elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 1)
 
@@ -163,7 +178,8 @@ async def inpaint_restore(
         raise HTTPException(status_code=400, detail=f"Invalid polygon JSON: {str(e)}")
 
     inpaint_service = InpaintingService.get_instance()
-    result = inpaint_service.restore_region(
+    result = await run_in_threadpool(
+        inpaint_service.restore_region,
         image=image,
         polygon=parsed_polygon,
         font_size=fontSize,
