@@ -17,12 +17,14 @@ ENV PYTHONUNBUFFERED=1 \
     FLAGS_fast_eager_deletion_mode=True \
     LOW_MEMORY_MODE=true
 
-# Install system dependencies required by OpenCV and PaddlePaddle
+# Install system dependencies required by OpenCV, PaddlePaddle, and fonts
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
     libgomp1 \
     curl \
+    fonts-dejavu-core \
+    fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
