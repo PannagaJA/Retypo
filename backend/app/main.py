@@ -103,6 +103,15 @@ async def upload_image(file: UploadFile = File(...)):
         fileName=file.filename or "uploaded_image.png"
     )
 
+@app.get("/api/ocr/analyze")
+def ocr_analyze_info():
+    return {
+        "status": "ready",
+        "service": "PaddleOCR v3.7 Low-Memory Analysis Engine",
+        "methods_supported": ["POST", "OPTIONS", "HEAD", "GET"],
+        "usage": "Send a POST multipart/form-data request with 'file' and 'lang' parameters."
+    }
+
 @app.post("/api/ocr/analyze", response_model=OCRResponse)
 async def analyze_ocr(file: UploadFile = File(...), lang: str = Form('en')):
     start_time = time.perf_counter()
