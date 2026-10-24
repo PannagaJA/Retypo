@@ -21,4 +21,7 @@ if backend_dir not in sys.path:
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run('app.main:app', host='127.0.0.1', port=8000, reload=True, app_dir=backend_dir)
+    host = os.getenv("HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", 8000))
+    is_prod = os.getenv("RENDER") is not None or os.getenv("ENVIRONMENT") == "production"
+    uvicorn.run('app.main:app', host=host, port=port, reload=not is_prod, app_dir=backend_dir)
