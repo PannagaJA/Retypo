@@ -322,7 +322,11 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                 <button
                   onClick={onRunOCR}
                   disabled={isDetecting}
-                  className="mt-4 px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all"
+                  className={`mt-4 px-3 py-1.5 text-xs font-semibold rounded-full shadow-xs transition-all ${
+                    isDetecting
+                      ? 'bg-slate-300 text-slate-500 cursor-not-allowed pointer-events-none'
+                      : 'bg-slate-900 hover:bg-slate-800 text-white active:scale-95'
+                  }`}
                 >
                   {isDetecting ? 'Analyzing...' : 'Detect Text Now'}
                 </button>

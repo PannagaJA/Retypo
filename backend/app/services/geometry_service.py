@@ -34,12 +34,10 @@ def calculate_font_size(
 ) -> float:
     """
     Estimates CSS / Fabric.js fontSize in native image pixels.
-    In typography and Fabric.js, fontSize corresponds to the font's em-box:
-    - Capital letters (cap-height) occupy ~70% to 72% of the fontSize.
-    - Ascenders + descenders cover ~88% to 92% of the fontSize.
-    To ensure the rendered Fabric text matches the exact visual height of the original letters:
-      fontSize = glyph_height / 0.72 (if no descenders)
-      fontSize = glyph_height / 0.90 (if descenders present)
+    The OCR detection polygon spans the full line box height (lineHeight ~= 1.20 to 1.25 * fontSize).
+    To ensure the recreated Fabric.js Textbox matches the exact height and width of the original text
+    without expanding, word-wrapping, or overflowing:
+      fontSize = poly_height * 0.78
     """
     if len(polygon) < 4:
         return 16.0
@@ -47,12 +45,8 @@ def calculate_font_size(
 
     h_left = math.hypot(p4[0] - p1[0], p4[1] - p1[1])
     h_right = math.hypot(p3[0] - p2[0], p3[1] - p2[1])
-    glyph_height = max(6.0, (h_left + h_right) / 2.0)
-
-    clean_text = (text or "").strip()
-    has_desc = any(c in DESCENDERS_SET for c in clean_text)
-    divisor = 0.90 if has_desc else 0.72
-    calibrated_size = glyph_height / divisor
+    poly_height = max(6.0, (h_left + h_right) / 2.0)
+    nominal_size = poly_height * 0.65
 
     if image is not None:
         try:
@@ -60,23 +54,34 @@ def calculate_font_size(
             ys = [p[1] for p in polygon]
             min_x, max_x = max(0, int(min(xs))), min(image.width, int(max(xs)))
             min_y, max_y = max(0, int(min(ys))), min(image.height, int(max(ys)))
-            if max_x > min_x and max_y > min_y:
+            if max_x > min_x + 4 and max_y > min_y + 4:
                 crop = np.array(image.crop((min_x, min_y, max_x, max_y)))
                 if crop.size > 0:
                     gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY) if len(crop.shape) == 3 else crop
-                    _, th1 = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-                    _, th2 = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-                    th = th1 if np.sum(th1 == 255) < np.sum(th2 == 255) else th2
-                    fg_ys = np.where(th == 255)[0]
-                    if len(fg_ys) >= 4:
-                        inner_h = float(np.max(fg_ys) - np.min(fg_ys) + 1)
-                        if inner_h >= 6.0:
-                            inner_calibrated = inner_h / divisor
-                            return max(10.0, round(inner_calibrated, 1))
+                    h, w = gray.shape
+                    border = np.concatenate([gray[0, :], gray[-1, :], gray[:, 0], gray[:, -1]])
+                    bg_lum = np.median(border)
+                    diff = np.abs(gray.astype(np.float32) - bg_lum)
+                    _, mask = cv2.threshold(diff.astype(np.uint8), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+                    # Strip 2px boundary to eliminate outer box border artifacts
+                    inner_mask = mask[2:h-2, 2:w-2] if h > 6 and w > 6 else mask
+                    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(inner_mask)
+                    char_heights = []
+                    for i in range(1, num_labels):
+                        gx, gy, gw, gh, garea = stats[i]
+                        if 8 <= gh <= 0.92 * h and garea >= 15:
+                            char_heights.append(gh)
+
+                    if char_heights:
+                        char_h = float(np.percentile(char_heights, 75))
+                        # char_h represents cap/digit height (~78% of nominal em-size)
+                        calibrated = min(char_h / 0.78, poly_height * 0.70)
+                        return max(10.0, round(calibrated, 1))
         except Exception:
             pass
 
-    return max(10.0, round(calibrated_size, 1))
+    return max(10.0, round(nominal_size, 1))
 
 def estimate_text_weight(
     image: Optional[Image.Image],
@@ -85,13 +90,12 @@ def estimate_text_weight(
     text: Optional[str] = None
 ) -> str:
     """
-    Estimates CSS font-weight (400, 600, or 700) from text stroke thickness, typography context, and edge sharpness.
-    Uses Euclidean distance transform to measure stem stroke width relative to font height,
-    along with edge sharpness to distinguish bold headers/titles from regular body/subtitles.
+    Estimates CSS font-weight (400, 500, 600, or 700) from text stroke thickness relative to font height.
+    Uses scale-independent stroke-to-height ratio tau to prevent over-bolding UI text.
     """
-    # Context-aware weight detection: transaction amounts and major titles are bold/semi-bold in fintech UI
+    # Context-aware weight detection: transaction amounts and major titles are semi-bold (600) in modern fintech UI
     if text and re.search(r'[+-]?[₹$€£]?\s*[\d,]+\.\d{2}', text.strip()):
-        return "700"
+        return "600"
 
     if image is None or len(polygon) < 4:
         return "400"
@@ -137,14 +141,13 @@ def estimate_text_weight(
         sig_mag = mag[mag > 30]
         p90_edge = float(np.percentile(sig_mag, 90)) if len(sig_mag) > 0 else 0
 
-        # Calibrated for digital UI & mobile typography:
-        # Bold (700): heavy stroke >= 3.4 or (tau >= 0.17 and p90_edge >= 500)
-        # Semi-Bold (600): stroke >= 2.5 or (tau >= 0.13 and p90_edge >= 400)
-        # Regular (400): default
-        if stroke_w >= 3.4 or (tau >= 0.17 and p90_edge >= 500):
+        # Scale-independent relative weight classification:
+        if tau >= 0.20 and p90_edge >= 400:
             return "700"
-        elif stroke_w >= 2.5 or (tau >= 0.13 and p90_edge >= 400):
+        elif tau >= 0.16:
             return "600"
+        elif tau >= 0.13:
+            return "500"
         else:
             return "400"
     except Exception:

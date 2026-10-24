@@ -24,6 +24,8 @@ export const App: React.FC = () => {
   // OCR state
   const [detectedRegions, setDetectedRegions] = useState<DetectedTextRegion[]>([]);
   const [isDetecting, setIsDetecting] = useState<boolean>(false);
+  const isDetectingRef = useRef<boolean>(false);
+  const ocrAbortControllerRef = useRef<AbortController | null>(null);
   const [showDetectionOverlay, setShowDetectionOverlay] = useState<boolean>(true);
   const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null);
   const [ocrLang, setOcrLang] = useState<string>('en');
@@ -71,23 +73,44 @@ export const App: React.FC = () => {
     }
   }, [layers]);
 
-  // Run OCR on current image
+  // Run OCR on current image with strict synchronous locking and cancellation
   const handleRunOCR = async (fileToAnalyze?: File | Blob, langOverride?: string) => {
+    // 1. Synchronously prevent double submits - guarantees zero duplicate requests if fired in same tick/action
+    if (isDetectingRef.current) {
+      console.warn('OCR detection is already in progress, ignoring duplicate submit.');
+      return;
+    }
+
     const activeLang = langOverride || ocrLang;
     const file = fileToAnalyze || image?.file;
     if (!file && !image?.dataUrl) return;
 
+    // 2. Abort any previous pending in-flight request if present
+    if (ocrAbortControllerRef.current) {
+      ocrAbortControllerRef.current.abort();
+    }
+    const abortController = new AbortController();
+    ocrAbortControllerRef.current = abortController;
+
+    isDetectingRef.current = true;
     setIsDetecting(true);
+
     try {
       let blob: Blob;
       if (file) {
         blob = file;
       } else {
-        const res = await fetch(image!.dataUrl);
+        const res = await fetch(image!.dataUrl, { signal: abortController.signal });
         blob = await res.blob();
       }
 
-      const result = await analyzeImageOCR(blob, image?.fileName || 'image.png', activeLang);
+      const result = await analyzeImageOCR(blob, image?.fileName || 'image.png', activeLang, {
+        signal: abortController.signal,
+      });
+
+      // Ignore results if this request was aborted mid-flight
+      if (abortController.signal.aborted) return;
+
       setDetectedRegions(result.regions);
       setShowDetectionOverlay(true);
       if (result.regions.length > 0) {
@@ -95,11 +118,19 @@ export const App: React.FC = () => {
       } else {
         showToast('No text regions detected in this image.', 'info');
       }
-    } catch (err) {
-      console.warn('OCR API request error (PaddleOCR):', err);
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        console.log('Previous OCR request aborted.');
+        return;
+      }
+      console.warn('OCR API request error:', err);
       showToast('OCR detection failed. Please check backend connection.', 'warn');
     } finally {
-      setIsDetecting(false);
+      if (ocrAbortControllerRef.current === abortController) {
+        ocrAbortControllerRef.current = null;
+        isDetectingRef.current = false;
+        setIsDetecting(false);
+      }
     }
   };
 
@@ -812,12 +843,14 @@ export const App: React.FC = () => {
             <button
               onClick={() => handleRunOCR()}
               disabled={isDetecting}
-              className="flex flex-col items-center gap-1 text-center active:scale-95 transition-transform"
+              className={`flex flex-col items-center gap-1 text-center transition-all ${
+                isDetecting ? 'opacity-50 pointer-events-none cursor-not-allowed' : 'active:scale-95'
+              }`}
             >
               <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 shadow-xs">
                 {isDetecting ? <Loader2 className="w-4 h-4 animate-spin text-slate-600" /> : <ScanText className="w-4 h-4 text-slate-700" />}
               </div>
-              <span className="text-[10px] font-medium text-slate-700">Detect Text</span>
+              <span className="text-[10px] font-medium text-slate-700">{isDetecting ? 'Detecting...' : 'Detect Text'}</span>
             </button>
 
             {/* Inpaint All */}

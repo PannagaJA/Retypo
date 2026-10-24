@@ -90,7 +90,12 @@ export async function checkBackendHealth(): Promise<{ isHealthy: boolean; engine
   }
 }
 
-export async function analyzeImageOCR(file: File | Blob, fileName: string = 'image.png', lang: string = 'en'): Promise<OCRAnalysisResult> {
+export async function analyzeImageOCR(
+  file: File | Blob,
+  fileName: string = 'image.png',
+  lang: string = 'en',
+  options?: { signal?: AbortSignal }
+): Promise<OCRAnalysisResult> {
   const formData = new FormData();
   formData.append('file', file, fileName);
   formData.append('lang', lang);
@@ -98,6 +103,7 @@ export async function analyzeImageOCR(file: File | Blob, fileName: string = 'ima
   const response = await callApi('/api/ocr/analyze', {
     method: 'POST',
     body: formData,
+    signal: options?.signal,
   });
 
   if (!response.ok) {

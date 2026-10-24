@@ -34,6 +34,24 @@ FONT_CATALOGUE = [
         "aspect_factor": 0.58,
     },
     {
+        "family": "Poppins",
+        "category": "sans-serif",
+        "is_serif": False,
+        "weights": ["400", "500", "600", "700"],
+        "regular_patterns": ["Poppins-Regular.ttf", "Poppins.ttf", "Arial.ttf", "DejaVuSans.ttf"],
+        "bold_patterns": ["Poppins-Bold.ttf", "Arial Bold.ttf", "DejaVuSans-Bold.ttf"],
+        "aspect_factor": 0.58,
+    },
+    {
+        "family": "Plus Jakarta Sans",
+        "category": "sans-serif",
+        "is_serif": False,
+        "weights": ["400", "500", "600", "700"],
+        "regular_patterns": ["PlusJakartaSans-Regular.ttf", "PlusJakartaSans.ttf", "Arial.ttf"],
+        "bold_patterns": ["PlusJakartaSans-Bold.ttf", "Arial Bold.ttf"],
+        "aspect_factor": 0.57,
+    },
+    {
         "family": "Roboto",
         "category": "sans-serif",
         "is_serif": False,
@@ -247,7 +265,7 @@ class TypographyService:
         if len(dist_vals) == 0:
             return 3.0, "400"
 
-        stroke_radius = float(np.percentile(dist_vals, 92))
+        stroke_radius = float(np.percentile(dist_vals, 80))
         stroke_width = max(1.0, 2.0 * stroke_radius)
 
         effective_h = max(12.0, font_size)

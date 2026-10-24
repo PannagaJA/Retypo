@@ -144,15 +144,16 @@ export const Header: React.FC<HeaderProps> = ({
                 disabled={isDetecting}
                 className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full transition-all ${
                   isDetecting
-                    ? 'bg-slate-200 text-slate-500 cursor-wait'
-                    : 'bg-white text-slate-800 hover:bg-slate-50 shadow-xs'
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed pointer-events-none'
+                    : 'bg-white text-slate-800 hover:bg-slate-50 shadow-xs active:scale-95'
                 }`}
-                title="Detect text regions"
+                title={isDetecting ? 'Detection in progress...' : 'Detect text regions'}
               >
                 {isDetecting ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-600" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />
                     <span className="hidden sm:inline">Detecting...</span>
+                    <span className="sm:hidden">...</span>
                   </>
                 ) : (
                   <>
@@ -166,8 +167,11 @@ export const Header: React.FC<HeaderProps> = ({
               {onChangeOcrLang && (
                 <select
                   value={ocrLang}
+                  disabled={isDetecting}
                   onChange={(e) => onChangeOcrLang(e.target.value)}
-                  className="bg-transparent text-slate-700 hover:text-slate-900 px-2 py-1 text-[11px] font-mono cursor-pointer focus:outline-none rounded-r-full"
+                  className={`bg-transparent text-slate-700 hover:text-slate-900 px-2 py-1 text-[11px] font-mono rounded-r-full focus:outline-none ${
+                    isDetecting ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
                   title="OCR Language Model"
                 >
                   <option value="en">EN</option>

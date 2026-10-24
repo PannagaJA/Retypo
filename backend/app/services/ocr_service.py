@@ -253,11 +253,13 @@ class OCRService:
         s = re.sub(r'[\r\n\t]+', ' ', s)
         s = re.sub(r' {2,}', ' ', s)
 
-        # 2. Strip leading bullet/arrow symbols at start of lines (e.g. '> Continue Reading' -> 'Continue Reading')
-        s = re.sub(r'^[>»›«‹→←^v\-\—\•\·~\|\+]\s*', '', s)
+        # 2. Strip purely decorative bullet/arrow markers (e.g. '• Read More' -> 'Read More')
+        # CRITICAL: NEVER strip minus '-', plus '+', hyphens, or currency symbols ($ € £ ¥ ₹)!
+        s = re.sub(r'^[•·»›«‹→←]\s+(?=[A-Za-z])', '', s)
 
         # 3. Fix currency symbols attached to numbers or spaces universally:
-        # e.g. "$ 120" -> "$120", "€ 49.99" -> "€49.99", "£ 10" -> "£10", "₹ 250" -> "₹250"
+        # e.g. "$ 120" -> "$120", "€ 49.99" -> "€49.99", "£ 10" -> "£10", "₹ 250" -> "₹250", "- ₹ 105" -> "-₹105"
+        s = re.sub(r'([+-])\s*([$€£¥₹])', r'\1\2', s)
         s = re.sub(r'([$€£¥₹])\s+(\d)', r'\1\2', s)
 
         # 4. Standard punctuation spacing: remove space before comma/period/colon
@@ -270,6 +272,47 @@ class OCRService:
             s = s[:-1].strip()
 
         return s
+
+    @staticmethod
+    def _recover_currency_symbols(crop_bgr: Optional[np.ndarray], text: str) -> str:
+        """
+        Detects if an Indian Rupee symbol ₹ or currency glyph is present in the visual image crop
+        when the OCR engine missed or skipped it (e.g. recognized '-105.00' instead of '-₹105.00').
+        """
+        clean = text.strip()
+        m = re.match(r"^([+-]?)\s*([0-9,]+\.?[0-9]*)$", clean)
+        if not m or crop_bgr is None or crop_bgr.size == 0:
+            return text
+        sign, amount = m.groups()
+        if not amount:
+            return text
+
+        try:
+            gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
+            h, w = gray.shape
+            border = np.concatenate([gray[0, :], gray[-1, :], gray[:, 0], gray[:, -1]])
+            bg = float(np.median(border))
+            diff = np.abs(gray.astype(np.float32) - bg)
+            _, mask = cv2.threshold(diff.astype(np.uint8), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+            num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
+            major_comps = []
+            for i in range(1, num_labels):
+                gx, gy, gw, gh, garea = stats[i]
+                if gh >= 0.35 * h and garea >= 12:
+                    major_comps.append((gx, gy, gw, gh, garea))
+            major_comps.sort(key=lambda c: c[0])
+
+            num_main_digits = len(re.sub(r"[,\.]", "", amount))
+            if len(major_comps) > num_main_digits:
+                first_comp = major_comps[0]
+                gx, gy, gw, gh, garea = first_comp
+                aspect = gw / max(1.0, float(gh))
+                if 0.30 <= aspect <= 1.15:
+                    return f"{sign}₹{amount}"
+        except Exception:
+            pass
+        return text
 
     def analyze_image(self, image: Image.Image, lang: str = "en") -> List[DetectedTextRegion]:
         """
@@ -360,8 +403,9 @@ class OCRService:
                 if self._is_icon_or_noise(raw_text, bbox, round(score, 3), crop_bgr=crop_bgr, image_dims=(w, h)):
                     continue
 
-                # Apply universal text normalization
+                # Apply universal text normalization and recover currency symbols if dropped
                 normalized_text = self._normalize_detected_text(raw_text, all_raw_texts)
+                normalized_text = self._recover_currency_symbols(crop_bgr, normalized_text)
 
                 color = estimate_text_color(image, clean_polygon)
                 weight = estimate_text_weight(image, clean_polygon, font_size, text=normalized_text)

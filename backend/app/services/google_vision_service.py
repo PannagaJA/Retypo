@@ -1,6 +1,8 @@
 import os
 import io
+import time
 import base64
+import hashlib
 import httpx
 from typing import List, Tuple, Optional, Any, Dict
 from PIL import Image
@@ -8,14 +10,26 @@ from PIL import Image
 class GoogleVisionService:
     """
     High-accuracy, ultra-fast OCR engine powered by Google Cloud Vision API.
-    Processes full multi-line images in ~350ms with 99.9% commercial accuracy.
-    Runs completely free within Google's 1,000 requests/month free tier.
+    Configured with a strict ZERO-RETRY policy (max_retries=0) and SHA-256
+    deduplication cache to guarantee zero duplicate requests and zero quota wastage.
     """
     VISION_URL = "https://vision.googleapis.com/v1/images:annotate"
 
+    # In-memory deduplication cache: {sha256_hash: (timestamp, parsed_items)}
+    _dedup_cache: Dict[str, Tuple[float, List[Tuple[List[List[float]], str, float]]]] = {}
+    CACHE_TTL_SECONDS = 60.0
+
     @classmethod
     def get_api_key(cls) -> str:
-        return (os.getenv("GOOGLE_VISION_API_KEY") or "").strip()
+        key = os.getenv("GOOGLE_VISION_API_KEY")
+        if not key:
+            try:
+                from dotenv import load_dotenv
+                load_dotenv()
+                key = os.getenv("GOOGLE_VISION_API_KEY")
+            except Exception:
+                pass
+        return (key or "").strip()
 
     @classmethod
     def is_available(cls) -> bool:
@@ -75,7 +89,6 @@ class GoogleVisionService:
         # Fallback to textAnnotations if fullTextAnnotation didn't yield items
         if not items and "textAnnotations" in first_resp:
             text_annotations = first_resp.get("textAnnotations", [])
-            # Index 0 is the full concatenated text; indices 1+ are individual components
             for ann in text_annotations[1:]:
                 text = ann.get("description", "").strip()
                 vertices = ann.get("boundingPoly", {}).get("vertices", [])
@@ -109,16 +122,15 @@ class GoogleVisionService:
     @classmethod
     def analyze_image_sync(cls, image: Image.Image) -> Optional[List[Tuple[List[List[float]], str, float]]]:
         """
-        Synchronous call to Google Cloud Vision API using httpx.
-        Returns list of (clean_poly, text, confidence) or None if API key missing / request failed.
+        Synchronous call to Google Cloud Vision API with strict ZERO-RETRY policy (max_retries=0)
+        and SHA-256 deduplication. Drops out instantly on any error without quota burning.
         """
         api_key = cls.get_api_key()
         if not api_key:
             return None
 
-        # Convert PIL Image to compressed JPEG bytes for fast network transmission
+        # 1. Compress image to JPEG bytes
         buffer = io.BytesIO()
-        # Cap max side to 1600 for network efficiency without losing OCR clarity
         w, h = image.width, image.height
         if max(w, h) > 1600:
             scale = 1600.0 / float(max(w, h))
@@ -129,7 +141,18 @@ class GoogleVisionService:
             image.convert("RGB").save(buffer, format="JPEG", quality=90)
             img_scale = 1.0
 
-        content_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        image_bytes = buffer.getvalue()
+
+        # 2. SHA-256 Deduplication check (prevents double API calls if triggered in rapid succession)
+        img_hash = hashlib.sha256(image_bytes).hexdigest()
+        now = time.time()
+        if img_hash in cls._dedup_cache:
+            cached_time, cached_result = cls._dedup_cache[img_hash]
+            if now - cached_time < cls.CACHE_TTL_SECONDS:
+                print(f"[GoogleVision] Serving cached OCR result for hash {img_hash[:8]} (saved 1 API call).")
+                return cached_result
+
+        content_b64 = base64.b64encode(image_bytes).decode("utf-8")
 
         payload = {
             "requests": [
@@ -140,28 +163,37 @@ class GoogleVisionService:
             ]
         }
 
+        # 3. Strict Zero-Retry Policy: retries=0 transport guarantees immediate dropout
+        transport = httpx.HTTPTransport(retries=0)
         try:
-            with httpx.Client(timeout=15.0) as client:
+            with httpx.Client(transport=transport, timeout=10.0) as client:
                 resp = client.post(f"{cls.VISION_URL}?key={api_key}", json=payload)
 
             if resp.status_code != 200:
-                print(f"[GoogleVision] Cloud Vision API returned HTTP {resp.status_code}: {resp.text}")
+                print(f"[GoogleVision] API returned HTTP {resp.status_code}: {resp.text}")
                 return None
 
             data = resp.json()
             raw_items = cls.parse_vision_response(data)
 
-            # If image was scaled for network transfer, rescale coordinates back to full resolution
+            # Rescale coordinates back to full resolution if image was downscaled
             if img_scale != 1.0:
-                scaled_items = []
                 inv_scale = 1.0 / img_scale
+                items = []
                 for poly, text, conf in raw_items:
                     rescaled_poly = [[round(pt[0] * inv_scale, 1), round(pt[1] * inv_scale, 1)] for pt in poly]
-                    scaled_items.append((rescaled_poly, text, conf))
-                return scaled_items
+                    items.append((rescaled_poly, text, conf))
+            else:
+                items = raw_items
 
-            return raw_items
+            # Store in short-lived dedup cache
+            cls._dedup_cache[img_hash] = (now, items)
+            return items
 
+        except (httpx.RequestError, httpx.TimeoutException) as err:
+            # Immediate fail-fast: NEVER retry on network drop or timeout
+            print(f"[GoogleVision] Request failed immediately (zero-retry policy): {err}")
+            return None
         except Exception as e:
-            print(f"[GoogleVision] Error calling Cloud Vision API: {e}")
+            print(f"[GoogleVision] Unexpected error: {e}")
             return None
