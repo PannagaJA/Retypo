@@ -211,7 +211,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   return (
     <aside className="w-full lg:w-80 bg-white border-l-0 lg:border-l border-slate-200 flex flex-col h-full overflow-y-auto select-none text-slate-800">
       {/* Panel Header */}
-      <div className="p-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+      <div className="p-3 sm:p-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50 shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center shrink-0 border border-slate-200">
             <Type className="w-4 h-4" />
@@ -273,7 +273,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </div>
       </div>
 
-      <div className="p-4 space-y-5">
+      <div className="p-4 pb-28 lg:pb-6 space-y-4">
         {/* Background Inpainting / Text Removal Section */}
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
           <div className="flex items-center justify-between">

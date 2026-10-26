@@ -20,6 +20,7 @@ export const App: React.FC = () => {
   const [inpaintPatches, setInpaintPatches] = useState<InpaintPatch[]>([]);
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
   const [mobileTab, setMobileTab] = useState<'canvas' | 'layers' | 'properties'>('canvas');
+  const [isStyleExpanded, setIsStyleExpanded] = useState<boolean>(false);
 
   // OCR state
   const [detectedRegions, setDetectedRegions] = useState<DetectedTextRegion[]>([]);
@@ -817,7 +818,7 @@ export const App: React.FC = () => {
             lg:static lg:block lg:w-72 lg:h-full lg:z-auto
             ${
               mobileTab === 'layers'
-                ? 'fixed inset-x-0 bottom-0 z-40 h-[84vh] max-h-[84dvh] bg-white rounded-t-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.12)] border-t border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200'
+                ? 'fixed inset-x-0 bottom-0 z-40 h-[58vh] max-h-[58dvh] bg-white rounded-t-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.12)] border-t border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200'
                 : 'hidden lg:flex'
             }
           `}
@@ -893,12 +894,21 @@ export const App: React.FC = () => {
             lg:static lg:block lg:w-80 lg:h-full lg:z-auto
             ${
               mobileTab === 'properties'
-                ? 'fixed inset-x-0 bottom-0 z-40 h-[85vh] max-h-[85dvh] bg-white rounded-t-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.12)] border-t border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200'
+                ? `fixed inset-x-0 bottom-0 z-40 ${
+                    isStyleExpanded ? 'h-[75vh] max-h-[75dvh]' : 'h-[38vh] max-h-[38dvh] sm:h-[42vh] sm:max-h-[42dvh]'
+                  } bg-white rounded-t-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.15)] border-t border-slate-200 flex flex-col overflow-hidden transition-[height] duration-200 ease-out`
                 : 'hidden lg:flex'
             }
           `}
         >
-          <div className="lg:hidden w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2.5 shrink-0" />
+          {/* Mobile Drag / Expand Handle */}
+          <div
+            onClick={() => setIsStyleExpanded((v) => !v)}
+            className="lg:hidden w-full flex items-center justify-center py-2 cursor-pointer hover:bg-slate-50 active:bg-slate-100 transition-colors shrink-0 group select-none"
+            title={isStyleExpanded ? 'Tap to collapse' : 'Tap to expand'}
+          >
+            <div className="w-10 h-1.5 bg-slate-300 group-hover:bg-slate-400 rounded-full transition-colors" />
+          </div>
           <PropertiesPanel
             layer={selectedLayer}
             image={image}
@@ -928,7 +938,11 @@ export const App: React.FC = () => {
         {/* Backdrop for Mobile Drawers */}
         {mobileTab !== 'canvas' && (
           <div
-            className="lg:hidden fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-xs transition-opacity"
+            className={`lg:hidden fixed inset-0 z-30 transition-opacity ${
+              mobileTab === 'properties'
+                ? 'bg-transparent pointer-events-none'
+                : 'bg-slate-900/40 backdrop-blur-xs'
+            }`}
             onClick={() => setMobileTab('canvas')}
           />
         )}
