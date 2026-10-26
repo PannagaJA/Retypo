@@ -1,9 +1,10 @@
+# Retypo — AI Image Text Editor & Typography Reconstruction Engine
+
 <div align="center">
 
-<h1>
-  <img src="frontend/public/retypo-logo.svg" alt="Retypo Logo" width="32" height="32" align="middle" />
-  Retypo — AI Image Text Editor &amp; Typography Reconstruction Engine
-</h1>
+<img src="frontend/public/retypo-logo.svg" alt="Retypo Logo" width="64" height="64" />
+
+<br/>
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
