@@ -1,6 +1,9 @@
 <div align="center">
 
-# <img src="frontend/public/retypo-logo.svg" alt="Retypo Logo" width="36" height="36" style="vertical-align: middle; margin-right: 6px;" /> Retypo — AI Image Text Editor & Typography Reconstruction Engine
+<h1>
+  <img src="frontend/public/retypo-logo.svg" alt="Retypo Logo" width="32" height="32" align="middle" />
+  Retypo — AI Image Text Editor &amp; Typography Reconstruction Engine
+</h1>
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
