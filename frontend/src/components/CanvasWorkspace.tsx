@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as fabric from 'fabric';
 import type { ImageMetadata, TextLayer, InpaintPatch, DetectedTextRegion } from '../types';
 import { calculateFitScale } from '../utils/coordinates';
-import { UploadCloud, Image as ImageIcon, HelpCircle, ZoomIn, ZoomOut, Loader2 } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, HelpCircle, ZoomIn, ZoomOut } from 'lucide-react';
 
 function isPointInPolygon(pt: { x: number; y: number }, poly: number[][]): boolean {
   if (!poly || poly.length < 3) return false;
@@ -853,27 +853,23 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     >
       <canvas ref={canvasElRef} id="editor-canvas" className="w-full h-full block" />
 
-      {/* Document Scanner Animation (matches app theme) */}
+      {/* Scanning Document Animation (from LottieFiles scanning-document) */}
       {isDetecting && image && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-25 select-none transition-opacity duration-300">
-          {/* Subtle Scanning Beam */}
-          <div className="absolute inset-x-0 h-32 -translate-y-full animate-scan-sweep pointer-events-none">
-            {/* Soft gradient wash */}
-            <div
-              className="w-full h-full"
-              style={{
-                background:
-                  'linear-gradient(to bottom, transparent 0%, rgba(16, 185, 129, 0.04) 60%, rgba(16, 185, 129, 0.14) 100%)',
-              }}
-            />
-            {/* Fine emerald scan line matching detected text boxes */}
-            <div className="w-full h-[1.5px] bg-gradient-to-r from-transparent via-emerald-500/80 via-50% to-transparent shadow-[0_0_10px_rgba(16,185,129,0.35)]" />
-          </div>
-
-          {/* Minimal Floating Status Pill (matches canvas bottom controls) */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200 text-slate-700 shadow-sm text-xs font-medium">
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
-            <span>Scanning for text...</span>
+        <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-slate-900/10 backdrop-blur-[2px] transition-all duration-200">
+          <div className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-6 sm:p-7 shadow-2xl flex flex-col items-center justify-center max-w-xs text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-32 h-32 sm:w-36 sm:h-36 relative flex items-center justify-center mb-2">
+              <img
+                src="/scanning-document.gif"
+                alt="Scanning Document"
+                className="w-full h-full object-contain pointer-events-none select-none"
+              />
+            </div>
+            <h3 className="text-sm font-semibold text-slate-800 tracking-tight">
+              Scanning Document...
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1 max-w-[210px] leading-relaxed">
+              Detecting text regions and matching typography
+            </p>
           </div>
         </div>
       )}

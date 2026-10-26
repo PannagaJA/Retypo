@@ -641,7 +641,7 @@ export const App: React.FC = () => {
       setDetectedRegions(sampleDetected);
       setIsDetecting(false);
       showToast(`Detected ${sampleDetected.length} text region(s). Click any green box to edit.`, 'success');
-    }, 1100);
+    }, 1600);
   };
 
   const handleAddText = () => {
