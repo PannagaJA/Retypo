@@ -272,14 +272,15 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       touchDownPos = { x: pos.x, y: pos.y };
       hasMoved = false;
 
-      // Check if target is an editable text layer or active transform control
-      const isSelectableTarget = Boolean(opt.target && opt.target.selectable);
+      // Check if target is an editable text layer, detected text region, or active transform control
+      const isDetectedRegion = Boolean(opt.target && (opt.target as any).regionData);
+      const isSelectableTarget = Boolean(opt.target && (opt.target.selectable || isDetectedRegion));
       const isTransformControl = Boolean(
         opt.target &&
         (canvas as any)._currentTransform
       );
 
-      // Pan when holding outside any selectable text layer/control, or holding space, or middle click
+      // Pan when holding outside any selectable text layer/control/traced region, or holding space, or middle click
       const shouldPan = (!isSelectableTarget && !isTransformControl) || isSpacePressedRef.current || (e && e.button === 1);
 
       if (shouldPan) {
@@ -782,6 +783,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         hasBorders: true,
       };
 
+      const charSpacingVal = layer.letterSpacing
+        ? Math.round((layer.letterSpacing / Math.max(1, layer.fontSize)) * 1000)
+        : 0;
+      const lineHeightVal = layer.lineHeight || 1.16;
+
       if (!tb) {
         tb = new fabric.Textbox(layer.text, {
           left: layer.left,
@@ -795,6 +801,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           stroke: layer.stroke || undefined,
           strokeWidth: layer.strokeWidth || 0,
           textAlign: layer.textAlign,
+          charSpacing: charSpacingVal,
+          lineHeight: lineHeightVal,
           angle: layer.angle || 0,
           opacity: layer.opacity,
           shadow: shadowConfig,
@@ -844,6 +852,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           stroke: layer.stroke || undefined,
           strokeWidth: layer.strokeWidth || 0,
           textAlign: layer.textAlign,
+          charSpacing: charSpacingVal,
+          lineHeight: lineHeightVal,
           angle: layer.angle || 0,
           opacity: layer.opacity,
           shadow: shadowConfig,

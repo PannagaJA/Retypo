@@ -18,7 +18,9 @@ import {
   ChevronDown,
   X,
   Search,
-  Check
+  Check,
+  Minus,
+  Plus
 } from 'lucide-react';
 
 interface PropertiesPanelProps {
@@ -537,11 +539,58 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <div className="space-y-3 pt-2 border-t border-slate-200">
           <div className="flex items-center justify-between">
             <label className="text-xs font-medium text-slate-600">Font Size</label>
-            <span className="text-xs font-mono text-slate-800 font-semibold">{Math.round(layer.fontSize)} px</span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => onChange({ fontSize: Math.max(6, Math.round(layer.fontSize - 1)) })}
+                className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors shadow-2xs active:scale-95"
+                title="Decrease font size (-1px)"
+              >
+                <Minus className="w-3 h-3" />
+              </button>
+              <div className="relative flex items-center">
+                <input
+                  type="number"
+                  min="6"
+                  max="250"
+                  value={Math.round(layer.fontSize)}
+                  onChange={(e) => onChange({ fontSize: Math.max(6, Number(e.target.value) || 6) })}
+                  className="w-14 px-1 py-0.5 text-center font-mono text-xs font-semibold bg-slate-50 border border-slate-200 rounded text-slate-900 focus:outline-none focus:border-slate-800"
+                />
+                <span className="text-[10px] text-slate-400 font-mono absolute right-1 pointer-events-none">px</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => onChange({ fontSize: Math.min(250, Math.round(layer.fontSize + 1)) })}
+                className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors shadow-2xs active:scale-95"
+                title="Increase font size (+1px)"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
           </div>
+
+          {/* Quick preset size buttons */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar">
+            {[12, 14, 16, 18, 24, 32, 48, 64].map((size) => (
+              <button
+                key={size}
+                type="button"
+                onClick={() => onChange({ fontSize: size })}
+                className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors ${
+                  Math.round(layer.fontSize) === size
+                    ? 'bg-slate-900 text-white font-semibold shadow-2xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                }`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+
           <input
             type="range"
-            min="10"
+            min="8"
             max="180"
             value={layer.fontSize}
             onChange={(e) => onChange({ fontSize: Number(e.target.value) })}
@@ -672,28 +721,90 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           </div>
 
           {/* Spacing & Line Height */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-[11px] font-medium text-slate-600">Tracking</label>
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-medium text-slate-600">Tracking</label>
+                <span className="text-[10px] font-mono text-slate-700 font-semibold">{layer.letterSpacing || 0}px</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onChange({ letterSpacing: Math.round(((layer.letterSpacing || 0) - 0.5) * 10) / 10 })}
+                  className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 active:scale-95 transition-colors"
+                  title="Decrease tracking (-0.5px)"
+                >
+                  <Minus className="w-2.5 h-2.5" />
+                </button>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="-10"
+                  max="50"
+                  value={layer.letterSpacing || 0}
+                  onChange={(e) => onChange({ letterSpacing: Number(e.target.value) })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded px-1 py-0.5 text-xs font-mono text-center text-slate-900 focus:outline-none focus:border-slate-800"
+                />
+                <button
+                  type="button"
+                  onClick={() => onChange({ letterSpacing: Math.round(((layer.letterSpacing || 0) + 0.5) * 10) / 10 })}
+                  className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 active:scale-95 transition-colors"
+                  title="Increase tracking (+0.5px)"
+                >
+                  <Plus className="w-2.5 h-2.5" />
+                </button>
+              </div>
               <input
-                type="number"
-                min="-10"
-                max="100"
+                type="range"
+                min="-5"
+                max="30"
+                step="0.5"
                 value={layer.letterSpacing || 0}
                 onChange={(e) => onChange({ letterSpacing: Number(e.target.value) })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-mono text-slate-900"
+                className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-medium text-slate-600">Line Height</label>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-medium text-slate-600">Line Height</label>
+                <span className="text-[10px] font-mono text-slate-700 font-semibold">{layer.lineHeight || 1.2}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onChange({ lineHeight: Math.max(0.5, Math.round(((layer.lineHeight || 1.2) - 0.1) * 10) / 10) })}
+                  className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 active:scale-95 transition-colors"
+                  title="Decrease line height (-0.1)"
+                >
+                  <Minus className="w-2.5 h-2.5" />
+                </button>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0.5"
+                  max="3.0"
+                  value={layer.lineHeight || 1.2}
+                  onChange={(e) => onChange({ lineHeight: Number(e.target.value) })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded px-1 py-0.5 text-xs font-mono text-center text-slate-900 focus:outline-none focus:border-slate-800"
+                />
+                <button
+                  type="button"
+                  onClick={() => onChange({ lineHeight: Math.min(3.0, Math.round(((layer.lineHeight || 1.2) + 0.1) * 10) / 10) })}
+                  className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 active:scale-95 transition-colors"
+                  title="Increase line height (+0.1)"
+                >
+                  <Plus className="w-2.5 h-2.5" />
+                </button>
+              </div>
               <input
-                type="number"
-                step="0.1"
-                min="0.5"
-                max="3.0"
+                type="range"
+                min="0.8"
+                max="2.5"
+                step="0.05"
                 value={layer.lineHeight || 1.2}
                 onChange={(e) => onChange({ lineHeight: Number(e.target.value) })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-mono text-slate-900"
+                className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
               />
             </div>
           </div>
