@@ -93,4 +93,44 @@ describe('HistoryManager (Undo / Redo)', () => {
     expect(u3?.[0].text).toBe('v2');
     expect(history.canUndo()).toBe(false);
   });
+
+  it('correctly handles full EditorSnapshot with inpaint patches and converted regions', () => {
+    const history = new HistoryManager();
+
+    const snapshot0 = {
+      layers: [],
+      inpaintPatches: [],
+      convertedRegionIds: [],
+    };
+
+    const snapshot1 = {
+      layers: [layer1],
+      inpaintPatches: [
+        {
+          id: 'patch-layer-1',
+          bounds: { left: 100, top: 100, width: 200, height: 40 },
+          dataUrl: 'data:image/png;base64,patchdata',
+          strategy: 'telea',
+        },
+      ],
+      convertedRegionIds: ['region-1'],
+    };
+
+    history.pushState(snapshot0);
+    expect(history.canUndo()).toBe(true);
+
+    // Undo from snapshot1 back to snapshot0
+    const undone = history.undo(snapshot1);
+    expect(undone).toEqual(snapshot0);
+    expect(undone?.layers).toHaveLength(0);
+    expect(undone?.inpaintPatches).toHaveLength(0);
+    expect(undone?.convertedRegionIds).toHaveLength(0);
+
+    // Redo restores snapshot1 with inpaint patch and converted region ID
+    const redone = history.redo(snapshot0);
+    expect(redone).toEqual(snapshot1);
+    expect(redone?.layers).toHaveLength(1);
+    expect(redone?.inpaintPatches?.[0].id).toBe('patch-layer-1');
+    expect(redone?.convertedRegionIds).toContain('region-1');
+  });
 });

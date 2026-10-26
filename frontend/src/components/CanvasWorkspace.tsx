@@ -35,7 +35,9 @@ interface CanvasWorkspaceProps {
   layers: TextLayer[];
   selectedLayerId: string | null;
   onSelectLayer: (id: string | null) => void;
-  onUpdateLayer: (id: string, updates: Partial<TextLayer>) => void;
+  onUpdateLayer: (id: string, updates: Partial<TextLayer>, commitHistory?: boolean) => void;
+  onStartTextEditing?: () => void;
+  onEndTextEditing?: (hasChanged: boolean) => void;
   zoom: number;
   onZoomChange: (newZoom: number) => void;
   isComparing: boolean;
@@ -61,6 +63,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   selectedLayerId,
   onSelectLayer,
   onUpdateLayer,
+  onStartTextEditing,
+  onEndTextEditing,
   zoom: _zoom,
   onZoomChange,
   isComparing,
@@ -101,6 +105,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     onShowDetectionOverlay,
     onSelectLayer,
     onUpdateLayer,
+    onStartTextEditing,
+    onEndTextEditing,
     onZoomChange,
     onHoverRegion,
   });
@@ -114,6 +120,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     onShowDetectionOverlay,
     onSelectLayer,
     onUpdateLayer,
+    onStartTextEditing,
+    onEndTextEditing,
     onZoomChange,
     onHoverRegion,
   };
@@ -156,7 +164,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       onSelectLayer(null);
     });
 
-    // Handle Object Modifications
+    // Handle Object Modifications (drag, scale, rotate)
     const handleModified = (e: any) => {
       if (isUpdatingFromProps.current) return;
       const target = e.target as (fabric.Textbox & { layerId?: string });
@@ -174,8 +182,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         width: scaledWidth,
         fontSize: newFontSize,
       });
+      target.initDimensions();
+      target.setCoords();
 
-      onUpdateLayer(target.layerId, {
+      propsRef.current.onUpdateLayer(target.layerId, {
         left: target.left || 0,
         top: target.top || 0,
         width: scaledWidth,
@@ -183,12 +193,46 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         angle: target.angle || 0,
         fontSize: newFontSize,
         text: target.text || '',
-      });
+      }, true);
       canvas.renderAll();
     };
 
+    const handleTextChanged = (e: any) => {
+      if (isUpdatingFromProps.current) return;
+      const target = e.target as (fabric.Textbox & { layerId?: string });
+      if (!target || !target.layerId) return;
+
+      propsRef.current.onUpdateLayer(target.layerId, {
+        text: target.text || '',
+      }, false);
+    };
+
+    let textBeforeEditing: string = '';
+    const handleEditingEntered = (e: any) => {
+      const target = e.target as (fabric.Textbox & { layerId?: string });
+      if (!target) return;
+      textBeforeEditing = target.text || '';
+      propsRef.current.onStartTextEditing?.();
+    };
+
+    const handleEditingExited = (e: any) => {
+      if (isUpdatingFromProps.current) return;
+      const target = e.target as (fabric.Textbox & { layerId?: string });
+      if (!target || !target.layerId) return;
+
+      const hasChanged = (target.text || '') !== textBeforeEditing;
+      propsRef.current.onEndTextEditing?.(hasChanged);
+      if (hasChanged) {
+        propsRef.current.onUpdateLayer(target.layerId, {
+          text: target.text || '',
+        }, false);
+      }
+    };
+
     canvas.on('object:modified', handleModified);
-    canvas.on('text:changed', handleModified);
+    canvas.on('text:changed', handleTextChanged);
+    canvas.on('text:editing:entered', handleEditingEntered);
+    canvas.on('text:editing:exited', handleEditingExited);
 
     // Zooming via Wheel
     canvas.on('mouse:wheel', (opt) => {
@@ -736,6 +780,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           editable: !layer.isLocked,
           ...controlOptions,
         });
+        tb.initDimensions();
+        tb.setCoords();
       }
 
       if (selectedLayerId === layer.id && !layer.isLocked && tb) {

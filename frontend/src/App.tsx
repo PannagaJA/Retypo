@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { ImageMetadata, TextLayer, InpaintPatch, DetectedTextRegion } from './types';
-import { HistoryManager } from './utils/history';
+import { HistoryManager, type EditorSnapshot } from './utils/history';
 import { Header } from './components/Header';
 import { CanvasWorkspace } from './components/CanvasWorkspace';
 import { LayersPanel } from './components/LayersPanel';
@@ -45,33 +45,95 @@ export const App: React.FC = () => {
   };
 
   // History Manager
-  const historyRef = useRef<HistoryManager>(new HistoryManager(50));
-  const [_historyKey, setHistoryKey] = useState<number>(0);
+  const historyRef = useRef<HistoryManager<EditorSnapshot>>(new HistoryManager<EditorSnapshot>(50));
+  const [canUndo, setCanUndo] = useState<boolean>(false);
+  const [canRedo, setCanRedo] = useState<boolean>(false);
 
-  // Push history state whenever layers are intentionally updated
-  const updateLayersWithHistory = useCallback((newLayers: TextLayer[]) => {
-    historyRef.current.pushState(layers);
-    setLayers(newLayers);
-    setHistoryKey((k) => k + 1);
-  }, [layers]);
+  const layersRef = useRef(layers);
+  layersRef.current = layers;
+  const inpaintPatchesRef = useRef(inpaintPatches);
+  inpaintPatchesRef.current = inpaintPatches;
+  const detectedRegionsRef = useRef(detectedRegions);
+  detectedRegionsRef.current = detectedRegions;
+
+  const textEditingSnapshotRef = useRef<EditorSnapshot | null>(null);
+  const lastContinuousPushRef = useRef<{ time: number }>({ time: 0 });
+
+  const getSnapshot = useCallback((): EditorSnapshot => ({
+    layers: JSON.parse(JSON.stringify(layersRef.current)),
+    inpaintPatches: JSON.parse(JSON.stringify(inpaintPatchesRef.current)),
+    convertedRegionIds: detectedRegionsRef.current.filter((r) => r.isConverted).map((r) => r.regionId),
+  }), []);
+
+  const updateUndoRedoState = useCallback(() => {
+    setCanUndo(historyRef.current.canUndo());
+    setCanRedo(historyRef.current.canRedo());
+  }, []);
+
+  const pushHistory = useCallback((snapshot?: EditorSnapshot, continuous: boolean = false) => {
+    const now = Date.now();
+    if (continuous) {
+      if (now - lastContinuousPushRef.current.time < 500) {
+        return;
+      }
+      lastContinuousPushRef.current = { time: now };
+    } else {
+      lastContinuousPushRef.current = { time: 0 };
+    }
+    const snap = snapshot || getSnapshot();
+    historyRef.current.pushState(snap);
+    updateUndoRedoState();
+  }, [getSnapshot, updateUndoRedoState]);
+
+  const applySnapshot = useCallback((snapshot: EditorSnapshot) => {
+    const nextLayers = snapshot.layers || [];
+    setLayers(nextLayers);
+    setInpaintPatches(snapshot.inpaintPatches || []);
+    if (snapshot.convertedRegionIds) {
+      const convertedSet = new Set(snapshot.convertedRegionIds);
+      setDetectedRegions((prev) =>
+        prev.map((r) => ({ ...r, isConverted: convertedSet.has(r.regionId) }))
+      );
+    }
+    setSelectedLayerId((curId) => {
+      if (curId && !nextLayers.some((l) => l.id === curId)) {
+        return null;
+      }
+      return curId;
+    });
+  }, []);
 
   // Handle Undo
   const handleUndo = useCallback(() => {
-    const prevState = historyRef.current.undo(layers);
+    const currentSnap = getSnapshot();
+    const prevState = historyRef.current.undo(currentSnap);
     if (prevState) {
-      setLayers(prevState);
-      setHistoryKey((k) => k + 1);
+      applySnapshot(prevState);
+      updateUndoRedoState();
     }
-  }, [layers]);
+  }, [getSnapshot, applySnapshot, updateUndoRedoState]);
 
   // Handle Redo
   const handleRedo = useCallback(() => {
-    const nextState = historyRef.current.redo(layers);
+    const currentSnap = getSnapshot();
+    const nextState = historyRef.current.redo(currentSnap);
     if (nextState) {
-      setLayers(nextState);
-      setHistoryKey((k) => k + 1);
+      applySnapshot(nextState);
+      updateUndoRedoState();
     }
-  }, [layers]);
+  }, [getSnapshot, applySnapshot, updateUndoRedoState]);
+
+  const handleStartTextEditing = useCallback(() => {
+    textEditingSnapshotRef.current = getSnapshot();
+  }, [getSnapshot]);
+
+  const handleEndTextEditing = useCallback((hasChanged: boolean) => {
+    if (hasChanged && textEditingSnapshotRef.current) {
+      historyRef.current.pushState(textEditingSnapshotRef.current);
+      updateUndoRedoState();
+    }
+    textEditingSnapshotRef.current = null;
+  }, [updateUndoRedoState]);
 
   // Run OCR on current image with strict synchronous locking and cancellation
   const handleRunOCR = async (fileToAnalyze?: File | Blob, langOverride?: string) => {
@@ -164,11 +226,12 @@ export const App: React.FC = () => {
       origin: 'ocr_detected',
     };
 
+    pushHistory();
     setDetectedRegions((prev) =>
       prev.map((r) => (r.regionId === region.regionId ? { ...r, isConverted: true } : r))
     );
 
-    updateLayersWithHistory([...layers, newLayer]);
+    setLayers((prev) => [...prev, newLayer]);
     setSelectedLayerId(newId);
 
     // Auto Inpaint Background & Match Typography (PhoText 1-click seamless workflow)
@@ -239,8 +302,9 @@ export const App: React.FC = () => {
       origin: 'ocr_detected',
     }));
 
+    pushHistory();
     setDetectedRegions((prev) => prev.map((r) => ({ ...r, isConverted: true })));
-    updateLayersWithHistory([...layers, ...newLayers]);
+    setLayers((prev) => [...prev, ...newLayers]);
     if (newLayers.length > 0) {
       setSelectedLayerId(newLayers[0].id);
     }
@@ -304,6 +368,7 @@ export const App: React.FC = () => {
   const handleInpaintLayer = async (layer: TextLayer, strategy: string = 'auto', padding: number = 2) => {
     if (!image) return;
     setIsInpainting(true);
+    pushHistory();
 
     try {
       // Find matching polygon or construct from layer bbox
@@ -363,6 +428,7 @@ export const App: React.FC = () => {
   const handleInpaintAllDetected = async () => {
     if (!image || detectedRegions.length === 0) return;
     setIsInpaintingAll(true);
+    pushHistory();
 
     try {
       let blob: Blob;
@@ -410,6 +476,7 @@ export const App: React.FC = () => {
   };
 
   const handleDeletePatch = (patchId: string) => {
+    pushHistory();
     setInpaintPatches((prev) => prev.filter((p) => p.id !== patchId));
   };
 
@@ -434,7 +501,7 @@ export const App: React.FC = () => {
         setInpaintPatches([]);
         setDetectedRegions([]);
         historyRef.current.clear();
-        setHistoryKey((k) => k + 1);
+        updateUndoRedoState();
 
         handleRunOCR(file);
       };
@@ -567,11 +634,12 @@ export const App: React.FC = () => {
     setDetectedRegions(sampleDetected);
     setShowDetectionOverlay(true);
     historyRef.current.clear();
-    setHistoryKey((k) => k + 1);
+    updateUndoRedoState();
   };
 
   const handleAddText = () => {
     if (!image) return;
+    pushHistory();
     const newId = `layer-${Date.now()}`;
     const newLayer: TextLayer = {
       id: newId,
@@ -596,11 +664,19 @@ export const App: React.FC = () => {
       origin: 'manual',
     };
 
-    updateLayersWithHistory([...layers, newLayer]);
+    setLayers((prev) => [...prev, newLayer]);
     setSelectedLayerId(newId);
   };
 
-  const handleUpdateLayer = (id: string, updates: Partial<TextLayer>) => {
+  const handleUpdateLayer = (
+    id: string,
+    updates: Partial<TextLayer>,
+    commitHistory: boolean = false,
+    continuous: boolean = false
+  ) => {
+    if (commitHistory) {
+      pushHistory(undefined, continuous);
+    }
     setLayers((prev) =>
       prev.map((l) => (l.id === id ? { ...l, ...updates } : l))
     );
@@ -609,6 +685,7 @@ export const App: React.FC = () => {
   const handleDuplicateLayer = (layerId: string) => {
     const target = layers.find((l) => l.id === layerId);
     if (!target) return;
+    pushHistory();
 
     const duplicated: TextLayer = {
       ...JSON.parse(JSON.stringify(target)),
@@ -617,12 +694,13 @@ export const App: React.FC = () => {
       top: target.top + 25,
     };
 
-    updateLayersWithHistory([...layers, duplicated]);
+    setLayers((prev) => [...prev, duplicated]);
     setSelectedLayerId(duplicated.id);
   };
 
   const handleDeleteLayer = (layerId: string) => {
-    updateLayersWithHistory(layers.filter((l) => l.id !== layerId));
+    pushHistory();
+    setLayers((prev) => prev.filter((l) => l.id !== layerId));
     if (selectedLayerId === layerId) {
       setSelectedLayerId(null);
     }
@@ -631,19 +709,21 @@ export const App: React.FC = () => {
   const handleBringForward = (layerId: string) => {
     const idx = layers.findIndex((l) => l.id === layerId);
     if (idx < 0 || idx === layers.length - 1) return;
+    pushHistory();
     const reordered = [...layers];
     const item = reordered.splice(idx, 1)[0];
     reordered.splice(idx + 1, 0, item);
-    updateLayersWithHistory(reordered);
+    setLayers(reordered);
   };
 
   const handleSendBackward = (layerId: string) => {
     const idx = layers.findIndex((l) => l.id === layerId);
     if (idx <= 0) return;
+    pushHistory();
     const reordered = [...layers];
     const item = reordered.splice(idx, 1)[0];
     reordered.splice(idx - 1, 0, item);
-    updateLayersWithHistory(reordered);
+    setLayers(reordered);
   };
 
   // Keyboard Shortcuts Handler
@@ -693,8 +773,8 @@ export const App: React.FC = () => {
     <div className="flex flex-col h-screen h-[100dvh] w-screen overflow-hidden bg-slate-50 text-slate-900 relative">
       {/* Top Header */}
       <Header
-        canUndo={historyRef.current.canUndo()}
-        canRedo={historyRef.current.canRedo()}
+        canUndo={canUndo}
+        canRedo={canRedo}
         onUndo={handleUndo}
         onRedo={handleRedo}
         zoom={zoom}
@@ -745,11 +825,11 @@ export const App: React.FC = () => {
             onAddText={handleAddText}
             onToggleVisibility={(id) => {
               const layer = layers.find((l) => l.id === id);
-              if (layer) handleUpdateLayer(id, { isVisible: !layer.isVisible });
+              if (layer) handleUpdateLayer(id, { isVisible: !layer.isVisible }, true);
             }}
             onToggleLock={(id) => {
               const layer = layers.find((l) => l.id === id);
-              if (layer) handleUpdateLayer(id, { isLocked: !layer.isLocked });
+              if (layer) handleUpdateLayer(id, { isLocked: !layer.isLocked }, true);
             }}
             onDeleteLayer={handleDeleteLayer}
             onDeletePatch={handleDeletePatch}
@@ -780,6 +860,8 @@ export const App: React.FC = () => {
           selectedLayerId={selectedLayerId}
           onSelectLayer={setSelectedLayerId}
           onUpdateLayer={handleUpdateLayer}
+          onStartTextEditing={handleStartTextEditing}
+          onEndTextEditing={handleEndTextEditing}
           zoom={zoom}
           onZoomChange={setZoom}
           isComparing={isComparing}
@@ -814,7 +896,14 @@ export const App: React.FC = () => {
             image={image}
             onChange={(updates) => {
               if (selectedLayerId) {
-                handleUpdateLayer(selectedLayerId, updates);
+                const isContinuous =
+                  'opacity' in updates ||
+                  'blur' in updates ||
+                  'strokeWidth' in updates ||
+                  'letterSpacing' in updates ||
+                  'lineHeight' in updates ||
+                  'text' in updates;
+                handleUpdateLayer(selectedLayerId, updates, true, isContinuous);
               }
             }}
             onDuplicate={handleDuplicateLayer}

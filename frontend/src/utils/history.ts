@@ -1,17 +1,23 @@
-import type { TextLayer } from '../types';
+import type { TextLayer, InpaintPatch } from '../types';
 
-export class HistoryManager {
-  private undoStack: TextLayer[][] = [];
-  private redoStack: TextLayer[][] = [];
+export interface EditorSnapshot {
+  layers: TextLayer[];
+  inpaintPatches?: InpaintPatch[];
+  convertedRegionIds?: string[];
+}
+
+export class HistoryManager<T = any> {
+  private undoStack: T[] = [];
+  private redoStack: T[] = [];
   private maxDepth: number;
 
   constructor(maxDepth: number = 50) {
     this.maxDepth = maxDepth;
   }
 
-  public pushState(layers: TextLayer[]) {
-    // Clone layers deeply
-    const snapshot = JSON.parse(JSON.stringify(layers));
+  public pushState(state: T) {
+    // Clone state deeply to prevent reference mutation
+    const snapshot = JSON.parse(JSON.stringify(state));
     this.undoStack.push(snapshot);
     if (this.undoStack.length > this.maxDepth) {
       this.undoStack.shift();
@@ -20,17 +26,17 @@ export class HistoryManager {
     this.redoStack = [];
   }
 
-  public undo(currentLayers: TextLayer[]): TextLayer[] | null {
+  public undo(currentState: T): T | null {
     if (this.undoStack.length === 0) return null;
-    const currentState = JSON.parse(JSON.stringify(currentLayers));
-    this.redoStack.push(currentState);
+    const current = JSON.parse(JSON.stringify(currentState));
+    this.redoStack.push(current);
     return this.undoStack.pop() || null;
   }
 
-  public redo(currentLayers: TextLayer[]): TextLayer[] | null {
+  public redo(currentState: T): T | null {
     if (this.redoStack.length === 0) return null;
-    const currentState = JSON.parse(JSON.stringify(currentLayers));
-    this.undoStack.push(currentState);
+    const current = JSON.parse(JSON.stringify(currentState));
+    this.undoStack.push(current);
     return this.redoStack.pop() || null;
   }
 
