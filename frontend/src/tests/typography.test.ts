@@ -101,3 +101,52 @@ describe('Typography Reconstruction & Candidate Application', () => {
     expect(sorted[2].family).toBe('Inter');
   });
 });
+
+describe('Font Catalog & UPI Payment Presets', () => {
+  it('contains essential UPI payment fonts (GPay, PhonePe, BHIM)', async () => {
+    const { FONT_CATALOG } = await import('../components/PropertiesPanel');
+    const fontNames = FONT_CATALOG.map((f) => f.name);
+
+    expect(fontNames).toContain('Roboto'); // GPay
+    expect(fontNames).toContain('Inter'); // PhonePe
+    expect(fontNames).toContain('Poppins'); // PhonePe
+    expect(fontNames).toContain('Rubik'); // BHIM UPI
+    expect(fontNames).toContain('Plus Jakarta Sans'); // PhonePe / Fintech
+    expect(fontNames).toContain('Noto Sans'); // BHIM / NPCI
+  });
+
+  it('matches searches for GPay, PhonePe, BHIM, and UTR', async () => {
+    const { FONT_CATALOG } = await import('../components/PropertiesPanel');
+
+    const searchFonts = (query: string) => {
+      const q = query.toLowerCase();
+      return FONT_CATALOG.filter(
+        (f) =>
+          f.name.toLowerCase().includes(q) ||
+          f.keywords.some((k) => k.toLowerCase().includes(q))
+      );
+    };
+
+    const gpayMatches = searchFonts('gpay');
+    expect(gpayMatches.some((f) => f.name === 'Roboto')).toBe(true);
+
+    const phonePeMatches = searchFonts('phonepe');
+    expect(phonePeMatches.some((f) => f.name === 'Inter' || f.name === 'Poppins')).toBe(true);
+
+    const bhimMatches = searchFonts('bhim');
+    expect(bhimMatches.some((f) => f.name === 'Rubik' || f.name === 'Noto Sans')).toBe(true);
+
+    const utrMatches = searchFonts('utr');
+    expect(utrMatches.some((f) => f.name === 'Roboto Mono')).toBe(true);
+  });
+
+  it('includes classic default system and serif fonts', async () => {
+    const { FONT_CATALOG } = await import('../components/PropertiesPanel');
+    const fontNames = FONT_CATALOG.map((f) => f.name);
+
+    expect(fontNames).toContain('Arial');
+    expect(fontNames).toContain('Helvetica');
+    expect(fontNames).toContain('Georgia');
+    expect(fontNames).toContain('Times New Roman');
+  });
+});

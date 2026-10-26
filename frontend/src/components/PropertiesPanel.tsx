@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import type { TextLayer, ImageMetadata } from '../types';
 import {
   Type,
@@ -16,7 +16,9 @@ import {
   Sliders,
   Layers,
   ChevronDown,
-  X
+  X,
+  Search,
+  Check
 } from 'lucide-react';
 
 interface PropertiesPanelProps {
@@ -33,18 +35,163 @@ interface PropertiesPanelProps {
   onClose?: () => void;
 }
 
-const FONT_FAMILIES = [
-  'Inter',
-  'Roboto',
-  'Montserrat',
-  'Playfair Display',
-  'Outfit',
-  'Open Sans',
-  'Arial',
-  'Georgia',
-  'Courier New',
-  'Times New Roman'
+export interface FontOption {
+  name: string;
+  category: 'popular' | 'default' | 'mono' | 'serif';
+  keywords: string[];
+}
+
+export const FONT_CATALOG: FontOption[] = [
+  // --- POPULAR / COMMONLY USED ---
+  {
+    name: 'Roboto',
+    category: 'popular',
+    keywords: ['google pay', 'gpay', 'android', 'upi', 'receipt', 'payment', 'roboto']
+  },
+  {
+    name: 'Inter',
+    category: 'popular',
+    keywords: ['phonepe', 'upi', 'payment', 'clean', 'modern', 'interface', 'inter']
+  },
+  {
+    name: 'Poppins',
+    category: 'popular',
+    keywords: ['phonepe', 'numbers', 'digits', 'rounded', 'banner', 'heading', 'upi', 'poppins']
+  },
+  {
+    name: 'Rubik',
+    category: 'popular',
+    keywords: ['bhim', 'npci', 'government', 'upi', 'numbers', 'rounded', 'rubik']
+  },
+  {
+    name: 'Plus Jakarta Sans',
+    category: 'popular',
+    keywords: ['phonepe', 'fintech', 'upi', 'cred', 'payment slip', 'wallet', 'jakarta']
+  },
+  {
+    name: 'Noto Sans',
+    category: 'popular',
+    keywords: ['bhim', 'npci', 'sbi', 'national', 'banking', 'upi', 'noto']
+  },
+  {
+    name: 'Montserrat',
+    category: 'popular',
+    keywords: ['paytm', 'hdfc', 'icici', 'axis', 'banking', 'payment', 'card', 'montserrat']
+  },
+  {
+    name: 'Open Sans',
+    category: 'popular',
+    keywords: ['gpay', 'google pay', 'transaction', 'statement', 'upi', 'open sans']
+  },
+  {
+    name: 'Outfit',
+    category: 'popular',
+    keywords: ['google sans', 'product sans', 'gpay', 'modern', 'geometric', 'outfit']
+  },
+  {
+    name: 'DM Sans',
+    category: 'popular',
+    keywords: ['hdfc', 'icici', 'banking', 'upi', 'receipt', 'dm sans']
+  },
+  {
+    name: 'Manrope',
+    category: 'popular',
+    keywords: ['cred', 'axis', 'fintech', 'upi', 'modern', 'manrope']
+  },
+  {
+    name: 'Urbanist',
+    category: 'popular',
+    keywords: ['fintech', 'wallet', 'crypto', 'payment', 'urbanist']
+  },
+  {
+    name: 'Lato',
+    category: 'popular',
+    keywords: ['sbi', 'state bank', 'banking', 'challan', 'statement', 'lato']
+  },
+  {
+    name: 'Work Sans',
+    category: 'popular',
+    keywords: ['invoice', 'bill', 'receipt', 'bank', 'work sans']
+  },
+  {
+    name: 'Nunito Sans',
+    category: 'popular',
+    keywords: ['wallet', 'balance', 'numbers', 'upi', 'nunito']
+  },
+
+  // --- NUMBERS, UTR, TRANSACTION ID & MONO ---
+  {
+    name: 'Roboto Mono',
+    category: 'mono',
+    keywords: ['utr', 'ref id', 'transaction id', 'reference', 'numbers', 'mono', 'roboto mono']
+  },
+  {
+    name: 'Space Grotesk',
+    category: 'mono',
+    keywords: ['amount', 'price', 'rupees', 'inr', 'numbers', 'grotesk', 'space']
+  },
+  {
+    name: 'JetBrains Mono',
+    category: 'mono',
+    keywords: ['code', 'hash', 'monospace', 'txn', 'id', 'jetbrains']
+  },
+  {
+    name: 'Courier Prime',
+    category: 'mono',
+    keywords: ['atm', 'pos', 'slip', 'thermal', 'courier', 'receipt', 'prime']
+  },
+  {
+    name: 'Courier New',
+    category: 'mono',
+    keywords: ['courier', 'mono', 'typewriter', 'default mono']
+  },
+
+  // --- COMMON DEFAULTS & WEB SAFE ---
+  {
+    name: 'Arial',
+    category: 'default',
+    keywords: ['default', 'standard', 'clean', 'system', 'web safe', 'arial']
+  },
+  {
+    name: 'Helvetica',
+    category: 'default',
+    keywords: ['ios', 'iphone', 'apple', 'system', 'clean', 'default', 'helvetica']
+  },
+  {
+    name: 'Verdana',
+    category: 'default',
+    keywords: ['screen', 'readable', 'default', 'wide', 'verdana']
+  },
+  {
+    name: 'Times New Roman',
+    category: 'default',
+    keywords: ['formal', 'document', 'classic', 'standard', 'times']
+  },
+  {
+    name: 'Georgia',
+    category: 'serif',
+    keywords: ['georgia', 'serif', 'reading', 'classic']
+  },
+
+  // --- EDITORIAL & DISPLAY SERIF ---
+  {
+    name: 'Playfair Display',
+    category: 'serif',
+    keywords: ['luxury', 'certificate', 'elegant', 'serif', 'playfair']
+  },
+  {
+    name: 'Merriweather',
+    category: 'serif',
+    keywords: ['editorial', 'newspaper', 'serif', 'body', 'merriweather']
+  },
+  {
+    name: 'Lora',
+    category: 'serif',
+    keywords: ['contemporary', 'calligraphic', 'serif', 'lora']
+  }
 ];
+
+export const FONT_FAMILIES = FONT_CATALOG.map((f) => f.name);
 
 const FONT_WEIGHTS = [
   { label: 'Light', value: '300' },
@@ -64,6 +211,39 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   onSendBackward,
   onClose,
 }) => {
+  const [isFontPickerOpen, setIsFontPickerOpen] = useState(false);
+  const [fontSearch, setFontSearch] = useState('');
+  const [fontCategory, setFontCategory] = useState<'all' | 'popular' | 'default' | 'mono' | 'serif'>('all');
+  const fontPickerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!isFontPickerOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (fontPickerRef.current && !fontPickerRef.current.contains(e.target as Node)) {
+        setIsFontPickerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isFontPickerOpen]);
+
+  // Filtered fonts based on search & category tab
+  const filteredFonts = useMemo(() => {
+    const q = fontSearch.trim().toLowerCase();
+    return FONT_CATALOG.filter((item) => {
+      if (fontCategory !== 'all') {
+        if (fontCategory === 'popular' && item.category !== 'popular') return false;
+        if (fontCategory === 'default' && item.category !== 'default' && item.name !== 'Roboto' && item.name !== 'Inter') return false;
+        if (fontCategory === 'mono' && item.category !== 'mono') return false;
+        if (fontCategory === 'serif' && item.category !== 'serif') return false;
+      }
+      if (!q) return true;
+      const nameMatch = item.name.toLowerCase().includes(q);
+      const keywordMatch = item.keywords?.some((k) => k.toLowerCase().includes(q));
+      return nameMatch || keywordMatch;
+    });
+  }, [fontSearch, fontCategory]);
 
   if (!layer) {
     return (
@@ -170,23 +350,147 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
         {/* Font Family & Weight */}
         <div className="space-y-3 pt-2 border-t border-slate-200">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-600">Font Family</label>
-            <div className="relative">
-              <select
-                value={layer.fontFamily}
-                onChange={(e) => onChange({ fontFamily: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 appearance-none focus:outline-none focus:border-slate-900 focus:bg-white cursor-pointer"
+          {/* Searchable Font Family Picker */}
+          <div className="space-y-1.5" ref={fontPickerRef}>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-slate-600">Font Family</label>
+              <span className="text-[10px] text-slate-400 font-medium">{filteredFonts.length} fonts</span>
+            </div>
+
+            {/* Font Picker Trigger Button */}
+            <button
+              type="button"
+              onClick={() => setIsFontPickerOpen((prev) => !prev)}
+              className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-xs flex items-center justify-between transition-all text-left ${
+                isFontPickerOpen
+                  ? 'border-slate-900 ring-2 ring-slate-900/10 bg-white'
+                  : 'border-slate-200 hover:border-slate-300 hover:bg-white'
+              }`}
+            >
+              <span
+                className="text-xs font-semibold text-slate-900 truncate"
                 style={{ fontFamily: layer.fontFamily }}
               >
-                {FONT_FAMILIES.map((family) => (
-                  <option key={family} value={family} style={{ fontFamily: family }}>
-                    {family}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
-            </div>
+                {layer.fontFamily}
+              </span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-150 ${
+                  isFontPickerOpen ? 'rotate-180 text-slate-900' : ''
+                }`}
+              />
+            </button>
+
+            {/* Searchable Dropdown Popover */}
+            {isFontPickerOpen && (
+              <div className="mt-1.5 border border-slate-200 rounded-xl bg-white shadow-xl overflow-hidden animate-in fade-in-50 duration-150">
+                {/* Search Bar */}
+                <div className="p-2 border-b border-slate-100 bg-slate-50/70 space-y-1.5">
+                  <div className="relative flex items-center">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={fontSearch}
+                      onChange={(e) => setFontSearch(e.target.value)}
+                      placeholder="Search fonts (e.g. Roboto, Inter, Arial)..."
+                      className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-7 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800"
+                      autoFocus
+                    />
+                    {fontSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setFontSearch('')}
+                        className="absolute right-2 p-0.5 text-slate-400 hover:text-slate-600 rounded-full"
+                        title="Clear search"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Category Pills */}
+                  <div className="flex items-center gap-1 overflow-x-auto pb-0.5 text-[10px] no-scrollbar">
+                    {[
+                      { id: 'all', label: 'All' },
+                      { id: 'popular', label: 'Popular' },
+                      { id: 'default', label: 'Standard' },
+                      { id: 'mono', label: 'Monospace' },
+                      { id: 'serif', label: 'Serif' },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setFontCategory(tab.id as any)}
+                        className={`px-2 py-0.5 rounded-full whitespace-nowrap transition-colors font-medium ${
+                          fontCategory === tab.id
+                            ? 'bg-slate-900 text-white shadow-2xs'
+                            : 'bg-slate-200/80 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Font Items List */}
+                <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 overscroll-contain">
+                  {filteredFonts.length === 0 ? (
+                    <div className="p-4 text-center">
+                      <p className="text-xs text-slate-500">No matching fonts found</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFontSearch('');
+                          setFontCategory('all');
+                        }}
+                        className="mt-1 text-[11px] text-blue-600 hover:underline font-medium"
+                      >
+                        Reset filters
+                      </button>
+                    </div>
+                  ) : (
+                    filteredFonts.map((font) => {
+                      const isSelected = layer.fontFamily.toLowerCase() === font.name.toLowerCase();
+                      return (
+                        <button
+                          key={font.name}
+                          type="button"
+                          onClick={() => {
+                            onChange({ fontFamily: font.name });
+                            setIsFontPickerOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-slate-50 transition-colors ${
+                            isSelected ? 'bg-slate-100/70' : ''
+                          }`}
+                        >
+                          <div className="min-w-0 flex-1 pr-2">
+                            <div className="flex items-center justify-between">
+                              <span
+                                className="text-xs font-semibold text-slate-900 truncate"
+                                style={{ fontFamily: font.name }}
+                              >
+                                {font.name}
+                              </span>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-slate-900 shrink-0 ml-2" />}
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span
+                                className="text-[10px] text-slate-400 truncate"
+                                style={{ fontFamily: font.name }}
+                              >
+                                {font.category === 'mono'
+                                  ? '0123456789 • ABCDEF'
+                                  : 'The quick brown fox jumps'}
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
