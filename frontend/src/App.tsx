@@ -1062,72 +1062,74 @@ export const App: React.FC = () => {
       </div>
 
       {/* Floating Modern Pill Dock */}
-      <nav className="lg:hidden fixed bottom-4 inset-x-0 mx-auto w-fit z-40 bg-white/95 border border-slate-200 shadow-xl shadow-slate-300/40 backdrop-blur-2xl rounded-full p-1.5 flex items-center gap-1 select-none">
-        {/* Canvas Tab */}
-        <button
-          onClick={() => setMobileTab('canvas')}
-          className={`flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-xs transition-all ${
-            mobileTab === 'canvas'
-              ? 'bg-slate-900 text-white font-semibold shadow-xs scale-100'
-              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-          }`}
-        >
-          <Maximize2 className="w-3.5 h-3.5" />
-          {mobileTab === 'canvas' && <span>Canvas</span>}
-        </button>
+      {image && (
+        <nav className="lg:hidden fixed bottom-4 inset-x-0 mx-auto w-fit z-40 bg-white/95 border border-slate-200 shadow-xl shadow-slate-300/40 backdrop-blur-2xl rounded-full p-1.5 flex items-center gap-1 select-none">
+          {/* Canvas Tab */}
+          <button
+            onClick={() => setMobileTab('canvas')}
+            className={`flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-xs transition-all ${
+              mobileTab === 'canvas'
+                ? 'bg-slate-900 text-white font-semibold shadow-xs scale-100'
+                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+            {mobileTab === 'canvas' && <span>Canvas</span>}
+          </button>
 
-        {/* Layers Tab */}
-        <button
-          onClick={() => setMobileTab(mobileTab === 'layers' ? 'canvas' : 'layers')}
-          className={`relative flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-xs transition-all ${
-            mobileTab === 'layers'
-              ? 'bg-slate-900 text-white font-semibold shadow-xs scale-100'
-              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-          }`}
-        >
-          <div className="relative">
-            <Layers className="w-3.5 h-3.5" />
-            {(layers.length > 0 || detectedRegions.length > 0) && (
-              <span
-                className={`absolute -top-1 -right-2 px-1 text-[8px] font-mono rounded-full font-bold leading-none py-0.5 min-w-[12px] text-center ${
-                  mobileTab === 'layers' ? 'bg-white text-slate-900' : 'bg-slate-900 text-white'
-                }`}
-              >
-                {layers.length + detectedRegions.filter((r) => !r.isConverted).length}
-              </span>
-            )}
-          </div>
-          {mobileTab === 'layers' && <span>Layers</span>}
-        </button>
+          {/* Layers Tab */}
+          <button
+            onClick={() => setMobileTab(mobileTab === 'layers' ? 'canvas' : 'layers')}
+            className={`relative flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-xs transition-all ${
+              mobileTab === 'layers'
+                ? 'bg-slate-900 text-white font-semibold shadow-xs scale-100'
+                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <div className="relative">
+              <Layers className="w-3.5 h-3.5" />
+              {(layers.length > 0 || detectedRegions.length > 0) && (
+                <span
+                  className={`absolute -top-1 -right-2 px-1 text-[8px] font-mono rounded-full font-bold leading-none py-0.5 min-w-[12px] text-center ${
+                    mobileTab === 'layers' ? 'bg-white text-slate-900' : 'bg-slate-900 text-white'
+                  }`}
+                >
+                  {layers.length + detectedRegions.filter((r) => !r.isConverted).length}
+                </span>
+              )}
+            </div>
+            {mobileTab === 'layers' && <span>Layers</span>}
+          </button>
 
-        {/* Typography / Style Tab */}
-        <button
-          onClick={() => setMobileTab(mobileTab === 'properties' ? 'canvas' : 'properties')}
-          className={`relative flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-xs transition-all ${
-            mobileTab === 'properties'
-              ? 'bg-slate-900 text-white font-semibold shadow-xs scale-100'
-              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-          }`}
-        >
-          <div className="relative">
-            <Sliders className="w-3.5 h-3.5" />
-            {selectedLayer && (
-              <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            )}
-          </div>
-          {mobileTab === 'properties' && <span>Style</span>}
-        </button>
+          {/* Typography / Style Tab */}
+          <button
+            onClick={() => setMobileTab(mobileTab === 'properties' ? 'canvas' : 'properties')}
+            className={`relative flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-xs transition-all ${
+              mobileTab === 'properties'
+                ? 'bg-slate-900 text-white font-semibold shadow-xs scale-100'
+                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <div className="relative">
+              <Sliders className="w-3.5 h-3.5" />
+              {selectedLayer && (
+                <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+              )}
+            </div>
+            {mobileTab === 'properties' && <span>Style</span>}
+          </button>
 
-        {/* Quick Add Text Pill Button */}
-        <button
-          onClick={handleAddText}
-          disabled={!image}
-          className="w-8 h-8 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xs active:scale-95 transition-all flex items-center justify-center disabled:opacity-40 disabled:pointer-events-none ml-1"
-          title="Add Text Layer"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
-      </nav>
+          {/* Quick Add Text Pill Button */}
+          <button
+            onClick={handleAddText}
+            disabled={!image}
+            className="w-8 h-8 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xs active:scale-95 transition-all flex items-center justify-center disabled:opacity-40 disabled:pointer-events-none ml-1"
+            title="Add Text Layer"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </nav>
+      )}
 
       {/* Floating Status Toast */}
       {toast && (
