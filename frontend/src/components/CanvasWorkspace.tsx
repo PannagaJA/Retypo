@@ -995,16 +995,15 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       {/* Floating Canvas Hint */}
       {image && (
-        <div className="absolute bottom-3 left-3 sm:left-4 flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur border border-slate-200 text-[10px] sm:text-[11px] text-slate-600 pointer-events-none select-none shadow-xs z-10">
+        <div className="hidden sm:flex absolute bottom-3 left-3 sm:left-4 items-center gap-1.5 sm:gap-2 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur border border-slate-200 text-[10px] sm:text-[11px] text-slate-600 pointer-events-none select-none shadow-xs z-10">
           <HelpCircle className="w-3 h-3 text-slate-500 shrink-0" />
-          <span className="hidden sm:inline">Hold Space + Drag to Pan • Mouse Wheel to Zoom</span>
-          <span className="sm:hidden">Drag canvas to pan • Pinch to zoom</span>
+          <span>Hold Space + Drag to Pan • Mouse Wheel to Zoom</span>
         </div>
       )}
 
       {/* Floating Canvas Zoom Controls */}
       {image && (
-        <div className="absolute bottom-3 right-3 flex items-center bg-white/95 backdrop-blur-md rounded-full p-1 border border-slate-200 shadow-md gap-1 z-20">
+        <div className="absolute bottom-20 sm:bottom-3 right-3 flex items-center bg-white/95 backdrop-blur-md rounded-full p-1 border border-slate-200 shadow-md gap-1 z-20">
           <button
             onClick={() => onZoomChange(Math.max(0.1, _zoom * 0.85))}
             className="w-7 h-7 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors"

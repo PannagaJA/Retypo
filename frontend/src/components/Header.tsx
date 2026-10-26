@@ -65,8 +65,6 @@ export const Header: React.FC<HeaderProps> = ({
   showDetectionOverlay,
   onToggleDetectionOverlay,
   detectedCount,
-  ocrLang = 'en',
-  onChangeOcrLang,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,10 +75,10 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="h-14 sm:h-16 bg-white/95 backdrop-blur-xl border-b border-slate-200 px-3 sm:px-5 flex items-center justify-between z-20 shrink-0 select-none gap-2 overflow-x-auto no-scrollbar shadow-xs">
+    <header className="h-14 sm:h-16 bg-white/95 backdrop-blur-xl border-b border-slate-200 px-2.5 sm:px-5 flex items-center justify-between z-20 shrink-0 select-none gap-1.5 sm:gap-2 shadow-xs">
       {/* Retypo Brand & Upload */}
-      <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
-        <div className="flex items-center gap-2.5 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center shadow-xs shrink-0 ring-1 ring-slate-900/10 overflow-hidden">
             <svg viewBox="0 0 48 48" className="w-5 h-5" fill="none">
               <path d="M14 12C14 10.8954 14.8954 10 16 10H26C31.5228 10 36 14.4772 36 20C36 24.3427 33.2274 28.0378 29.3512 29.3879L36.4142 36.4509C37.1953 37.232 36.6409 38.5714 35.5355 38.5714H30.5C29.7044 38.5714 28.9413 38.2554 28.3787 37.6928L22 31.3142V37C22 37.5523 21.5523 38 21 38H15C14.4477 38 14 37.5523 14 37V12Z" fill="white"/>
@@ -88,9 +86,9 @@ export const Header: React.FC<HeaderProps> = ({
               <circle cx="34" cy="14" r="2.5" fill="#38bdf8"/>
             </svg>
           </div>
-          <div className="flex flex-col">
+          <div className="hidden min-[480px]:flex flex-col">
             <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-base tracking-tight text-slate-900 leading-none">
+              <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 leading-none">
                 Retypo
               </span>
               <span className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-[9px] font-mono uppercase tracking-wider font-semibold">
@@ -103,7 +101,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        <div className="hidden sm:block h-6 w-px bg-slate-200 mx-1" />
+        <div className="hidden sm:block h-6 w-px bg-slate-200 mx-0.5" />
 
         {/* Upload Controls */}
         <input
@@ -115,12 +113,11 @@ export const Header: React.FC<HeaderProps> = ({
         />
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-800 border border-slate-200 transition-all shadow-xs shrink-0 active:scale-95"
+          className="flex items-center justify-center gap-1.5 w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 text-xs font-semibold rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-800 border border-slate-200 transition-all shadow-xs shrink-0 active:scale-95"
           title="Upload image (PNG, JPG, WebP)"
         >
           <Upload className="w-3.5 h-3.5 text-slate-600" />
           <span className="hidden sm:inline">Upload Image</span>
-          <span className="sm:hidden">Upload</span>
         </button>
 
         {!hasImage && (
@@ -135,58 +132,39 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* OCR Analyze Button */}
+        {/* OCR Analyze Button (English) */}
         {hasImage && (
-          <div className="flex items-center gap-1.5 shrink-0">
-            <div className="flex items-center bg-slate-100 border border-slate-200 rounded-full p-0.5 shadow-xs">
-              <button
-                onClick={onRunOCR}
-                disabled={isDetecting}
-                className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full transition-all ${
-                  isDetecting
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed pointer-events-none'
-                    : 'bg-white text-slate-800 hover:bg-slate-50 shadow-xs active:scale-95'
-                }`}
-                title={isDetecting ? 'Detection in progress...' : 'Detect text regions'}
-              >
-                {isDetecting ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />
-                    <span className="hidden sm:inline">Detecting...</span>
-                    <span className="sm:hidden">...</span>
-                  </>
-                ) : (
-                  <>
-                    <ScanText className="w-3.5 h-3.5 text-slate-700" />
-                    <span className="hidden sm:inline">Detect Text</span>
-                    <span className="sm:hidden">Detect</span>
-                  </>
-                )}
-              </button>
-
-              {onChangeOcrLang && (
-                <select
-                  value={ocrLang}
-                  disabled={isDetecting}
-                  onChange={(e) => onChangeOcrLang(e.target.value)}
-                  className={`bg-transparent text-slate-700 hover:text-slate-900 px-2 py-1 text-[11px] font-mono rounded-r-full focus:outline-none ${
-                    isDetecting ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
-                  }`}
-                  title="OCR Language Model"
-                >
-                  <option value="en">EN</option>
-                  <option value="ka">KA</option>
-                  <option value="hi">HI</option>
-                </select>
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            <button
+              onClick={onRunOCR}
+              disabled={isDetecting}
+              className={`flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-full border transition-all shrink-0 shadow-xs ${
+                isDetecting
+                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed pointer-events-none'
+                  : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50 active:scale-95'
+              }`}
+              title={isDetecting ? 'Detection in progress...' : 'Detect text regions'}
+            >
+              {isDetecting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />
+                  <span className="hidden sm:inline">Detecting...</span>
+                </>
+              ) : (
+                <>
+                  <ScanText className="w-3.5 h-3.5 text-slate-700" />
+                  <span className="hidden md:inline">Detect Text</span>
+                  <span className="hidden sm:inline md:hidden">Detect</span>
+                </>
               )}
-            </div>
+            </button>
 
             {detectedCount > 0 && (
               <button
                 onClick={onToggleDetectionOverlay}
-                className={`w-7 h-7 flex items-center justify-center text-xs rounded-full border transition-all ${
+                className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs rounded-full border transition-all shrink-0 ${
                   showDetectionOverlay
-                    ? 'bg-slate-900 text-white border-slate-900'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
                     : 'bg-white text-slate-500 border-slate-200 hover:text-slate-900'
                 }`}
                 title={showDetectionOverlay ? 'Hide detected text boxes' : 'Show detected text boxes'}
@@ -293,17 +271,17 @@ export const Header: React.FC<HeaderProps> = ({
       )}
 
       {/* Right Actions: Mobile Undo/Redo & High-Contrast Dark Export */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
         {/* Mobile Undo & Redo Capsule */}
         {hasImage && (
-          <div className="flex lg:hidden items-center bg-slate-100 rounded-full p-1 border border-slate-200 shrink-0 shadow-xs">
+          <div className="flex lg:hidden items-center bg-slate-100 rounded-full p-0.5 border border-slate-200 shrink-0 shadow-xs">
             <button
               onClick={onUndo}
               disabled={!canUndo}
               className={`w-7 h-7 flex items-center justify-center rounded-full transition-colors ${
-                canUndo ? 'text-slate-700 hover:text-slate-900 hover:bg-white' : 'text-slate-300 cursor-not-allowed'
+                canUndo ? 'text-slate-700 hover:text-slate-900 hover:bg-white active:scale-90' : 'text-slate-300 cursor-not-allowed'
               }`}
-              title="Undo"
+              title="Undo (Ctrl/Cmd + Z)"
             >
               <Undo2 className="w-3.5 h-3.5" />
             </button>
@@ -311,9 +289,9 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onRedo}
               disabled={!canRedo}
               className={`w-7 h-7 flex items-center justify-center rounded-full transition-colors ${
-                canRedo ? 'text-slate-700 hover:text-slate-900 hover:bg-white' : 'text-slate-300 cursor-not-allowed'
+                canRedo ? 'text-slate-700 hover:text-slate-900 hover:bg-white active:scale-90' : 'text-slate-300 cursor-not-allowed'
               }`}
-              title="Redo"
+              title="Redo (Ctrl/Cmd + Shift + Z)"
             >
               <Redo2 className="w-3.5 h-3.5" />
             </button>
@@ -323,7 +301,7 @@ export const Header: React.FC<HeaderProps> = ({
         {hasImage && (
           <button
             onClick={onOpenExport}
-            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-full bg-slate-900 text-white hover:bg-slate-800 shadow-sm transition-all active:scale-95 shrink-0"
+            className="flex items-center justify-center gap-1 px-2.5 sm:px-4 py-1.5 text-xs font-semibold rounded-full bg-slate-900 text-white hover:bg-slate-800 shadow-sm transition-all active:scale-95 shrink-0"
             title="Export image at full native resolution"
           >
             <Download className="w-3.5 h-3.5" />

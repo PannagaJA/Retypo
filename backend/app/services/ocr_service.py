@@ -76,9 +76,7 @@ class OCRService:
         return cls._instance
 
     def _get_paddle_engine(self, lang: str = "en"):
-        clean_lang = lang.lower().strip()
-        if clean_lang not in ["en", "ka", "hi", "te", "ta", "ch"]:
-            clean_lang = "en"
+        clean_lang = "en"
 
         if clean_lang in self._engines:
             return self._engines[clean_lang]

@@ -7,7 +7,7 @@ import { LayersPanel } from './components/LayersPanel';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { ExportModal } from './components/ExportModal';
 import { analyzeImageOCR, restoreBackground } from './services/api';
-import { Layers, Type, Maximize2, Eye, Sliders, Copy, Trash2, X, ScanText, Eraser, Plus, Loader2 } from 'lucide-react';
+import { Layers, Type, Maximize2, Eye, Sliders, Copy, Trash2, X, ScanText, Plus, Loader2 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [image, setImage] = useState<ImageMetadata | null>(null);
@@ -948,18 +948,6 @@ export const App: React.FC = () => {
                 {isDetecting ? <Loader2 className="w-4 h-4 animate-spin text-slate-600" /> : <ScanText className="w-4 h-4 text-slate-700" />}
               </div>
               <span className="text-[10px] font-medium text-slate-700">{isDetecting ? 'Detecting...' : 'Detect Text'}</span>
-            </button>
-
-            {/* Inpaint All */}
-            <button
-              onClick={() => handleInpaintAllDetected()}
-              disabled={isInpaintingAll || detectedRegions.length === 0}
-              className="flex flex-col items-center gap-1 text-center active:scale-95 transition-transform disabled:opacity-40"
-            >
-              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 shadow-xs">
-                {isInpaintingAll ? <Loader2 className="w-4 h-4 animate-spin text-slate-600" /> : <Eraser className="w-4 h-4 text-slate-700" />}
-              </div>
-              <span className="text-[10px] font-medium text-slate-700">Clean BG</span>
             </button>
 
             {/* Add Text */}
