@@ -2,7 +2,9 @@
 
 <div align="center">
 
-![Retypo Logo](frontend/public/retypo-logo.svg)
+<img src="frontend/public/retypo-logo.svg" alt="Retypo Logo" width="64" height="64" />
+
+<br/>
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
