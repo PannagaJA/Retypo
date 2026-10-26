@@ -263,23 +263,32 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     // Panning & Outside Click Handling
     canvas.on('mouse:down', (opt) => {
       const e = opt.e as any;
-      const isTouch = Boolean(e && e.touches);
-      const isBgTouch = isTouch && !opt.target;
-
       const pos = getEvtPos(e);
       touchDownPos = { x: pos.x, y: pos.y };
       hasMoved = false;
 
-      if (isSpacePressed || (e && e.button === 1) || isBgTouch) {
+      // Check if target is an editable text layer or active transform control
+      const isSelectableTarget = Boolean(opt.target && opt.target.selectable);
+      const isTransformControl = Boolean(
+        opt.target &&
+        (canvas as any)._currentTransform
+      );
+
+      // Pan when holding outside any selectable text layer/control, or holding space, or middle click
+      const shouldPan = (!isSelectableTarget && !isTransformControl) || isSpacePressed || (e && e.button === 1);
+
+      if (shouldPan) {
         isPanningRef.current = true;
         lastPanPos.current = { x: pos.x, y: pos.y };
-        if (isTouch && e.touches.length === 2) {
+        canvas.selection = false; // Disable marquee selection rectangle while panning
+        canvas.setCursor('grab');
+
+        if (e && e.touches && e.touches.length === 2) {
           lastTouchDistance = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           );
         }
-        canvas.setCursor('grab');
       }
     });
 
@@ -315,10 +324,13 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       if (isPanningRef.current) {
         const vpt = canvas.viewportTransform;
         if (vpt) {
-          vpt[4] += pos.x - lastPanPos.current.x;
-          vpt[5] += pos.y - lastPanPos.current.y;
+          const dx = pos.x - lastPanPos.current.x;
+          const dy = pos.y - lastPanPos.current.y;
+          vpt[4] += dx;
+          vpt[5] += dy;
           canvas.requestRenderAll();
           lastPanPos.current = { x: pos.x, y: pos.y };
+          canvas.setCursor('grabbing');
         }
       }
     });
@@ -326,6 +338,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     canvas.on('mouse:up', (opt) => {
       isPanningRef.current = false;
       lastTouchDistance = 0;
+      canvas.selection = true;
       canvas.setCursor('default');
 
       // If user was panning / dragging (> 6px moved), do not treat as tap or click
@@ -406,10 +419,23 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
     };
 
+    // Global mouseup/touchend listeners to safely reset panning
+    const handleGlobalMouseUp = () => {
+      if (isPanningRef.current) {
+        isPanningRef.current = false;
+        canvas.selection = true;
+        canvas.setCursor('default');
+      }
+    };
+
     window.addEventListener('resize', handleResize);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('touchend', handleGlobalMouseUp);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('touchend', handleGlobalMouseUp);
       canvas.dispose();
       fabricCanvasRef.current = null;
     };
@@ -847,7 +873,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           propsRef.current.onSelectLayer(null);
         }
       }}
-      className={`relative flex-1 h-full w-full overflow-hidden bg-slate-100 ${
+      className={`relative flex-1 h-full w-full overflow-hidden bg-slate-100 touch-none ${
         isSpacePressed ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
       }`}
     >
