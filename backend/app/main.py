@@ -5,6 +5,19 @@ try:
 except Exception:
     pass
 
+# Configure project-local models directory for PaddleX OCR weights
+if "PADDLE_PDX_CACHE_HOME" not in os.environ:
+    _cur_dir = os.path.dirname(os.path.abspath(__file__))
+    _root_models = os.path.abspath(os.path.join(_cur_dir, "..", "..", "models"))
+    _backend_models = os.path.abspath(os.path.join(_cur_dir, "..", "models"))
+    if os.path.isdir(_root_models):
+        os.environ["PADDLE_PDX_CACHE_HOME"] = _root_models
+    elif os.path.isdir(_backend_models):
+        os.environ["PADDLE_PDX_CACHE_HOME"] = _backend_models
+    else:
+        os.environ["PADDLE_PDX_CACHE_HOME"] = _root_models
+
+os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
 os.environ["FLAGS_use_mkldnn"] = "0"
 os.environ["PADDLE_PDX_ENABLE_MKLDNN_BYDEFAULT"] = "0"
 

@@ -34,10 +34,9 @@ def calculate_font_size(
 ) -> float:
     """
     Estimates CSS / Fabric.js fontSize in native image pixels.
-    The OCR detection polygon spans the full line box height (lineHeight ~= 1.20 to 1.25 * fontSize).
-    To ensure the recreated Fabric.js Textbox matches the exact height and width of the original text
-    without expanding, word-wrapping, or overflowing:
-      fontSize = poly_height * 0.78
+    In digital typography, the em-box font size corresponds to cap-height / 0.72.
+    For single-line OCR detection polygons, the detected polygon height tracks
+    the line box (approximately 1.05 to 1.25x the em-box).
     """
     if len(polygon) < 4:
         return 16.0
@@ -46,7 +45,7 @@ def calculate_font_size(
     h_left = math.hypot(p4[0] - p1[0], p4[1] - p1[1])
     h_right = math.hypot(p3[0] - p2[0], p3[1] - p2[1])
     poly_height = max(6.0, (h_left + h_right) / 2.0)
-    nominal_size = poly_height * 0.65
+    nominal_size = poly_height * 0.88
 
     if image is not None:
         try:
@@ -64,19 +63,21 @@ def calculate_font_size(
                     diff = np.abs(gray.astype(np.float32) - bg_lum)
                     _, mask = cv2.threshold(diff.astype(np.uint8), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-                    # Strip 2px boundary to eliminate outer box border artifacts
-                    inner_mask = mask[2:h-2, 2:w-2] if h > 6 and w > 6 else mask
+                    # Strip 1px boundary to eliminate outer box border artifacts
+                    inner_mask = mask[1:h-1, 1:w-1] if h > 4 and w > 4 else mask
                     num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(inner_mask)
                     char_heights = []
                     for i in range(1, num_labels):
                         gx, gy, gw, gh, garea = stats[i]
-                        if 8 <= gh <= 0.92 * h and garea >= 15:
+                        if 6 <= gh <= 0.95 * h and garea >= 10:
                             char_heights.append(gh)
 
                     if char_heights:
                         char_h = float(np.percentile(char_heights, 75))
-                        # char_h represents cap/digit height (~78% of nominal em-size)
-                        calibrated = min(char_h / 0.78, poly_height * 0.70)
+                        # In digital fonts, cap-height ~= 0.72 of em-size
+                        calibrated = char_h / 0.72
+                        # Bound within sensible line-box envelope of polygon
+                        calibrated = max(poly_height * 0.75, min(poly_height * 1.05, calibrated))
                         return max(10.0, round(calibrated, 1))
         except Exception:
             pass
@@ -91,12 +92,8 @@ def estimate_text_weight(
 ) -> str:
     """
     Estimates CSS font-weight (400, 500, 600, or 700) from text stroke thickness relative to font height.
-    Uses scale-independent stroke-to-height ratio tau to prevent over-bolding UI text.
+    Uses scale-independent stroke-to-height ratio tau and edge sharpness gradients.
     """
-    # Context-aware weight detection: transaction amounts and major titles are semi-bold (600) in modern fintech UI
-    if text and re.search(r'[+-]?[₹$€£]?\s*[\d,]+\.\d{2}', text.strip()):
-        return "600"
-
     if image is None or len(polygon) < 4:
         return "400"
 
@@ -132,7 +129,7 @@ def estimate_text_weight(
 
         p80 = float(np.percentile(vals, 80))
         stroke_w = p80 * 2.0
-        eff_h = max(14.0, float(font_size))
+        eff_h = max(12.0, float(font_size))
         tau = stroke_w / eff_h
 
         sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
@@ -141,10 +138,10 @@ def estimate_text_weight(
         sig_mag = mag[mag > 30]
         p90_edge = float(np.percentile(sig_mag, 90)) if len(sig_mag) > 0 else 0
 
-        # Scale-independent relative weight classification:
-        if tau >= 0.20 and p90_edge >= 400:
+        # Calibrated typography weight classification
+        if tau >= 0.22 and p90_edge >= 350:
             return "700"
-        elif tau >= 0.16:
+        elif tau >= 0.17:
             return "600"
         elif tau >= 0.13:
             return "500"
@@ -158,9 +155,8 @@ def calculate_bounding_box(
     image: Optional[Image.Image] = None
 ) -> Tuple[float, float, float, float]:
     """
-    Returns axis-aligned bounding box (left, top, width, height) in original image pixels.
-    When image is provided, calibrates bounds to exact visual foreground text bounds,
-    preventing 5-6px vertical/horizontal alignment offsets caused by outer whitespace padding.
+    Returns axis-aligned bounding box (left, top, width, height) in original image pixels
+    directly enclosing the polygon coordinates without shrinking or truncating text glyphs.
     """
     xs = [p[0] for p in polygon]
     ys = [p[1] for p in polygon]
@@ -168,27 +164,6 @@ def calculate_bounding_box(
     max_x = max(xs)
     min_y = min(ys)
     max_y = max(ys)
-
-    if image is not None:
-        try:
-            ix1, ix2 = max(0, int(min_x)), min(image.width, int(max_x))
-            iy1, iy2 = max(0, int(min_y)), min(image.height, int(max_y))
-            if ix2 > ix1 + 4 and iy2 > iy1 + 4:
-                crop = np.array(image.crop((ix1, iy1, ix2, iy2)))
-                if crop.size > 0:
-                    gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY) if len(crop.shape) == 3 else crop
-                    _, th1 = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-                    _, th2 = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-                    th = th1 if np.sum(th1 == 255) < np.sum(th2 == 255) else th2
-                    fg_ys, fg_xs = np.where(th == 255)
-                    if len(fg_ys) >= 6 and len(fg_xs) >= 6:
-                        cal_left = ix1 + float(np.min(fg_xs))
-                        cal_top = iy1 + float(np.min(fg_ys))
-                        cal_w = float(np.max(fg_xs) - np.min(fg_xs) + 1)
-                        cal_h = float(np.max(fg_ys) - np.min(fg_ys) + 1)
-                        return (round(cal_left, 1), round(cal_top, 1), round(cal_w, 1), round(cal_h, 1))
-        except Exception:
-            pass
 
     return (round(min_x, 1), round(min_y, 1), round(max_x - min_x, 1), round(max_y - min_y, 1))
 
@@ -296,12 +271,22 @@ def estimate_text_color(image: Image.Image, polygon: List[List[float]]) -> str:
     if max_diff < 15.0:
         return "#ffffff" if bg_lum < 128 else "#111827"
 
-    # Extract high-contrast text pixels
+    # Extract high-contrast text pixels with perimeter inset
     text_mask = diff >= max(18.0, 0.35 * max_diff)
     if np.sum(text_mask) < 4:
         text_mask = diff >= np.percentile(diff, 80)
 
-    text_pixels = rgb[text_mask]
+    # Inset by 1px from the perimeter to prevent sampling bounding boxes, card borders or canvas outlines
+    inner = np.zeros((h, w), dtype=bool)
+    if h > 4 and w > 4:
+        inner[1:h-1, 1:w-1] = True
+        text_mask = text_mask & inner
+
+    # Sample core text pixels (erode by 1px if enough foreground pixels exist)
+    eroded = cv2.erode(text_mask.astype(np.uint8), np.ones((2, 2), np.uint8))
+    core_mask_to_use = (eroded > 0) if np.sum(eroded) >= 4 else text_mask
+
+    text_pixels = rgb[core_mask_to_use]
     if len(text_pixels) == 0:
         return "#ffffff" if bg_lum < 128 else "#111827"
 
@@ -309,7 +294,7 @@ def estimate_text_color(image: Image.Image, polygon: List[List[float]]) -> str:
 
     if bg_lum < 128:
         # Dark Background -> Light text: select brightest core pixels
-        core_mask = pixel_lums >= np.percentile(pixel_lums, 65)
+        core_mask = pixel_lums >= np.percentile(pixel_lums, 60)
         core_pixels = text_pixels[core_mask] if np.sum(core_mask) > 0 else text_pixels
         median_c = np.median(core_pixels, axis=0)
         r, g, b = median_c
@@ -321,7 +306,7 @@ def estimate_text_color(image: Image.Image, polygon: List[List[float]]) -> str:
         return f"#{int(r):02x}{int(g):02x}{int(b):02x}"
     else:
         # Light Background -> Dark text: select deepest/darkest core pixels
-        core_mask = pixel_lums <= np.percentile(pixel_lums, 35)
+        core_mask = pixel_lums <= np.percentile(pixel_lums, 40)
         core_pixels = text_pixels[core_mask] if np.sum(core_mask) > 0 else text_pixels
         median_c = np.median(core_pixels, axis=0)
         r, g, b = median_c

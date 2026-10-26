@@ -1,4 +1,5 @@
 import os
+import re
 import glob
 import time
 import math
@@ -30,26 +31,8 @@ FONT_CATALOGUE = [
         "is_serif": False,
         "weights": ["300", "400", "500", "600", "700", "800"],
         "regular_patterns": ["Inter-Regular.ttf", "Inter.ttf", "Arial.ttf", "SFNS.ttf", "Helvetica.ttc", "DejaVuSans.ttf"],
-        "bold_patterns": ["Inter-Bold.ttf", "Arial Bold.ttf", "Helvetica-Bold.ttc", "DejaVuSans-Bold.ttf"],
+        "bold_patterns": ["Inter-Bold.ttf", "Inter-SemiBold.ttf", "Arial Bold.ttf", "Helvetica-Bold.ttc", "DejaVuSans-Bold.ttf"],
         "aspect_factor": 0.58,
-    },
-    {
-        "family": "Poppins",
-        "category": "sans-serif",
-        "is_serif": False,
-        "weights": ["400", "500", "600", "700"],
-        "regular_patterns": ["Poppins-Regular.ttf", "Poppins.ttf", "Arial.ttf", "DejaVuSans.ttf"],
-        "bold_patterns": ["Poppins-Bold.ttf", "Arial Bold.ttf", "DejaVuSans-Bold.ttf"],
-        "aspect_factor": 0.58,
-    },
-    {
-        "family": "Plus Jakarta Sans",
-        "category": "sans-serif",
-        "is_serif": False,
-        "weights": ["400", "500", "600", "700"],
-        "regular_patterns": ["PlusJakartaSans-Regular.ttf", "PlusJakartaSans.ttf", "Arial.ttf"],
-        "bold_patterns": ["PlusJakartaSans-Bold.ttf", "Arial Bold.ttf"],
-        "aspect_factor": 0.57,
     },
     {
         "family": "Roboto",
@@ -57,16 +40,34 @@ FONT_CATALOGUE = [
         "is_serif": False,
         "weights": ["300", "400", "500", "700"],
         "regular_patterns": ["Roboto-Regular.ttf", "Roboto.ttf", "Arial.ttf", "DejaVuSans.ttf"],
-        "bold_patterns": ["Roboto-Bold.ttf", "Arial Bold.ttf", "DejaVuSans-Bold.ttf"],
+        "bold_patterns": ["Roboto-Bold.ttf", "Roboto-Regular.ttf", "Arial Bold.ttf", "DejaVuSans-Bold.ttf"],
         "aspect_factor": 0.56,
+    },
+    {
+        "family": "Plus Jakarta Sans",
+        "category": "sans-serif",
+        "is_serif": False,
+        "weights": ["400", "500", "600", "700"],
+        "regular_patterns": ["PlusJakartaSans-Regular.ttf", "PlusJakartaSans.ttf", "Arial.ttf"],
+        "bold_patterns": ["PlusJakartaSans-Bold.ttf", "PlusJakartaSans-Regular.ttf", "Arial Bold.ttf"],
+        "aspect_factor": 0.57,
+    },
+    {
+        "family": "Poppins",
+        "category": "sans-serif",
+        "is_serif": False,
+        "weights": ["400", "500", "600", "700"],
+        "regular_patterns": ["Poppins-Regular.ttf", "Poppins.ttf", "Arial.ttf", "DejaVuSans.ttf"],
+        "bold_patterns": ["Poppins-Bold.ttf", "Poppins-Regular.ttf", "Arial Bold.ttf", "DejaVuSans-Bold.ttf"],
+        "aspect_factor": 0.58,
     },
     {
         "family": "Montserrat",
         "category": "sans-serif",
         "is_serif": False,
         "weights": ["400", "500", "600", "700", "800"],
-        "regular_patterns": ["Montserrat-Regular.ttf", "Montserrat.ttf", "Trebuchet MS.ttf", "Arial.ttf", "DejaVuSans.ttf"],
-        "bold_patterns": ["Montserrat-Bold.ttf", "Trebuchet MS Bold.ttf", "Arial Bold.ttf"],
+        "regular_patterns": ["Montserrat-Regular.ttf", "Montserrat.ttf", "Trebuchet MS.ttf", "Arial.ttf"],
+        "bold_patterns": ["Montserrat-Bold.ttf", "Montserrat-Regular.ttf", "Trebuchet MS Bold.ttf", "Arial Bold.ttf"],
         "aspect_factor": 0.65,
     },
     {
@@ -75,7 +76,7 @@ FONT_CATALOGUE = [
         "is_serif": False,
         "weights": ["400", "500", "600", "700"],
         "regular_patterns": ["Outfit-Regular.ttf", "Outfit.ttf", "Trebuchet MS.ttf", "Arial.ttf"],
-        "bold_patterns": ["Outfit-Bold.ttf", "Trebuchet MS Bold.ttf", "Arial Bold.ttf"],
+        "bold_patterns": ["Outfit-Bold.ttf", "Outfit-Regular.ttf", "Trebuchet MS Bold.ttf", "Arial Bold.ttf"],
         "aspect_factor": 0.62,
     },
     {
@@ -84,7 +85,7 @@ FONT_CATALOGUE = [
         "is_serif": False,
         "weights": ["400", "600", "700"],
         "regular_patterns": ["OpenSans-Regular.ttf", "OpenSans.ttf", "Verdana.ttf", "Arial.ttf"],
-        "bold_patterns": ["OpenSans-Bold.ttf", "Verdana Bold.ttf", "Arial Bold.ttf"],
+        "bold_patterns": ["OpenSans-Bold.ttf", "OpenSans-Regular.ttf", "Verdana Bold.ttf", "Arial Bold.ttf"],
         "aspect_factor": 0.60,
     },
     {
@@ -92,9 +93,18 @@ FONT_CATALOGUE = [
         "category": "serif",
         "is_serif": True,
         "weights": ["400", "600", "700"],
-        "regular_patterns": ["PlayfairDisplay-Regular.ttf", "PlayfairDisplay.ttf", "Georgia.ttf", "Times New Roman.ttf"],
-        "bold_patterns": ["PlayfairDisplay-Bold.ttf", "Georgia Bold.ttf", "Times New Roman Bold.ttf"],
+        "regular_patterns": ["PlayfairDisplay-Regular.ttf", "PlayfairDisplay.ttf", "Georgia.ttf"],
+        "bold_patterns": ["PlayfairDisplay-Bold.ttf", "PlayfairDisplay-Regular.ttf", "Georgia Bold.ttf"],
         "aspect_factor": 0.58,
+    },
+    {
+        "family": "Merriweather",
+        "category": "serif",
+        "is_serif": True,
+        "weights": ["400", "700"],
+        "regular_patterns": ["Merriweather-Regular.ttf", "Merriweather.ttf", "Georgia.ttf"],
+        "bold_patterns": ["Merriweather-Bold.ttf", "Merriweather-Regular.ttf", "Georgia Bold.ttf"],
+        "aspect_factor": 0.62,
     },
     {
         "family": "Georgia",
@@ -115,21 +125,12 @@ FONT_CATALOGUE = [
         "aspect_factor": 0.54,
     },
     {
-        "family": "Merriweather",
-        "category": "serif",
-        "is_serif": True,
-        "weights": ["400", "700"],
-        "regular_patterns": ["Merriweather-Regular.ttf", "Merriweather.ttf", "Georgia.ttf", "Times New Roman.ttf"],
-        "bold_patterns": ["Merriweather-Bold.ttf", "Georgia Bold.ttf", "Times New Roman Bold.ttf"],
-        "aspect_factor": 0.62,
-    },
-    {
         "family": "Courier Prime",
         "category": "monospace",
         "is_serif": True,
         "weights": ["400", "700"],
-        "regular_patterns": ["Courier Prime.ttf", "Courier New.ttf", "Courier.dfont", "DejaVuSansMono.ttf"],
-        "bold_patterns": ["Courier New Bold.ttf", "DejaVuSansMono-Bold.ttf"],
+        "regular_patterns": ["CourierPrime-Regular.ttf", "Courier Prime.ttf", "Courier New.ttf", "DejaVuSansMono.ttf"],
+        "bold_patterns": ["CourierPrime-Bold.ttf", "Courier Prime Bold.ttf", "Courier New Bold.ttf", "DejaVuSansMono-Bold.ttf"],
         "aspect_factor": 0.60,
     },
 ]
@@ -271,18 +272,21 @@ class TypographyService:
         effective_h = max(12.0, font_size)
         tau = stroke_width / effective_h
 
-        if tau < 0.10:
+        # Calibrated digital screen weight scale
+        if tau < 0.11:
             weight = "300"
-        elif tau < 0.14:
+        elif tau < 0.15:
             weight = "400"
-        elif tau < 0.17:
+        elif tau < 0.19:
             weight = "500"
-        elif tau < 0.21:
+        elif tau < 0.24:
             weight = "600"
-        elif tau < 0.26:
-            weight = "700"
         else:
-            weight = "800"
+            weight = "700"
+
+        # Prevent small body/subtitle text on digital screenshots from being falsely marked bold
+        if font_size <= 13.0 and weight in ["600", "700"] and stroke_width <= 2.2:
+            weight = "400"
 
         return round(stroke_width, 1), weight
 
@@ -309,11 +313,10 @@ class TypographyService:
         corner_density = total_corners / total_white
 
         # Calibrated threshold on text mask:
-        # Sans-serif (Arial, Helvetica, Inter, Roboto) produces corner density 0.30 - 0.42.
-        # Real serifs (Georgia, Times, Playfair, Merriweather) produce corner density 0.65 - 0.98.
-        # Monospace serifs (Courier) produce corner density > 1.20.
-        is_serif = corner_density >= 0.55 and total_white > 120
-        serif_confidence = min(1.0, max(0.0, (corner_density - 0.45) / 0.25))
+        # Sans-serif produces corner density 0.25 - 0.45.
+        # Real serifs (Georgia, Times, Playfair) produce corner density > 0.65.
+        is_serif = corner_density >= 0.65 and total_white > 150
+        serif_confidence = min(1.0, max(0.0, (corner_density - 0.50) / 0.30))
 
         return is_serif, round(serif_confidence, 2)
 
@@ -358,48 +361,29 @@ class TypographyService:
         font_size_hint: Optional[float] = None
     ) -> Tuple[str, str, str]:
         """
-        Ultra-fast (<5ms) heuristic typography estimation for initial OCR scanning.
-        Extracts stroke weight and serif classification without heavy multi-font cross-correlation.
+        High-accuracy fast typography estimation for initial OCR scanning.
+        Uses visual contour cross-correlation, aspect ratio, stroke weight, and serif classification
+        against official rendered font templates.
         Returns: (font_family, category, css_weight)
         """
         if crop_bgr is None or crop_bgr.size == 0 or not text.strip():
             return "Inter", "sans-serif", "400"
 
+        try:
+            res = self.match_typography(crop_bgr, text, font_size_hint=font_size_hint, top_k=1)
+            if res.candidates:
+                best = res.candidates[0]
+                return best.family, best.category, best.weight
+        except Exception as e:
+            print(f"Typography quick estimate fallback: {e}")
+
         orig_mask = self.extract_text_mask(crop_bgr)
-        effective_font_size = font_size_hint if font_size_hint and font_size_hint > 8 else float(crop_bgr.shape[0] * 0.75)
-
-        stroke_width, detected_weight = self.estimate_stroke_weight(orig_mask, effective_font_size)
+        effective_font_size = font_size_hint if font_size_hint and font_size_hint > 8 else float(crop_bgr.shape[0] * 0.85)
+        _, detected_weight = self.estimate_stroke_weight(orig_mask, effective_font_size)
         detected_serif, _ = self.classify_serif(orig_mask)
-
-        orig_h, orig_w = crop_bgr.shape[:2]
-        aspect_ratio = orig_w / max(1.0, orig_h)
-        char_aspect = aspect_ratio / max(1, len(text))
-
-        # Only apply serif if font is large enough to resolve true serif brackets (>16px)
-        if detected_serif and effective_font_size >= 16:
-            category = "serif"
-            if effective_font_size >= 36 or char_aspect > 0.65:
-                family = "Playfair Display"
-            elif int(detected_weight) >= 600:
-                family = "Merriweather"
-            else:
-                family = "Georgia"
-        else:
-            category = "sans-serif"
-            # High-fidelity digital UI & graphic typography matching
-            if int(detected_weight) >= 700:
-                family = "Montserrat" if char_aspect > 0.62 else "Inter"
-            elif int(detected_weight) >= 600:
-                family = "Roboto"
-            else:
-                if char_aspect > 0.65:
-                    family = "Montserrat"
-                elif effective_font_size >= 28:
-                    family = "Outfit"
-                else:
-                    family = "Inter"
-
-        return family, category, detected_weight
+        cat = "serif" if detected_serif else "sans-serif"
+        fam = "Georgia" if detected_serif else "Inter"
+        return fam, cat, detected_weight
 
     def match_typography(
         self,
@@ -463,11 +447,13 @@ class TypographyService:
             aspect_diff = abs(actual_aspect - expected_aspect) / max(actual_aspect, expected_aspect)
             aspect_sim = max(0.1, 1.0 - min(1.0, aspect_diff))
 
-            # Signal 3: Serif classification match (soft penalty)
+            # Signal 3: Serif classification match (strict category penalty)
             if is_serif_font == detected_serif:
-                serif_sim = 0.95
+                serif_sim = 1.0
+                category_mult = 1.0
             else:
-                serif_sim = 0.55
+                serif_sim = 0.0
+                category_mult = 0.40  # Heavily downweight serif fonts on sans-serif text and vice-versa
 
             # Signal 4: Contour cross-correlation on tight crops (primary ground-truth)
             cand_mask = self.render_candidate_mask(
@@ -486,12 +472,13 @@ class TypographyService:
             contour_sim = max(0.0, min(1.0, dot_product / (norm_orig * norm_cand)))
 
             # Composite weighted confidence: contour cross-correlation is primary visual signal
-            confidence = (
+            raw_confidence = (
                 0.55 * contour_sim +
                 0.25 * aspect_sim +
                 0.15 * weight_sim +
                 0.05 * serif_sim
             )
+            confidence = raw_confidence * category_mult
             confidence = max(0.05, min(0.99, confidence))
 
             # Letter spacing recommendation

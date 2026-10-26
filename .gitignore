@@ -41,3 +41,7 @@ htmlcov/
 # Temporary scratch & outputs
 output/
 temp/
+
+# Machine Learning Models & Local OCR Weights
+models/
+.paddlex/

@@ -1,6 +1,11 @@
 import os
 import sys
 
+# Configure project-local models directory for PaddleX OCR weights
+MODELS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
+os.environ.setdefault("PADDLE_PDX_CACHE_HOME", MODELS_DIR)
+os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
+
 # Configure Paddle low-memory flags before importing any C++ frameworks
 os.environ["FLAGS_use_mkldnn"] = "0"
 os.environ["PADDLE_PDX_ENABLE_MKLDNN_BYDEFAULT"] = "0"

@@ -21,8 +21,8 @@ def test_calculate_polygon_angle():
 def test_calculate_font_size():
     # Height is 30px
     quad = [[10.0, 20.0], [110.0, 20.0], [110.0, 50.0], [10.0, 50.0]]
-    # 30px visual line box height calibrates to 19.5px font em-size (30.0 * 0.65)
-    assert calculate_font_size(quad) == 19.5
+    # 30px visual line box height calibrates to 26.4px font em-size (30.0 * 0.88)
+    assert calculate_font_size(quad) == 26.4
 
 def test_calculate_bounding_box():
     quad = [[10.0, 20.0], [110.0, 20.0], [110.0, 50.0], [10.0, 50.0]]

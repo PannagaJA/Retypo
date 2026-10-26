@@ -4,6 +4,7 @@ import time
 import base64
 import hashlib
 import httpx
+import numpy as np
 from typing import List, Tuple, Optional, Any, Dict
 from PIL import Image
 
@@ -38,7 +39,8 @@ class GoogleVisionService:
     @classmethod
     def parse_vision_response(cls, response_json: Dict[str, Any]) -> List[Tuple[List[List[float]], str, float]]:
         """
-        Parses Google Vision fullTextAnnotation into structured lines with accurate polygon boxes.
+        Parses Google Vision fullTextAnnotation into structured lines with accurate polygon boxes
+        using spatial reading-order line clustering. Prevents grouping distant buttons or columns into huge boxes.
         Falls back to textAnnotations if fullTextAnnotation is not populated.
         """
         items: List[Tuple[List[List[float]], str, float]] = []
@@ -50,41 +52,79 @@ class GoogleVisionService:
         full_text_annotation = first_resp.get("fullTextAnnotation")
 
         if full_text_annotation:
+            extracted_words: List[Dict[str, Any]] = []
             for page in full_text_annotation.get("pages", []):
                 for block in page.get("blocks", []):
                     for para in block.get("paragraphs", []):
-                        current_line_words: List[str] = []
-                        current_line_vertices: List[Dict[str, Any]] = []
-
                         for word in para.get("words", []):
-                            word_text = "".join([s.get("text", "") for s in word.get("symbols", [])])
-                            current_line_words.append(word_text)
+                            word_text = "".join([s.get("text", "") for s in word.get("symbols", [])]).strip()
+                            if not word_text:
+                                continue
+                            vertices = word.get("boundingPoly", {}).get("vertices", [])
+                            if len(vertices) < 4:
+                                continue
+                            xs = [float(v.get("x", 0)) for v in vertices if "x" in v]
+                            ys = [float(v.get("y", 0)) for v in vertices if "y" in v]
+                            if not xs or not ys:
+                                continue
+                            wx1, wx2 = min(xs), max(xs)
+                            wy1, wy2 = min(ys), max(ys)
+                            conf = float(word.get("confidence", 0.98))
+                            extracted_words.append({
+                                "text": word_text,
+                                "x1": wx1,
+                                "y1": wy1,
+                                "x2": wx2,
+                                "y2": wy2,
+                                "conf": conf,
+                                "vertices": vertices,
+                            })
 
-                            word_poly = word.get("boundingPoly", {}).get("vertices", [])
-                            current_line_vertices.extend(word_poly)
+            # Spatial reading-order line clustering:
+            # Group words that share vertical baseline overlap and are horizontally adjacent
+            extracted_words.sort(key=lambda w: (w["y1"], w["x1"]))
+            lines: List[Dict[str, Any]] = []
 
-                            # Detect line breaks or paragraph breaks
-                            symbols = word.get("symbols", [])
-                            last_symbol = symbols[-1] if symbols else {}
-                            detected_break = last_symbol.get("property", {}).get("detectedBreak", {})
-                            break_type = detected_break.get("type", "")
+            for w in extracted_words:
+                wx1, wy1, wx2, wy2 = w["x1"], w["y1"], w["x2"], w["y2"]
+                wh = max(1.0, wy2 - wy1)
+                placed = False
 
-                            if break_type in ["LINE_BREAK", "EOL_SURE_SPACE", "HYPHEN_BREAK"]:
-                                line_text = " ".join(current_line_words).strip()
-                                if line_text and current_line_vertices:
-                                    poly = cls._compute_bounding_polygon(current_line_vertices)
-                                    if poly:
-                                        items.append((poly, line_text, 0.99))
-                                current_line_words = []
-                                current_line_vertices = []
+                for line in lines:
+                    ly1, ly2 = line["y1"], line["y2"]
+                    lh = max(1.0, ly2 - ly1)
+                    # Vertical baseline overlap test
+                    overlap = max(0.0, min(wy2, ly2) - max(wy1, ly1))
+                    if overlap >= 0.50 * min(wh, lh):
+                        # Horizontal proximity test: ensure words are not across distant columns
+                        last_w = line["words"][-1]
+                        gap = wx1 - last_w["x2"]
+                        if 0 <= gap <= 3.2 * max(wh, lh):
+                            line["words"].append(w)
+                            line["y1"] = min(line["y1"], wy1)
+                            line["y2"] = max(line["y2"], wy2)
+                            line["x2"] = max(line["x2"], wx2)
+                            line["vertices"].extend(w["vertices"])
+                            placed = True
+                            break
 
-                        # Flush remaining words in paragraph
-                        if current_line_words and current_line_vertices:
-                            line_text = " ".join(current_line_words).strip()
-                            if line_text:
-                                poly = cls._compute_bounding_polygon(current_line_vertices)
-                                if poly:
-                                    items.append((poly, line_text, 0.99))
+                if not placed:
+                    lines.append({
+                        "words": [w],
+                        "x1": wx1,
+                        "y1": wy1,
+                        "x2": wx2,
+                        "y2": wy2,
+                        "vertices": list(w["vertices"]),
+                    })
+
+            for line in lines:
+                line_text = " ".join([w["text"] for w in line["words"]]).strip()
+                if line_text and line["vertices"]:
+                    poly = cls._compute_bounding_polygon(line["vertices"])
+                    if poly:
+                        avg_conf = float(np.mean([w["conf"] for w in line["words"]]))
+                        items.append((poly, line_text, round(avg_conf, 3)))
 
         # Fallback to textAnnotations if fullTextAnnotation didn't yield items
         if not items and "textAnnotations" in first_resp:

@@ -12,6 +12,18 @@ from typing import List, Optional, Tuple, Any, Dict
 # Concurrency lock to strictly serialize OCR execution on low-memory environments (Render 512MB)
 OCR_LOCK = threading.Lock()
 
+# Configure project-local models directory for PaddleX OCR weights
+if "PADDLE_PDX_CACHE_HOME" not in os.environ:
+    _cur_dir = os.path.dirname(os.path.abspath(__file__))
+    _root_models = os.path.abspath(os.path.join(_cur_dir, "..", "..", "..", "models"))
+    _backend_models = os.path.abspath(os.path.join(_cur_dir, "..", "..", "models"))
+    if os.path.isdir(_root_models):
+        os.environ["PADDLE_PDX_CACHE_HOME"] = _root_models
+    elif os.path.isdir(_backend_models):
+        os.environ["PADDLE_PDX_CACHE_HOME"] = _backend_models
+    else:
+        os.environ["PADDLE_PDX_CACHE_HOME"] = _root_models
+
 # Configure Paddle allocator flags before runtime initializes (disable MKLDNN to prevent oneDNN PIR conversion crashes)
 os.environ["FLAGS_use_mkldnn"] = "0"
 os.environ["PADDLE_PDX_ENABLE_MKLDNN_BYDEFAULT"] = "0"
@@ -77,7 +89,7 @@ class OCRService:
             self._engines.clear()
             clear_system_memory_caches()
 
-        det_limit = 640 if is_low_mem else 960
+        det_limit = 960
 
         try:
             from paddleocr import PaddleOCR
@@ -91,8 +103,8 @@ class OCRService:
                 text_det_limit_type="max",
                 text_recognition_batch_size=8,
                 text_det_unclip_ratio=1.6,
-                text_det_box_thresh=0.55 if is_low_mem else 0.50,
-                text_det_thresh=0.30 if is_low_mem else 0.25,
+                text_det_box_thresh=0.50,
+                text_det_thresh=0.25,
                 device="cpu",
             )
             self._engines[clean_lang] = engine
@@ -114,8 +126,8 @@ class OCRService:
                     text_det_limit_type="max",
                     text_recognition_batch_size=8,
                     text_det_unclip_ratio=1.6,
-                    text_det_box_thresh=0.55 if is_low_mem else 0.50,
-                    text_det_thresh=0.30 if is_low_mem else 0.25,
+                    text_det_box_thresh=0.50,
+                    text_det_thresh=0.25,
                     device="cpu",
                 )
                 self._engines["en"] = engine
@@ -178,8 +190,8 @@ class OCRService:
             return True
 
         # 1. Reject pure punctuation, symbols, separators, or geometric marks
-        # Text must contain at least one alphanumeric character
-        if not re.search(r'[a-zA-Z0-9\u00C0-\u024F\u0400-\u04FF\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]', clean):
+        # Genuine text must contain at least one alphanumeric character or currency symbol
+        if not re.search(r'[a-zA-Z0-9\u00C0-\u024F\u0400-\u04FF\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF₹$€£¥]', clean):
             return True
 
         aspect = w / max(1.0, h)
@@ -196,52 +208,242 @@ class OCRService:
         if clean in icon_chars:
             return True
 
-        # 3. Small square glyphs: UI icons misread as a single character (e.g. search magnifying glass as 'Q' or 'O', user avatar as '0' or 'o', arrow badge as '7' or 'K' or '1')
+        # 3. Small square glyphs: UI icons misread as a single character (e.g. search magnifying glass as 'Q' or 'O', user avatar as '0' or 'o')
         if len(compact) <= 1:
             # Low confidence standalone character
-            if confidence < 0.80:
+            if confidence < 0.82:
                 return True
             # Square icon bounding box (avatars, search lenses, radio buttons, navigation arrows)
-            if 0.75 <= aspect <= 1.35 and max(w, h) <= 80.0:
+            if 0.70 <= aspect <= 1.40 and max(w, h) <= 80.0 and not compact.isdigit():
                 return True
 
-        # 4. Two-glyph UI badges / icon noise
-        if len(compact) <= 2:
-            if confidence < 0.88 and max(w, h) <= 50.0 and 0.60 <= aspect <= 1.50:
-                return True
-            if confidence < 0.70:
-                return True
+        # 4. Status-bar / notification icon noise sequences (e.g. '0000', '||||||', 'xxxxxx', '------')
+        if len(compact) >= 3 and len(set(compact)) == 1 and compact[0] in ['0', 'o', 'O', 'x', '|', '-']:
+            return True
 
         # 5. Non-text images / large photo textures / decorative elements
         if image_dims:
             img_w, img_h = image_dims
-            # Misdetected huge photographic block or texture
             if (w * h) > 0.35 * (img_w * img_h) and confidence < 0.75:
                 return True
 
-        # 6. Repetitive noise sequences (e.g. "||||||", "xxxxxx", "------")
-        if len(compact) >= 5 and len(set(compact)) == 1 and confidence < 0.85:
-            return True
-
-        # 7. Computer Vision check on crop: Detect circular avatars, button badges, and solid icons
-        if crop_bgr is not None and crop_bgr.size > 0 and len(compact) <= 2:
+        # 6. Computer Vision check on crop: Detect circular avatars, button badges, and solid icons
+        # Strictly applies ONLY to isolated single non-digit glyphs with low-to-medium confidence
+        if crop_bgr is not None and crop_bgr.size > 0 and len(compact) == 1 and not compact.isdigit() and confidence < 0.90:
             try:
                 gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
-                _, otsu = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-                cnts, _ = cv2.findContours(otsu, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                border = np.concatenate([gray[0, :], gray[-1, :], gray[:, 0], gray[:, -1]])
+                bg = float(np.median(border))
+                diff = np.abs(gray.astype(np.float32) - bg)
+                _, mask = cv2.threshold(diff.astype(np.uint8), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 if cnts:
                     c = max(cnts, key=cv2.contourArea)
                     area = cv2.contourArea(c)
                     peri = cv2.arcLength(c, True)
-                    if peri > 0:
+                    crop_area = float(crop_bgr.shape[0] * crop_bgr.shape[1])
+                    if peri > 0 and area >= 0.40 * crop_area:
                         circ = 4.0 * math.pi * area / (peri * peri)
-                        # Circular profile badges, search icons, notification dots have high circularity
-                        if circ > 0.65:
+                        if circ > 0.75:
                             return True
             except Exception:
                 pass
 
         return False
+
+    @staticmethod
+    def _separate_adjacent_icons(
+        crop_bgr: Optional[np.ndarray],
+        polygon: List[List[float]],
+        text: str
+    ) -> Tuple[List[List[float]], str]:
+        """
+        Detects if an OCR detection polygon spans both a UI icon and a text label
+        (e.g. Income/Expenses with bullet indicator dots, Account button with wallet icon on left,
+        Filter button with sliders on left and chevron on right, '+ Transaction' button with plus icon on left,
+        Search bar with magnifying glass, status clock with notification icons on right,
+        status battery with network meters on left).
+        Trims the polygon to wrap strictly the text characters, leaving the icons in the background.
+        Strictly guards against modifying names, account numbers, IDs, sentences, emails, or currency amounts.
+        """
+        if crop_bgr is None or crop_bgr.size == 0:
+            return polygon, text
+
+        clean_text = text.strip()
+        if not clean_text or len(clean_text) <= 1 or len(clean_text) > 40:
+            return polygon, text
+
+        # Strictly exclude emails, UPI IDs, currency symbols, slashes, or backslashes
+        if any(ch in clean_text for ch in ['@', '#', '$', '€', '£', '¥', '/', '\\']):
+            return polygon, text
+
+        # Currency amounts or signed numerical values
+        if re.search(r'^[+\-–]?\s*[₹$€£¥]', clean_text) or re.search(r'^[+\-–]\s*\d', clean_text):
+            return polygon, text
+
+        # Account numbers, transaction IDs, UTRs, pure IDs
+        if re.match(r'^(?:[X\d\-_]{6,}|T\d{10,}|UTR[:\s]|UPI)', clean_text, re.IGNORECASE):
+            return polygon, text
+
+        # Check if text is a standalone status-bar clock (e.g. '1:55', '1:55 0000', '1:55 0020')
+        # NEVER match date/time strings like '10:38 pm on 22 Oct 2026'
+        is_status_clock = bool(re.match(r'^\d{1,2}:\d{2}(?:\s+[\d0oOxX|–\-]{2,})?$', clean_text))
+
+        # Check if text is a status-bar battery percentage (e.g. '40%', '40 40%')
+        is_status_battery = bool(re.match(r'^(?:\d{1,2}\s+)?\d{1,2}%$', clean_text))
+
+        norm_lower = clean_text.lower().lstrip('+').strip()
+        is_ui_button = norm_lower in {
+            'account', 'filter', 'transaction', 'transactions', 'dashboard', 'settings',
+            'profile', 'history', 'subscriptions', 'budgets', 'search', 'sort', 'menu'
+        }
+
+        # Exclude dates like 'Oct 8, 2026'
+        if re.match(r'^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b', clean_text, re.IGNORECASE):
+            return polygon, text
+
+        words = clean_text.split()
+        is_single_word = len(words) == 1
+        has_plus_prefix = clean_text.startswith(('+ ', '+')) and len(words) <= 2
+
+        # CRITICAL: Multi-word phrases like 'Transaction Successful', 'Transfer Details', 'Powered by'
+        # must NEVER have words trimmed!
+        if not (is_status_clock or is_status_battery or is_ui_button or is_single_word or has_plus_prefix):
+            return polygon, text
+
+        h, w = crop_bgr.shape[:2]
+        if w < 20 or h < 8:
+            return polygon, text
+
+        try:
+            gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
+            border = np.concatenate([gray[0, :], gray[-1, :], gray[:, 0], gray[:, -1]])
+            bg = float(np.median(border))
+            diff = np.abs(gray.astype(np.float32) - bg)
+            _, th = cv2.threshold(diff.astype(np.uint8), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+            # Strip 2px perimeter border to eliminate any surrounding container border artifacts
+            pad = 2 if (h > 8 and w > 8) else 1
+            inner_th = th[pad:h-pad, pad:w-pad] if h > 4 and w > 4 else th
+            num, labels, stats, _ = cv2.connectedComponentsWithStats(inner_th)
+            raw_comps = [stats[i] for i in range(1, num) if stats[i][4] >= 4 and (stats[i][3] >= 3 or stats[i][3] >= 0.15 * h)]
+            raw_comps.sort(key=lambda c: c[0])
+
+            if len(raw_comps) < 2:
+                return polygon, text
+
+            # Cluster contiguous components separated by <= 3px (e.g. multi-bar slider icons or broken glyphs)
+            clusters: List[List[int]] = []
+            curr = list(raw_comps[0][:4])
+            for c in raw_comps[1:]:
+                cx, cy, cw, ch = c[:4]
+                curr_right = curr[0] + curr[2]
+                if cx <= curr_right + 3:
+                    new_right = max(curr_right, cx + cw)
+                    curr[2] = new_right - curr[0]
+                    curr[3] = max(curr[3], ch)
+                else:
+                    clusters.append(curr)
+                    curr = [cx, cy, cw, ch]
+            clusters.append(curr)
+
+            if len(clusters) < 2:
+                return polygon, text
+
+            # Minimum expected width for text: 0.28 * h per char
+            expected_min_w = max(8.0, len(clean_text) * (h * 0.28))
+
+            left_offset = 0.0
+            right_offset = 0.0
+            new_text = clean_text
+
+            # 1. Check for leading icon on the left
+            if len(clusters) >= 2:
+                for c_idx in range(min(2, len(clusters) - 1)):
+                    cl = clusters[c_idx]
+                    fx, fy, fw, fh = cl
+                    f_aspect = fw / max(1.0, float(fh))
+                    next_cl = clusters[c_idx + 1]
+                    gap = next_cl[0] - (fx + fw)
+
+                    # Bullet / indicator dot (e.g. small circular green dot in Income, red dot in Expenses)
+                    # Notice: full-height letters like 'K' in Krishna have fh >= 0.80*h and fail this condition
+                    is_bullet_dot = is_single_word and (0.65 <= f_aspect <= 1.40) and (fh <= 0.70 * h) and (fw <= 0.70 * h) and (gap >= 5)
+
+                    # Graphic icon on explicit UI action buttons (e.g. wallet on Account, sliders on Filter, plus on + Transaction)
+                    is_button_icon = (is_ui_button or has_plus_prefix) and (0.30 <= f_aspect <= 3.50 or fh >= 0.35 * h) and (gap >= 4)
+
+                    if fx < 0.40 * w and (is_bullet_dot or is_button_icon):
+                        cand_w = (w - pad) - float(next_cl[0] + pad)
+                        # Check if text starts with a plus icon that belongs to button graphic (e.g. "+ Transaction")
+                        if has_plus_prefix:
+                            if cand_w >= expected_min_w * 0.7:
+                                left_offset = float(next_cl[0] + pad)
+                                new_text = clean_text.lstrip('+').strip()
+                                break
+                        elif not clean_text.startswith(('+', '-', '₹', '$', '€', '£')):
+                            if cand_w >= expected_min_w:
+                                left_offset = float(next_cl[0] + pad)
+                                break
+
+            # Special case: Status bar battery/network cluster on left where percentage text is on right
+            if is_status_battery:
+                pct_clusters = [cl for cl in clusters if (cl[0] + pad) > 0.60 * w]
+                if pct_clusters:
+                    leftmost_pct = pct_clusters[0][0] + pad
+                    if leftmost_pct > left_offset and (w - leftmost_pct) >= 12.0:
+                        left_offset = float(leftmost_pct)
+
+            # 2. Check for trailing icon on the right (strictly for UI buttons like chevron down 'v' in 'Filter')
+            if is_ui_button and len(clusters) >= 2:
+                last_cl = clusters[-1]
+                lx, ly, lw, lh = last_cl
+                l_aspect = lw / max(1.0, float(lh))
+                if (lx + lw + pad) > 0.60 * w:
+                    prev_cl = clusters[-2]
+                    gap = lx - (prev_cl[0] + prev_cl[2])
+                    if gap >= 4 and (0.30 <= l_aspect <= 3.50 or lh >= 0.35 * h):
+                        if not clean_text.endswith(('%', 'Cr', 'Lakh', 'st', 'nd', 'rd', 'th')):
+                            cand_w = (prev_cl[0] + prev_cl[2] + pad) - left_offset
+                            if cand_w >= expected_min_w:
+                                right_offset = float(w - (prev_cl[0] + prev_cl[2] + pad))
+
+            # Special case: Standalone status bar clock on left followed by app notification icons on right
+            if is_status_clock:
+                clock_end_x = 0
+                for idx in range(len(clusters) - 1):
+                    curr_cl = clusters[idx]
+                    nxt_cl = clusters[idx + 1]
+                    curr_right = curr_cl[0] + curr_cl[2] + pad
+                    if curr_right >= 1.0 * h:
+                        gap_after = (nxt_cl[0] + pad) - curr_right
+                        if gap_after >= 4:
+                            clock_end_x = curr_right
+                            break
+                if clock_end_x > 0 and (w - clock_end_x) > right_offset:
+                    right_offset = float(w - clock_end_x)
+
+            if left_offset > 0 or right_offset > 0:
+                xs = [p[0] for p in polygon]
+                min_x = min(xs)
+                max_x = max(xs)
+                poly_w = max_x - min_x
+                scale_x = poly_w / float(w)
+
+                new_min_x = min_x + left_offset * scale_x
+                new_max_x = max_x - right_offset * scale_x
+
+                new_poly = [
+                    [round(new_min_x, 1), polygon[0][1]],
+                    [round(new_max_x, 1), polygon[1][1]],
+                    [round(new_max_x, 1), polygon[2][1]],
+                    [round(new_min_x, 1), polygon[3][1]]
+                ]
+                return new_poly, new_text
+        except Exception:
+            pass
+
+        return polygon, text
 
     @staticmethod
     def _normalize_detected_text(text: str, all_raw_texts: Optional[List[str]] = None) -> str:
@@ -257,15 +459,36 @@ class OCRService:
         # CRITICAL: NEVER strip minus '-', plus '+', hyphens, or currency symbols ($ € £ ¥ ₹)!
         s = re.sub(r'^[•·»›«‹→←]\s+(?=[A-Za-z])', '', s)
 
-        # 3. Fix currency symbols attached to numbers or spaces universally:
+        # 3. Clean status bar clock & notification sequences (e.g. '1:55 0000', '1:55 0020' -> '1:55')
+        # NEVER strip legitimate date/time suffixes such as 'pm', 'am', 'on 22 Oct 2026', etc.
+        s = re.sub(r'^(\d{1,2}:\d{2})\s+[\d0oOxX|–\-]{2,}$', r'\1', s)
+        s = re.sub(r'\s+[0oOxX|–\-]{3,}$', '', s)
+
+        # 3b. Convert OCR misread of Rupee symbol 'F' or 'r' before numbers:
+        # e.g. 'F30' -> '₹30', 'F 30' -> '₹30', 'r150.00' -> '₹150.00'
+        s = re.sub(r'^[FfRr]\s*(\d[\d,\.]*)', r'₹\1', s)
+
+        # 4. Clean status bar battery & network sequences (e.g. '40 40%' -> '40%', '4040%' -> '40%')
+        s = re.sub(r'^\d{1,2}\s+(\d{1,2}%)$', r'\1', s)
+        s = re.sub(r'^(\d{2})\1%$', r'\1%', s)
+
+        # 5. Strip stray trailing colons on single-word UI tabs, buttons, or list subtitles
+        # (e.g. 'Transfer:' -> 'Transfer', 'More:' -> 'More', 'Bank of Baroda:' -> 'Bank of Baroda')
+        if s.endswith(':') and not re.search(r'(?i)^(note|warning|tip|total|subtotal|tax):', s):
+            s = s[:-1].strip()
+
+        # 6. Normalize common subtitle bullets: 'General - Bank of Baroda' -> 'General • Bank of Baroda'
+        s = re.sub(r'(?<=[A-Za-z0-9])\s*[-·]\s*(?=[A-Z][a-z])', ' • ', s)
+
+        # 7. Fix currency symbols attached to numbers or spaces universally:
         # e.g. "$ 120" -> "$120", "€ 49.99" -> "€49.99", "£ 10" -> "£10", "₹ 250" -> "₹250", "- ₹ 105" -> "-₹105"
         s = re.sub(r'([+-])\s*([$€£¥₹])', r'\1\2', s)
         s = re.sub(r'([$€£¥₹])\s+(\d)', r'\1\2', s)
 
-        # 4. Standard punctuation spacing: remove space before comma/period/colon
-        s = re.sub(r'\s+([,\.:;!\?])', r'\1', s)
+        # 8. Standard punctuation spacing: remove space before comma/period
+        s = re.sub(r'\s+([,\.])', r'\1', s)
 
-        # 5. Remove stray leading or trailing decorative quotes or backticks if unbalanced
+        # 9. Remove stray leading or trailing decorative quotes or backticks if unbalanced
         if (s.startswith("`") or s.startswith("'") or s.startswith('"')) and not (s.endswith("`") or s.endswith("'") or s.endswith('"')):
             s = s[1:].strip()
         elif (s.endswith("`") or s.endswith("'") or s.endswith('"')) and not (s.startswith("`") or s.startswith("'") or s.startswith('"')):
@@ -274,18 +497,36 @@ class OCRService:
         return s
 
     @staticmethod
-    def _recover_currency_symbols(crop_bgr: Optional[np.ndarray], text: str) -> str:
+    def _recover_currency_symbols(
+        crop_bgr: Optional[np.ndarray],
+        text: str,
+        all_raw_texts: Optional[List[str]] = None
+    ) -> str:
         """
         Detects if an Indian Rupee symbol ₹ or currency glyph is present in the visual image crop
-        when the OCR engine missed or skipped it (e.g. recognized '-105.00' instead of '-₹105.00').
+        when the OCR engine missed or skipped it (e.g. recognized '105.00' instead of '-₹105.00', '30' instead of '₹30').
+        Strictly targets strings matching monetary patterns (e.g. 30, 105.00, +26,800.00, 1,75,710.33)
+        to prevent falsely modifying dates (Oct 9, 2026), percentages (40%), account numbers, or IDs.
         """
         clean = text.strip()
-        m = re.match(r"^([+-]?)\s*([0-9,]+\.?[0-9]*)$", clean)
+        # Strictly target monetary numbers (supports decimals or whole integer amounts)
+        m = re.match(r'^([+-]?)\s*([\d,]+(?:\.\d{1,2})?)(?:\s+(?:100%|Cr|Lakh))?$', clean)
         if not m or crop_bgr is None or crop_bgr.size == 0:
             return text
-        sign, amount = m.groups()
-        if not amount:
+
+        # If already has currency symbol, return
+        if any(c in clean for c in ['₹', '$', '€', '£', '¥']):
             return text
+
+        sign, amount = m.group(1), m.group(2)
+        # Exclude single digits or pure years (e.g. 2026, 7) unless amount contains comma or decimal
+        if len(amount) == 4 and amount.startswith(('19', '20')) and not sign and '.' not in amount and ',' not in amount:
+            return text
+        if len(amount) < 2:
+            return text
+
+        # Document currency context: check if other amounts in this image use ₹
+        has_rupee_context = all_raw_texts and any('₹' in t for t in all_raw_texts)
 
         try:
             gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
@@ -299,17 +540,41 @@ class OCRService:
             major_comps = []
             for i in range(1, num_labels):
                 gx, gy, gw, gh, garea = stats[i]
-                if gh >= 0.35 * h and garea >= 12:
+                if gh >= 0.25 * h and garea >= 6:
                     major_comps.append((gx, gy, gw, gh, garea))
             major_comps.sort(key=lambda c: c[0])
 
-            num_main_digits = len(re.sub(r"[,\.]", "", amount))
-            if len(major_comps) > num_main_digits:
-                first_comp = major_comps[0]
-                gx, gy, gw, gh, garea = first_comp
-                aspect = gw / max(1.0, float(gh))
-                if 0.30 <= aspect <= 1.15:
-                    return f"{sign}₹{amount}"
+            if not major_comps:
+                return text
+
+            # Check components in prefix area (left 40% of crop)
+            prefix_comps = [c for c in major_comps if c[0] < 0.40 * w]
+            detected_sign = sign
+
+            # If no sign in text, check if first component is a minus sign
+            if not detected_sign and prefix_comps:
+                first_c = prefix_comps[0]
+                gx, gy, gw, gh, garea = first_c
+                mid_y = gy + gh / 2.0
+                if 0.30 * h <= mid_y <= 0.70 * h and gh <= 0.40 * h and gw >= 1.2 * gh:
+                    detected_sign = '-'
+                    prefix_comps = prefix_comps[1:]
+
+            # Check if currency symbol is present in prefix
+            has_currency_glyph = False
+            if prefix_comps:
+                for c in prefix_comps:
+                    gx, gy, gw, gh, garea = c
+                    if gh >= 0.35 * h and garea >= 10:
+                        has_currency_glyph = True
+                        break
+
+            if has_currency_glyph or has_rupee_context:
+                currency_sym = '₹'
+                target = f"{sign}{amount}" if sign else amount
+                replacement = f"{detected_sign}{currency_sym}{amount}"
+                return clean.replace(target, replacement, 1)
+
         except Exception:
             pass
         return text
@@ -385,10 +650,9 @@ class OCRService:
         for clean_polygon, raw_text, score in extracted_items:
             try:
                 angle = calculate_polygon_angle(clean_polygon)
-                font_size = calculate_font_size(clean_polygon, image=image, text=raw_text)
                 bbox = calculate_bounding_box(clean_polygon, image=image)
-                geom_conf = calculate_geometry_confidence(clean_polygon)
-                # Extract crop for visual icon validation & typography matching
+
+                # Extract initial crop
                 crop_x1 = max(0, int(np.floor(bbox[0])))
                 crop_y1 = max(0, int(np.floor(bbox[1])))
                 crop_x2 = min(image.width, int(np.ceil(bbox[0] + bbox[2])))
@@ -399,14 +663,31 @@ class OCRService:
                     crop_img = image.crop((crop_x1, crop_y1, crop_x2, crop_y2))
                     crop_bgr = cv2.cvtColor(np.array(crop_img.convert("RGB")), cv2.COLOR_RGB2BGR)
 
-                # Filter out UI icons, non-text symbols, and graphic glyphs
+                # 1. Separate text labels from adjacent component icons (e.g. Account with wallet, Filter with sliders)
+                trimmed_polygon, trimmed_text = self._separate_adjacent_icons(crop_bgr, clean_polygon, raw_text)
+                if trimmed_polygon != clean_polygon:
+                    clean_polygon = trimmed_polygon
+                    raw_text = trimmed_text
+                    bbox = calculate_bounding_box(clean_polygon, image=image)
+                    crop_x1 = max(0, int(np.floor(bbox[0])))
+                    crop_y1 = max(0, int(np.floor(bbox[1])))
+                    crop_x2 = min(image.width, int(np.ceil(bbox[0] + bbox[2])))
+                    crop_y2 = min(image.height, int(np.ceil(bbox[1] + bbox[3])))
+                    if crop_x2 > crop_x1 and crop_y2 > crop_y1:
+                        crop_img = image.crop((crop_x1, crop_y1, crop_x2, crop_y2))
+                        crop_bgr = cv2.cvtColor(np.array(crop_img.convert("RGB")), cv2.COLOR_RGB2BGR)
+
+                # 2. Filter out UI icons, non-text symbols, and graphic glyphs
                 if self._is_icon_or_noise(raw_text, bbox, round(score, 3), crop_bgr=crop_bgr, image_dims=(w, h)):
                     continue
 
-                # Apply universal text normalization and recover currency symbols if dropped
+                # 3. Apply universal text normalization and recover currency symbols if dropped
                 normalized_text = self._normalize_detected_text(raw_text, all_raw_texts)
-                normalized_text = self._recover_currency_symbols(crop_bgr, normalized_text)
+                normalized_text = self._recover_currency_symbols(crop_bgr, normalized_text, all_raw_texts)
 
+                # 4. Accurate font size, color, weight estimation
+                font_size = calculate_font_size(clean_polygon, image=image, text=normalized_text)
+                geom_conf = calculate_geometry_confidence(clean_polygon)
                 color = estimate_text_color(image, clean_polygon)
                 weight = estimate_text_weight(image, clean_polygon, font_size, text=normalized_text)
                 blur = 0.0  # Crisp digital rendering: prevent artificial blur

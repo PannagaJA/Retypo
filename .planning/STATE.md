@@ -28,3 +28,5 @@
 | fix-typography-size-color-detection | 2026-10-22 | complete ✓ | Fix typography font matching, font size scaling, and color extraction |
 | mobile-responsive | 2026-10-23 | complete ✓ | Complete mobile responsiveness (drawers, touch gestures, bottom navigation) |
 | ocr-render-512mb-low-memory | 2026-10-24 | complete ✓ | Optimize PaddleOCR for Render 512MB RAM (dropped angle model, disabled MKLDNN, concurrency lock, glibc trim, worker recycle) |
+| ocr-accuracy-font-reconstruction | 2026-10-26 | complete ✓ | Fix OCR text detection, currency recovery, icon separation, typography em-box metrics, and mask micro-dilation |
+
