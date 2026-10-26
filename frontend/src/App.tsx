@@ -21,6 +21,7 @@ export const App: React.FC = () => {
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
   const [mobileTab, setMobileTab] = useState<'canvas' | 'layers' | 'properties'>('canvas');
   const [isStyleExpanded, setIsStyleExpanded] = useState<boolean>(false);
+  const [fitTrigger, setFitTrigger] = useState<number>(0);
 
   // OCR state
   const [detectedRegions, setDetectedRegions] = useState<DetectedTextRegion[]>([]);
@@ -788,7 +789,7 @@ export const App: React.FC = () => {
         zoom={zoom}
         onZoomIn={() => setZoom((z) => Math.min(5.0, z * 1.15))}
         onZoomOut={() => setZoom((z) => Math.max(0.1, z * 0.85))}
-        onZoomFit={() => setZoom(1.0)}
+        onZoomFit={() => setFitTrigger((t) => t + 1)}
         onZoomReset={() => setZoom(1.0)}
         onImageSelected={handleImageSelected}
         onLoadSample={handleLoadSample}
@@ -872,6 +873,7 @@ export const App: React.FC = () => {
           onEndTextEditing={handleEndTextEditing}
           zoom={zoom}
           onZoomChange={setZoom}
+          fitTrigger={fitTrigger}
           isComparing={isComparing}
           compareMode={compareMode}
           splitPosition={splitPosition}

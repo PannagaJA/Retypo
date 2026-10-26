@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as fabric from 'fabric';
 import type { ImageMetadata, TextLayer, InpaintPatch, DetectedTextRegion } from '../types';
 import { calculateFitScale } from '../utils/coordinates';
-import { UploadCloud, Image as ImageIcon, HelpCircle, ZoomIn, ZoomOut } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, HelpCircle, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 
 function isPointInPolygon(pt: { x: number; y: number }, poly: number[][]): boolean {
   if (!poly || poly.length < 3) return false;
@@ -55,6 +55,7 @@ interface CanvasWorkspaceProps {
   hoveredRegionId?: string | null;
   onHoverRegion?: (regionId: string | null) => void;
   isDetecting?: boolean;
+  fitTrigger?: number;
 }
 
 export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
@@ -82,6 +83,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   hoveredRegionId,
   onHoverRegion,
   isDetecting = false,
+  fitTrigger = 0,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasElRef = useRef<HTMLCanvasElement>(null);
@@ -93,6 +95,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   const isUpdatingFromProps = useRef<boolean>(false);
   const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
   const [isSpacePressed, setIsSpacePressed] = useState<boolean>(false);
+  const isSpacePressedRef = useRef<boolean>(false);
+  const isInternalZoomUpdate = useRef<boolean>(false);
   const isPanningRef = useRef<boolean>(false);
   const lastPanPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const [hoveredRegion, setHoveredRegion] = useState<{ text: string; confidence: number; x: number; y: number } | null>(null);
@@ -140,6 +144,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       selectionColor: 'rgba(15, 23, 42, 0.08)',
       selectionBorderColor: '#0f172a',
       selectionLineWidth: 1.5,
+      selection: false,
     });
 
     fabricCanvasRef.current = canvas;
@@ -275,12 +280,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       );
 
       // Pan when holding outside any selectable text layer/control, or holding space, or middle click
-      const shouldPan = (!isSelectableTarget && !isTransformControl) || isSpacePressed || (e && e.button === 1);
+      const shouldPan = (!isSelectableTarget && !isTransformControl) || isSpacePressedRef.current || (e && e.button === 1);
 
       if (shouldPan) {
         isPanningRef.current = true;
         lastPanPos.current = { x: pos.x, y: pos.y };
-        canvas.selection = false; // Disable marquee selection rectangle while panning
         canvas.setCursor('grab');
 
         if (e && e.touches && e.touches.length === 2) {
@@ -315,6 +319,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           const rect = canvas.upperCanvasEl.getBoundingClientRect();
           const point = new fabric.Point(midX - rect.left, midY - rect.top);
           canvas.zoomToPoint(point, newZoom);
+          isInternalZoomUpdate.current = true;
           onZoomChange(newZoom);
         }
         lastTouchDistance = dist;
@@ -328,6 +333,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           const dy = pos.y - lastPanPos.current.y;
           vpt[4] += dx;
           vpt[5] += dy;
+          canvas.setViewportTransform(vpt);
           canvas.requestRenderAll();
           lastPanPos.current = { x: pos.x, y: pos.y };
           canvas.setCursor('grabbing');
@@ -336,9 +342,12 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     });
 
     canvas.on('mouse:up', (opt) => {
-      isPanningRef.current = false;
+      if (isPanningRef.current) {
+        isPanningRef.current = false;
+        canvas.setViewportTransform(canvas.viewportTransform);
+        canvas.requestRenderAll();
+      }
       lastTouchDistance = 0;
-      canvas.selection = true;
       canvas.setCursor('default');
 
       // If user was panning / dragging (> 6px moved), do not treat as tap or click
@@ -446,11 +455,13 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && (e.target as HTMLElement).tagName !== 'TEXTAREA' && (e.target as HTMLElement).tagName !== 'INPUT') {
         setIsSpacePressed(true);
+        isSpacePressedRef.current = true;
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         setIsSpacePressed(false);
+        isSpacePressedRef.current = false;
         isPanningRef.current = false;
       }
     };
@@ -508,10 +519,47 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       const panY = (c.getHeight() - image.height * fitScale) / 2;
 
       c.setViewportTransform([fitScale, 0, 0, fitScale, panX, panY]);
+      isInternalZoomUpdate.current = true;
       onZoomChange(fitScale);
       c.renderAll();
     };
   }, [image]);
+
+  // Respond to fitTrigger prop changes (e.g. Fit to view button in Header)
+  useEffect(() => {
+    if (fitTrigger && fitTrigger > 0) {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas || !containerRef.current || !image) return;
+      const cWidth = containerRef.current.clientWidth;
+      const cHeight = containerRef.current.clientHeight;
+      const fitScale = calculateFitScale(image.width, image.height, cWidth, cHeight, 40);
+      const panX = (cWidth - image.width * fitScale) / 2;
+      const panY = (cHeight - image.height * fitScale) / 2;
+      canvas.setViewportTransform([fitScale, 0, 0, fitScale, panX, panY]);
+      canvas.requestRenderAll();
+      isInternalZoomUpdate.current = true;
+      onZoomChange(fitScale);
+    }
+  }, [fitTrigger, image, onZoomChange]);
+
+  // Respond to zoom prop changes from external (e.g. Header + / - buttons or reset)
+  useEffect(() => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas || !containerRef.current) return;
+    if (isInternalZoomUpdate.current) {
+      isInternalZoomUpdate.current = false;
+      return;
+    }
+    const currentZoom = canvas.getZoom();
+    if (Math.abs(currentZoom - _zoom) < 0.001) return;
+
+    const centerPoint = new fabric.Point(
+      containerRef.current.clientWidth / 2,
+      containerRef.current.clientHeight / 2
+    );
+    canvas.zoomToPoint(centerPoint, _zoom);
+    canvas.requestRenderAll();
+  }, [_zoom]);
 
   // 3. Render Inpaint Patches directly onto Canvas (above base image, below text layers)
   useEffect(() => {
@@ -1050,6 +1098,26 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
             title="Zoom in"
           >
             <ZoomIn className="w-3.5 h-3.5" />
+          </button>
+          <div className="h-3.5 w-px bg-slate-200 my-auto mx-0.5" />
+          <button
+            onClick={() => {
+              const canvas = fabricCanvasRef.current;
+              if (!canvas || !containerRef.current || !image) return;
+              const cWidth = containerRef.current.clientWidth;
+              const cHeight = containerRef.current.clientHeight;
+              const fitScale = calculateFitScale(image.width, image.height, cWidth, cHeight, 40);
+              const panX = (cWidth - image.width * fitScale) / 2;
+              const panY = (cHeight - image.height * fitScale) / 2;
+              canvas.setViewportTransform([fitScale, 0, 0, fitScale, panX, panY]);
+              canvas.requestRenderAll();
+              isInternalZoomUpdate.current = true;
+              onZoomChange(fitScale);
+            }}
+            className="w-7 h-7 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors"
+            title="Fit to screen"
+          >
+            <Maximize2 className="w-3 h-3" />
           </button>
         </div>
       )}
