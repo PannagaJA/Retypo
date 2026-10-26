@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as fabric from 'fabric';
 import type { ImageMetadata, TextLayer, InpaintPatch, DetectedTextRegion } from '../types';
 import { calculateFitScale } from '../utils/coordinates';
-import { UploadCloud, Image as ImageIcon, HelpCircle, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { UploadCloud, HelpCircle, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 
 function isPointInPolygon(pt: { x: number; y: number }, poly: number[][]): boolean {
   if (!poly || poly.length < 3) return false;
@@ -45,7 +45,7 @@ interface CanvasWorkspaceProps {
   splitPosition: number;
   onSplitChange: (pos: number) => void;
   onDropImage: (file: File) => void;
-  onLoadSample: () => void;
+  onLoadSample?: () => void;
   // OCR detection overlay
   detectedRegions: DetectedTextRegion[];
   showDetectionOverlay: boolean;
@@ -74,7 +74,6 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   splitPosition,
   onSplitChange,
   onDropImage,
-  onLoadSample,
   detectedRegions,
   showDetectionOverlay,
   onConvertRegion,
@@ -1065,13 +1064,6 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
                 />
               </label>
 
-              <button
-                onClick={onLoadSample}
-                className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors"
-              >
-                <ImageIcon className="w-4 h-4 text-slate-500" />
-                Load Sample Image
-              </button>
             </div>
           </div>
         </div>

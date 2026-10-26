@@ -9,7 +9,6 @@ import {
   Download,
   SplitSquareVertical,
   Eye,
-  Image as ImageIcon,
   ScanText,
   Loader2
 } from 'lucide-react';
@@ -25,7 +24,7 @@ interface HeaderProps {
   onZoomFit: () => void;
   onZoomReset: () => void;
   onImageSelected: (file: File) => void;
-  onLoadSample: () => void;
+  onLoadSample?: () => void;
   isComparing: boolean;
   onToggleCompare: () => void;
   compareMode: 'toggle' | 'split';
@@ -53,7 +52,6 @@ export const Header: React.FC<HeaderProps> = ({
   onZoomFit,
   onZoomReset,
   onImageSelected,
-  onLoadSample,
   isComparing,
   onToggleCompare,
   compareMode,
@@ -120,17 +118,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="hidden sm:inline">Upload Image</span>
         </button>
 
-        {!hasImage && (
-          <button
-            onClick={onLoadSample}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-all shrink-0 active:scale-95"
-            title="Load sample typography poster"
-          >
-            <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
-            <span className="hidden sm:inline">Try Sample</span>
-            <span className="sm:hidden">Sample</span>
-          </button>
-        )}
+
 
         {/* OCR Analyze Button (English) */}
         {hasImage && (
