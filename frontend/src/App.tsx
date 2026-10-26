@@ -631,10 +631,17 @@ export const App: React.FC = () => {
     setLayers([]);
     setSelectedLayerId(null);
     setInpaintPatches([]);
-    setDetectedRegions(sampleDetected);
+    setDetectedRegions([]);
     setShowDetectionOverlay(true);
     historyRef.current.clear();
     updateUndoRedoState();
+    setIsDetecting(true);
+
+    setTimeout(() => {
+      setDetectedRegions(sampleDetected);
+      setIsDetecting(false);
+      showToast(`Detected ${sampleDetected.length} text region(s). Click any green box to edit.`, 'success');
+    }, 1100);
   };
 
   const handleAddText = () => {
@@ -877,6 +884,7 @@ export const App: React.FC = () => {
           onShowDetectionOverlay={() => setShowDetectionOverlay(true)}
           hoveredRegionId={hoveredRegionId}
           onHoverRegion={setHoveredRegionId}
+          isDetecting={isDetecting}
         />
 
         {/* Right: Typography & Inpainting Properties Inspector */}

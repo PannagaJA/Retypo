@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as fabric from 'fabric';
 import type { ImageMetadata, TextLayer, InpaintPatch, DetectedTextRegion } from '../types';
 import { calculateFitScale } from '../utils/coordinates';
-import { UploadCloud, Image as ImageIcon, HelpCircle, ZoomIn, ZoomOut } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, HelpCircle, ZoomIn, ZoomOut, Loader2 } from 'lucide-react';
 
 function isPointInPolygon(pt: { x: number; y: number }, poly: number[][]): boolean {
   if (!poly || poly.length < 3) return false;
@@ -54,6 +54,7 @@ interface CanvasWorkspaceProps {
   onShowDetectionOverlay?: () => void;
   hoveredRegionId?: string | null;
   onHoverRegion?: (regionId: string | null) => void;
+  isDetecting?: boolean;
 }
 
 export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
@@ -80,6 +81,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   onShowDetectionOverlay,
   hoveredRegionId,
   onHoverRegion,
+  isDetecting = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasElRef = useRef<HTMLCanvasElement>(null);
@@ -850,6 +852,31 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }`}
     >
       <canvas ref={canvasElRef} id="editor-canvas" className="w-full h-full block" />
+
+      {/* Document Scanner Animation (matches app theme) */}
+      {isDetecting && image && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-25 select-none transition-opacity duration-300">
+          {/* Subtle Scanning Beam */}
+          <div className="absolute inset-x-0 h-32 -translate-y-full animate-scan-sweep pointer-events-none">
+            {/* Soft gradient wash */}
+            <div
+              className="w-full h-full"
+              style={{
+                background:
+                  'linear-gradient(to bottom, transparent 0%, rgba(16, 185, 129, 0.04) 60%, rgba(16, 185, 129, 0.14) 100%)',
+              }}
+            />
+            {/* Fine emerald scan line matching detected text boxes */}
+            <div className="w-full h-[1.5px] bg-gradient-to-r from-transparent via-emerald-500/80 via-50% to-transparent shadow-[0_0_10px_rgba(16,185,129,0.35)]" />
+          </div>
+
+          {/* Minimal Floating Status Pill (matches canvas bottom controls) */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200 text-slate-700 shadow-sm text-xs font-medium">
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+            <span>Scanning for text...</span>
+          </div>
+        </div>
+      )}
 
       {/* Hover Tooltip for Detected Text Region */}
       {hoveredRegion && (
