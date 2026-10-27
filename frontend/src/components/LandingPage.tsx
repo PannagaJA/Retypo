@@ -32,7 +32,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   // Smooth scroll state (Lenis driven)
   const [scrollY, setScrollY] = useState<number>(0);
-  const [scrollProgress, setScrollProgress] = useState<number>(0);
   const [headingOffset, setHeadingOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const lenisRef = useRef<Lenis | null>(null);
@@ -40,18 +39,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const sliderContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const featuresPinnedRef = useRef<HTMLDivElement>(null);
+  const cardsTrackRef = useRef<HTMLDivElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const activeFeatureIndexRef = useRef<number>(0);
+  const isScrolledRef = useRef<boolean>(false);
+  const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [activeFeatureIndex, setActiveFeatureIndex] = useState<number>(0);
+
   const [isMobile, setIsMobile] = useState<boolean>(() => {
     return typeof window !== 'undefined' ? window.innerWidth < 640 : false;
   });
-  const [cardStride, setCardStride] = useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      const w = window.innerWidth;
-      const cardW = Math.min(360, w * 0.88);
-      return cardW + 16;
-    }
-    return 376;
-  });
+
   const [initialOffset, setInitialOffset] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const w = window.innerWidth;
@@ -60,7 +58,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
     return 24;
   });
-  const [mobileProgress, setMobileProgress] = useState<number>(0);
 
   const FEATURE_NAMES = [
     'Smart Text Detection',
@@ -70,51 +67,89 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     'Lossless Quality Export',
   ];
 
-  // Recalibrate mobile layout metrics for centering card & peeking next card
-  useEffect(() => {
-    const updateMetrics = () => {
-      if (typeof window === 'undefined') return;
-      const w = window.innerWidth;
-      const mobile = w < 640;
-      setIsMobile(mobile);
-      if (mobile) {
-        const cardW = Math.min(360, w * 0.88);
-        const gap = 16;
-        setCardStride(cardW + gap);
-        setInitialOffset((w - cardW) / 2);
-      }
+  // Cached layout metrics to eliminate layout thrashing (getBoundingClientRect / offsetHeight) during scrolling
+  const metricsRef = useRef({
+    sectionTop: 0,
+    totalDistance: 0,
+    cardStride: 376,
+    initialOffset: 24,
+    isMobile: false,
+  });
+
+  // Direct hardware-accelerated DOM update for mobile cards (Zero React re-render)
+  const updateMobileFeatureScroll = useCallback((currentScroll: number) => {
+    const m = metricsRef.current;
+    if (!m.isMobile || !cardsTrackRef.current) return;
+
+    if (m.totalDistance <= 0 && featuresPinnedRef.current) {
+      const rect = featuresPinnedRef.current.getBoundingClientRect();
+      m.sectionTop = rect.top + currentScroll;
+      m.totalDistance = featuresPinnedRef.current.offsetHeight - window.innerHeight;
+    }
+    if (m.totalDistance <= 0) return;
+
+    const currentScrolled = currentScroll - m.sectionTop;
+    const progress = Math.max(0, Math.min(1, currentScrolled / m.totalDistance));
+
+    const targetX = m.initialOffset - progress * 4 * m.cardStride;
+    cardsTrackRef.current.style.transform = `translate3d(${targetX}px, 0, 0)`;
+
+    // Only update React state when active card actually changes (5 total updates across entire section)
+    const activeIdx = Math.min(4, Math.max(0, Math.round(progress * 4)));
+    if (activeIdx !== activeFeatureIndexRef.current) {
+      activeFeatureIndexRef.current = activeIdx;
+      setActiveFeatureIndex(activeIdx);
+    }
+  }, []);
+
+  // Recalibrate layout metrics on mount & resize
+  const updateMetrics = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const mobile = w < 640;
+    setIsMobile(mobile);
+
+    const cardW = Math.min(360, w * 0.88);
+    const gap = 16;
+    const stride = cardW + gap;
+    const offset = (w - cardW) / 2;
+    setInitialOffset(offset);
+
+    let sectionTop = 0;
+    let totalDistance = 0;
+    if (featuresPinnedRef.current) {
+      const rect = featuresPinnedRef.current.getBoundingClientRect();
+      const currentScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
+      sectionTop = rect.top + currentScroll;
+      totalDistance = featuresPinnedRef.current.offsetHeight - h;
+    }
+
+    metricsRef.current = {
+      sectionTop,
+      totalDistance,
+      cardStride: stride,
+      initialOffset: offset,
+      isMobile: mobile,
     };
+
+    if (mobile && cardsTrackRef.current) {
+      const currentScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
+      const progress = totalDistance > 0
+        ? Math.max(0, Math.min(1, (currentScroll - sectionTop) / totalDistance))
+        : 0;
+      const targetX = offset - progress * 4 * stride;
+      cardsTrackRef.current.style.transform = `translate3d(${targetX}px, 0, 0)`;
+    } else if (!mobile && cardsTrackRef.current) {
+      cardsTrackRef.current.style.transform = '';
+    }
+  }, []);
+
+  useEffect(() => {
     updateMetrics();
     window.addEventListener('resize', updateMetrics);
     return () => window.removeEventListener('resize', updateMetrics);
-  }, []);
-
-  // Update card position purely from vertical page scroll
-  const updateMobileFeatureScroll = useCallback(() => {
-    if (typeof window === 'undefined' || window.innerWidth >= 640) return;
-    if (!featuresPinnedRef.current) return;
-
-    const rect = featuresPinnedRef.current.getBoundingClientRect();
-    const totalDistance = featuresPinnedRef.current.offsetHeight - window.innerHeight;
-    if (totalDistance <= 0) return;
-
-    const currentScrolled = -rect.top;
-    const progress = Math.max(0, Math.min(1, currentScrolled / totalDistance));
-
-    setMobileProgress(progress);
-    const activeIdx = Math.min(4, Math.max(0, Math.round(progress * 4)));
-    setActiveFeatureIndex(activeIdx);
-  }, []);
-
-  useEffect(() => {
-    updateMobileFeatureScroll();
-    window.addEventListener('scroll', updateMobileFeatureScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', updateMobileFeatureScroll);
-    };
-  }, [updateMobileFeatureScroll]);
-
-  const translateX = isMobile ? initialOffset - mobileProgress * 4 * cardStride : 0;
+  }, [updateMetrics]);
 
   // Enforce light theme only - keep document element clean of 'dark' class
   useEffect(() => {
@@ -148,21 +183,60 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       };
       animationFrameId = requestAnimationFrame(raf);
 
+      let ticking = false;
+      const dispatchScroll = (current: number, limit: number) => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(() => {
+            // 1. Direct hardware-accelerated translation for feature cards (Zero React Re-render)
+            updateMobileFeatureScroll(current);
+
+            // 2. Direct DOM update for top reading progress bar (Zero React Re-render)
+            if (progressBarRef.current) {
+              const max = limit || (document.documentElement.scrollHeight - window.innerHeight) || 1;
+              const pct = Math.min(100, Math.max(0, (current / max) * 100));
+              progressBarRef.current.style.width = `${pct}%`;
+            }
+
+            // 3. Header threshold boolean (Only 1 re-render across the entire page scroll)
+            const scrolled = current > 25;
+            if (scrolled !== isScrolledRef.current) {
+              isScrolledRef.current = scrolled;
+              setIsScrolled(scrolled);
+            }
+
+            // 4. Parallax satellites on desktop only
+            if (window.innerWidth >= 768) {
+              setScrollY(current);
+            }
+
+            ticking = false;
+          });
+        }
+      };
+
       const handleScroll = (e: { scroll: number; limit: number }) => {
-        const current = e.scroll || 0;
-        const max = e.limit || 1;
-        setScrollY(current);
-        setScrollProgress(Math.min(100, Math.max(0, (current / max) * 100)));
-        updateMobileFeatureScroll();
+        dispatchScroll(e.scroll || 0, e.limit || 1);
       };
 
       lenis.on('scroll', handleScroll);
 
-      const handleResize = () => lenis.resize();
+      const handleNativeScroll = () => {
+        const current = window.pageYOffset || document.documentElement.scrollTop || 0;
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        dispatchScroll(current, max);
+      };
+      window.addEventListener('scroll', handleNativeScroll, { passive: true });
+
+      const handleResize = () => {
+        lenis.resize();
+        updateMetrics();
+      };
       window.addEventListener('resize', handleResize);
 
       return () => {
         cancelAnimationFrame(animationFrameId);
+        window.removeEventListener('scroll', handleNativeScroll);
         window.removeEventListener('resize', handleResize);
         lenis.destroy();
         lenisRef.current = null;
@@ -170,7 +244,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     } catch (err) {
       console.warn('Lenis scroll initialization', err);
     }
-  }, []);
+  }, [updateMobileFeatureScroll, updateMetrics]);
 
   // Scroll Reveal Observer (Smooth viewport entry animation)
   useEffect(() => {
@@ -320,15 +394,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     };
   }, [isSliding, handleSliderMove]);
 
-  const isScrolled = scrollY > 25;
-
   return (
     <div className="min-h-screen w-full bg-[#f7f5f0] text-neutral-950 [font-family:'Inter',var(--font-sans)] antialiased select-none">
       {/* Top Dynamic Reading Progress Bar (Two26 & Roveia style) */}
       <div className="fixed top-0 inset-x-0 z-50 h-[3px] bg-neutral-200/40 pointer-events-none">
         <div
-          className="h-full bg-gradient-to-r from-[#ff6f42] via-[#ff885e] to-[#ff5400] transition-[width] duration-75 ease-out shadow-[0_0_10px_rgba(255,111,66,0.6)]"
-          style={{ width: `${scrollProgress}%` }}
+          ref={progressBarRef}
+          className="h-full bg-gradient-to-r from-[#ff6f42] via-[#ff885e] to-[#ff5400] shadow-[0_0_10px_rgba(255,111,66,0.6)]"
+          style={{ width: '0%' }}
         />
       </div>
 
@@ -734,21 +807,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </p>
               </div>
 
-              {/* Cards Track: Scroll-driven horizontal sliding on mobile, 5-column bento on desktop */}
+              {/* Cards Track: Direct GPU-accelerated horizontal translation on mobile, 5-column bento on desktop */}
               <div
-                className="flex w-max sm:w-full sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-4 overflow-visible will-change-transform"
+                ref={cardsTrackRef}
+                className="flex w-max sm:w-full sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-4 overflow-visible will-change-transform transform-gpu"
                 style={
                   isMobile
                     ? {
-                        transform: `translate3d(${translateX}px, 0, 0)`,
-                        transition: 'transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                        transform: `translate3d(${initialOffset}px, 0, 0)`,
                       }
                     : undefined
                 }
               >
                 {/* Feature 1: Text Detection */}
                 <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
+                  className={`group overflow-hidden rounded-2xl bg-white transition-transform transition-opacity duration-300 ease-out transform-gpu will-change-transform shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
                     isMobile
                       ? activeFeatureIndex === 0
                         ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
@@ -793,7 +866,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                 {/* Feature 2: Clean Inpainting */}
                 <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
+                  className={`group overflow-hidden rounded-2xl bg-white transition-transform transition-opacity duration-300 ease-out transform-gpu will-change-transform shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
                     isMobile
                       ? activeFeatureIndex === 1
                         ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
@@ -838,7 +911,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                 {/* Feature 3: Font Matcher */}
                 <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
+                  className={`group overflow-hidden rounded-2xl bg-white transition-transform transition-opacity duration-300 ease-out transform-gpu will-change-transform shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
                     isMobile
                       ? activeFeatureIndex === 2
                         ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
@@ -885,7 +958,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                 {/* Feature 4: Vector Canvas */}
                 <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
+                  className={`group overflow-hidden rounded-2xl bg-white transition-transform transition-opacity duration-300 ease-out transform-gpu will-change-transform shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
                     isMobile
                       ? activeFeatureIndex === 3
                         ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
@@ -930,7 +1003,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                 {/* Feature 5: Lossless Compositor */}
                 <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
+                  className={`group overflow-hidden rounded-2xl bg-white transition-transform transition-opacity duration-300 ease-out transform-gpu will-change-transform shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
                     isMobile
                       ? activeFeatureIndex === 4
                         ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
@@ -982,12 +1055,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </span>
                 <div className="flex items-center gap-1.5">
                   {[0, 1, 2, 3, 4].map((i) => (
-                    <div
+                    <button
                       key={i}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                      type="button"
+                      aria-label={`Jump to feature ${i + 1}`}
+                      onClick={() => {
+                        const m = metricsRef.current;
+                        if (m.totalDistance > 0) {
+                          const target = m.sectionTop + (i / 4) * m.totalDistance;
+                          if (lenisRef.current) {
+                            lenisRef.current.scrollTo(target);
+                          } else {
+                            window.scrollTo({ top: target, behavior: 'smooth' });
+                          }
+                        }
+                      }}
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                         activeFeatureIndex === i
                           ? 'w-7 bg-[#ff6f42]'
-                          : 'w-2 bg-neutral-300'
+                          : 'w-2 bg-neutral-300 hover:bg-neutral-400'
                       }`}
                     />
                   ))}
