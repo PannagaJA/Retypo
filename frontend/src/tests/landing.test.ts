@@ -15,23 +15,13 @@ describe('LandingPage Architecture & Presets', () => {
     expect(supportedPresets.length).toBe(3);
   });
 
-  it('verifies pricing plan structure', () => {
-    const pricingTiers = [
-      { name: 'Free', priceMonthly: 0, priceYearly: 0 },
-      { name: 'Creator', priceMonthly: 19, priceYearly: 14 },
-      { name: 'Studio Pro', priceMonthly: 59, priceYearly: 49 },
-      { name: 'Enterprise', priceMonthly: 119, priceYearly: 99 },
-    ];
-
-    expect(pricingTiers.length).toBe(4);
-    pricingTiers.forEach((tier) => {
-      if (tier.priceMonthly > 0) {
-        expect(tier.priceYearly).toBeLessThan(tier.priceMonthly);
-        // Approximately 20-25% discount
-        const discountPercent = ((tier.priceMonthly - tier.priceYearly) / tier.priceMonthly) * 100;
-        expect(discountPercent).toBeGreaterThanOrEqual(15);
-      }
-    });
+  it('validates core studio sections without pricing', () => {
+    const coreSections = ['features', 'demo', 'workflow', 'faq'];
+    expect(coreSections).toContain('features');
+    expect(coreSections).toContain('demo');
+    expect(coreSections).toContain('workflow');
+    expect(coreSections).toContain('faq');
+    expect(coreSections).not.toContain('pricing');
   });
 
   it('validates tablet and large screen satellite cards configuration', () => {

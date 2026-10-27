@@ -6,7 +6,6 @@ import {
   ShieldCheck,
   ArrowRight,
   ChevronDown,
-  Check,
   CheckCircle2,
   Lock,
   Layers,
@@ -32,7 +31,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [isGlobalDraggingOver, setIsGlobalDraggingOver] = useState<boolean>(false);
   const [sliderPosition, setSliderPosition] = useState<number>(50);
   const [isSliding, setIsSliding] = useState<boolean>(false);
-  const [isYearly, setIsYearly] = useState<boolean>(true);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
@@ -776,322 +774,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </section>
 
-          {/* SECTION 5: CURATED SAMPLE TEMPLATES (HeyRetro Inspiration) */}
-          <section id="presets" className="py-20 border-t border-neutral-200 dark:border-neutral-800">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between mb-12">
-              <div>
-                <h2 className="max-w-[28ch] text-3xl font-extrabold tracking-tight text-balance sm:text-5xl text-neutral-950 dark:text-white">
-                  Choose a sample preset.
-                </h2>
-              </div>
-              <p className="max-w-[48ch] text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                Test the full studio workflow instantly without uploading an image. Select any preset to generate canvas layers and OCR text.
-              </p>
-            </div>
-
-            <div className="grid gap-6 sm:grid-cols-3">
-              {/* Preset 1 */}
-              <div className="group flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/15 shadow-sm">
-                <div className="aspect-[16/11] overflow-hidden bg-gradient-to-br from-stone-900 to-amber-950 p-6 flex flex-col justify-between text-white relative">
-                  <span className="self-start px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-xs font-mono font-bold">
-                    Serif Editorial
-                  </span>
-                  <div>
-                    <p className="text-2xl font-serif font-bold text-white">VOGUE & STYLE</p>
-                    <p className="text-xs text-amber-200 font-semibold">Autumn Edition • Issue 42</p>
-                  </div>
-                </div>
-                <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-base font-extrabold text-neutral-950 dark:text-white">Vintage Editorial Magazine</h3>
-                  <p className="mt-1 text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
-                    Playfair Display headline with editorial sub-lines and subtle gradient overlays.
-                  </p>
-                  <button
-                    onClick={() => onLoadSample('magazine')}
-                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#ff6f42] hover:underline"
-                  >
-                    Open in Studio <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Preset 2 */}
-              <div className="group flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/15 shadow-sm">
-                <div className="aspect-[16/11] overflow-hidden bg-gradient-to-br from-stone-900 to-amber-900 p-6 flex flex-col justify-between text-white relative">
-                  <span className="self-start px-2 py-0.5 rounded bg-orange-500/20 text-orange-300 text-xs font-mono font-bold">
-                    Artisan Brand
-                  </span>
-                  <div>
-                    <p className="text-2xl font-sans font-black tracking-tight text-white">ROAST & CO.</p>
-                    <p className="text-xs text-orange-200 font-semibold">Single Origin Organic 250g</p>
-                  </div>
-                </div>
-                <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-base font-extrabold text-neutral-950 dark:text-white">Artisan Coffee Brand</h3>
-                  <p className="mt-1 text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
-                    Heavy geometric typography, product packaging badges, and organic color palettes.
-                  </p>
-                  <button
-                    onClick={() => onLoadSample('coffee')}
-                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#ff6f42] hover:underline"
-                  >
-                    Open in Studio <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Preset 3 */}
-              <div className="group flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/15 shadow-sm">
-                <div className="aspect-[16/11] overflow-hidden bg-gradient-to-br from-indigo-950 to-slate-900 p-6 flex flex-col justify-between text-white relative">
-                  <span className="self-start px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-xs font-mono font-bold">
-                    Tech Summit
-                  </span>
-                  <div>
-                    <p className="text-2xl font-mono font-bold text-white">NEXT DEV 2026</p>
-                    <p className="text-xs text-indigo-200 font-semibold">San Francisco • Nov 14-16</p>
-                  </div>
-                </div>
-                <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-base font-extrabold text-neutral-950 dark:text-white">Tech Conference Poster</h3>
-                  <p className="mt-1 text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
-                    High-contrast modern monospace typography with speaker tags and barcode details.
-                  </p>
-                  <button
-                    onClick={() => onLoadSample('tech')}
-                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#ff6f42] hover:underline"
-                  >
-                    Open in Studio <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* SECTION 6: PRICING SECTION (HeyRetro Layout) */}
-          <section id="pricing" className="py-20 border-t border-neutral-200 dark:border-neutral-800">
-            <div className="flex flex-col items-center text-center">
-              <h2 className="max-w-[24ch] text-3xl font-extrabold tracking-tight text-balance sm:text-5xl text-neutral-950 dark:text-white">
-                Simple, transparent pricing.
-              </h2>
-              <p className="mt-4 max-w-[50ch] text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                Start editing free forever. Upgrade for unlimited high-resolution batch jobs and API access.
-              </p>
-
-              {/* Billing Toggle */}
-              <div className="mt-8 inline-flex items-center rounded-full bg-white dark:bg-neutral-900 p-1.5 ring-1 ring-black/10 dark:ring-white/15 shadow-xs">
-                <button
-                  type="button"
-                  onClick={() => setIsYearly(false)}
-                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
-                    !isYearly ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-xs' : 'text-neutral-700 hover:text-neutral-950 dark:text-neutral-300 dark:hover:text-white'
-                  }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsYearly(true)}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
-                    isYearly ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-xs' : 'text-neutral-700 hover:text-neutral-950 dark:text-neutral-300 dark:hover:text-white'
-                  }`}
-                >
-                  <span>Yearly</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
-                    isYearly ? 'bg-[#ff6f42] text-white' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20'
-                  }`}>
-                    Save 25%
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* 4-Tier Pricing Grid */}
-            <div className="mt-12 grid gap-4 lg:grid-cols-4 items-stretch">
-              {/* Plan 1: Free */}
-              <div className="flex flex-col justify-between rounded-3xl p-6 bg-white ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/15 shadow-sm">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-base font-extrabold text-neutral-950 dark:text-white">Free</p>
-                  </div>
-                  <p className="mt-2 text-xs font-medium text-neutral-600 dark:text-neutral-300">For individual creators & quick one-off edits.</p>
-                  <div className="mt-6 flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white">$0</span>
-                    <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">/month</span>
-                  </div>
-                  <p className="mt-1 text-xs font-semibold text-neutral-500 dark:text-neutral-400">Forever free</p>
-
-                  <ul className="mt-6 space-y-2.5 text-xs font-medium text-neutral-800 dark:text-neutral-200">
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Up to 10 image exports / mo</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Instant auto text detection</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Core Google Fonts library</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Standard PNG / WebP export</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className="mt-8">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full h-10 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-950 dark:text-white ring-1 ring-black/10 dark:ring-white/15 text-xs font-bold transition"
-                  >
-                    Start Free
-                  </button>
-                </div>
-              </div>
-
-              {/* Plan 2: Creator */}
-              <div className="flex flex-col justify-between rounded-3xl p-6 bg-white ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/15 shadow-sm">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-base font-extrabold text-neutral-950 dark:text-white">Creator</p>
-                  </div>
-                  <p className="mt-2 text-xs font-medium text-neutral-600 dark:text-neutral-300">For designers & content marketers.</p>
-                  <div className="mt-6 flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white">
-                      {isYearly ? '$14' : '$19'}
-                    </span>
-                    <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">/month</span>
-                  </div>
-                  <p className="mt-1 text-xs font-semibold text-neutral-500 dark:text-neutral-400">{isYearly ? 'Billed yearly ($168/yr)' : 'Billed monthly'}</p>
-
-                  <ul className="mt-6 space-y-2.5 text-xs font-medium text-neutral-800 dark:text-neutral-200">
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Unlimited image exports</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Automated font matching</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Deep background texture fill</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Studio JPEG & WebP Ultra</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className="mt-8">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full h-10 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-950 dark:text-white ring-1 ring-black/10 dark:ring-white/15 text-xs font-bold transition"
-                  >
-                    Start 7-Day Trial
-                  </button>
-                </div>
-              </div>
-
-              {/* Plan 3: Studio Pro (Highlighted Card - HeyRetro Style) */}
-              <div className="flex flex-col justify-between rounded-3xl p-6 bg-neutral-950 text-white ring-1 ring-neutral-950 dark:bg-white dark:text-neutral-950 dark:ring-white shadow-xl scale-105 z-10">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-base font-extrabold">Studio Pro</p>
-                    <span className="rounded-full bg-[#ff6f42] px-2.5 py-0.5 text-xs font-bold text-white">
-                      Most popular
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs font-medium text-neutral-300 dark:text-neutral-700">For agencies, media studios, and e-commerce teams.</p>
-                  <div className="mt-6 flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold tracking-tight">
-                      {isYearly ? '$49' : '$59'}
-                    </span>
-                    <span className="text-xs font-medium text-neutral-400 dark:text-neutral-600">/month</span>
-                  </div>
-                  <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500 font-medium">{isYearly ? 'Billed yearly ($588/yr)' : 'Billed monthly'}</p>
-
-                  <ul className="mt-6 space-y-2.5 text-xs font-semibold text-neutral-100 dark:text-neutral-900">
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Everything in Creator</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Batch image processing API</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Custom font uploads (.ttf, .otf, .woff2)</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Color profile preservation</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>GPU-accelerated rendering</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className="mt-8">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full h-10 rounded-full bg-[#ff6f42] hover:bg-[#ee6037] text-white text-xs font-bold shadow-md transition"
-                  >
-                    Start Free Trial
-                  </button>
-                </div>
-              </div>
-
-              {/* Plan 4: Enterprise */}
-              <div className="flex flex-col justify-between rounded-3xl p-6 bg-white ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/15 shadow-sm">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-base font-extrabold text-neutral-950 dark:text-white">Enterprise</p>
-                  </div>
-                  <p className="mt-2 text-xs font-medium text-neutral-600 dark:text-neutral-300">For corporations with scale & security needs.</p>
-                  <div className="mt-6 flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white">
-                      {isYearly ? '$99' : '$119'}
-                    </span>
-                    <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">/month</span>
-                  </div>
-                  <p className="mt-1 text-xs font-semibold text-neutral-500 dark:text-neutral-400">{isYearly ? 'Billed yearly' : 'Billed monthly'}</p>
-
-                  <ul className="mt-6 space-y-2.5 text-xs font-medium text-neutral-800 dark:text-neutral-200">
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Unlimited team members</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>SAML & OIDC SSO</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Self-hosted on-premise container option</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Dedicated SLA & 24/7 engineering support</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className="mt-8">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full h-10 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-950 dark:text-white ring-1 ring-black/10 dark:ring-white/15 text-xs font-bold transition"
-                  >
-                    Contact Sales
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* SECTION 7: ENTERPRISE CALLOUT BANNER (HeyRetro Layout) */}
-          <section className="py-16">
+          {/* SECTION 5: ENTERPRISE CALLOUT BANNER (HeyRetro Layout) */}
+          <section className="py-16 border-t border-neutral-200 dark:border-neutral-800">
             <div className="overflow-hidden rounded-[2rem] bg-neutral-950 p-8 text-white shadow-[0_34px_90px_-44px_rgba(15,23,42,0.8)] sm:p-10 lg:p-12">
               <div className="grid gap-10 lg:grid-cols-[7fr_5fr] lg:items-center">
                 <div>
@@ -1102,7 +786,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     Built for high-volume catalog & localization pipelines.
                   </h2>
                   <p className="mt-4 max-w-[50ch] text-sm font-medium text-neutral-300">
-                    Deploy Retypo on-premises or connect our batch REST endpoints to automatically replace pricing, translate product labels, and update brand banners at scale.
+                    Deploy Retypo on-premises or connect our batch REST endpoints to automatically translate product labels and update brand banners at scale.
                   </p>
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
                     <button
@@ -1111,9 +795,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     >
                       Explore Enterprise <ArrowRight className="w-3.5 h-3.5" />
                     </button>
-                    <a href="#pricing" className="text-xs font-bold text-neutral-300 hover:text-white">
-                      See plan comparison
-                    </a>
                   </div>
                 </div>
 
@@ -1222,7 +903,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   Start editing text in your images now.
                 </h2>
                 <p className="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-300 max-w-md">
-                  Drop any flattened image into the studio or test with our sample presets in one click.
+                  Drop any flattened image into the studio to reconstruct and edit text in seconds.
                 </p>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
                   <button
@@ -1260,7 +941,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <li><a href="#features" className="hover:text-neutral-950 dark:hover:text-white font-semibold">Features</a></li>
                     <li><a href="#demo" className="hover:text-neutral-950 dark:hover:text-white font-semibold">Interactive Demo</a></li>
                     <li><a href="#workflow" className="hover:text-neutral-950 dark:hover:text-white font-semibold">Workflow</a></li>
-                    <li><a href="#presets" className="hover:text-neutral-950 dark:hover:text-white font-semibold">Templates</a></li>
+                    <li><a href="#faq" className="hover:text-neutral-950 dark:hover:text-white font-semibold">FAQ</a></li>
                   </ul>
                 </div>
                 <div>
