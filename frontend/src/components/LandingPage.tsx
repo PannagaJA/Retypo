@@ -10,9 +10,7 @@ import {
   Layers,
   Eraser,
   LayoutTemplate,
-  Download,
-  Sun,
-  Moon
+  Download
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -29,7 +27,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [sliderPosition, setSliderPosition] = useState<number>(50);
   const [isSliding, setIsSliding] = useState<boolean>(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+
+  // Enforce light theme only - keep document element clean of 'dark' class
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
 
   const sliderContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -123,7 +127,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   }, [isSliding, handleSliderMove]);
 
   return (
-    <div className={`min-h-screen w-full transition-colors duration-300 ${isDarkMode ? 'dark bg-[#0a0a0c] text-white' : 'bg-[#f7f5f0] text-neutral-950'} [font-family:'Inter',var(--font-sans)] antialiased select-none`}>
+    <div className="min-h-screen w-full bg-[#f7f5f0] text-neutral-950 [font-family:'Inter',var(--font-sans)] antialiased select-none">
       {/* Background Dot Texture */}
       <div className="relative isolate">
         <div className="pointer-events-none absolute inset-0 -z-10 [background-image:radial-gradient(rgba(23,23,23,0.14)_1px,transparent_1px)] [background-size:18px_18px] opacity-70 dark:[background-image:radial-gradient(rgba(255,255,255,0.14)_1px,transparent_1px)] dark:opacity-20" />
@@ -156,21 +160,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <span className="text-base font-extrabold tracking-tight text-neutral-950 dark:text-white">Retypo</span>
               </a>
 
-              {/* Action Buttons & Theme Switcher */}
+              {/* Action Button */}
               <div className="flex items-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setIsDarkMode(!isDarkMode)}
-                  aria-label="Toggle dark mode"
-                  className="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full bg-neutral-200 dark:bg-neutral-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff6f42]"
-                >
-                  <Sun className="pointer-events-none absolute left-1.5 size-3.5 text-amber-500 opacity-100 dark:opacity-40" />
-                  <Moon className="pointer-events-none absolute right-1.5 size-3.5 text-indigo-400 opacity-40 dark:opacity-100" />
-                  <span className={`grid size-5 place-items-center rounded-full bg-white shadow-sm ring-1 ring-black/5 transition-transform duration-300 dark:bg-neutral-900 dark:ring-white/15 ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`}>
-                    {isDarkMode ? <Moon className="size-3 text-indigo-400" /> : <Sun className="size-3 text-amber-500" />}
-                  </span>
-                </button>
-
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="inline-flex items-center justify-center gap-1.5 h-9 rounded-full bg-neutral-950 px-4 text-sm font-semibold text-white shadow-sm hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 transition-all"
@@ -210,7 +201,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </h1>
 
               {/* Subtitle - HIGH CONTRAST */}
-              <p className="mt-5 max-w-[56ch] text-base/7 text-pretty text-neutral-700 sm:text-lg/8 dark:text-neutral-200 font-medium">
+              <p className="mt-5 max-w-[56ch] text-base/7 text-pretty text-neutral-700 sm:text-lg/8 dark:text-neutral-100 font-medium">
                 Upload any flattened PNG, JPG, or WebP. Retypo detects text automatically, cleans the background seamlessly, and lets you edit typography while keeping all your image pixels untouched.
               </p>
             </div>
@@ -229,10 +220,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                       <span className="text-xs font-bold tracking-tight text-neutral-900 dark:text-white">Studio Canvas Workspace</span>
-                      <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-mono font-medium">1920×1080</span>
+                      <span className="text-[11px] text-neutral-500 dark:text-neutral-300 font-mono font-medium">1920×1080</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
                         <ScanText className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Auto Text Detection Ready
                       </span>
                     </div>
@@ -256,7 +247,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     className={`relative mt-4 overflow-hidden rounded-xl border-2 border-dashed p-7 text-center transition-all cursor-pointer group ${
                       isDraggingOver
                         ? 'border-[#ff6f42] bg-[#fff6f2] scale-[1.02] dark:bg-[#ff6f42]/10'
-                        : 'border-neutral-300 bg-[#fdfbf9] hover:border-[#ff6f42] hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800/60'
+                        : 'border-neutral-300 bg-[#fdfbf9] hover:border-[#ff6f42] hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800/80'
                     }`}
                   >
                     {/* Upload Icon Container */}
@@ -267,7 +258,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <p className="text-base font-extrabold tracking-tight text-neutral-950 dark:text-white">
                       Drag & Drop your image here
                     </p>
-                    <p className="mt-1 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+                    <p className="mt-1 text-xs font-semibold text-neutral-600 dark:text-neutral-200">
                       Supports PNG, JPG, JPEG, WebP • Auto detects text & background
                     </p>
 
@@ -281,7 +272,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       <span className="rounded-md bg-white dark:bg-neutral-700 px-2.5 py-1 text-xs font-bold text-neutral-800 dark:text-white shadow-xs ring-1 ring-black/10">
                         WebP
                       </span>
-                      <span className="rounded-md bg-neutral-100 dark:bg-neutral-700 px-2.5 py-1 text-xs font-mono font-bold text-neutral-700 dark:text-neutral-200 ring-1 ring-black/5">
+                      <span className="rounded-md bg-neutral-100 dark:bg-neutral-700 px-2.5 py-1 text-xs font-mono font-bold text-neutral-700 dark:text-neutral-100 ring-1 ring-black/5">
                         ⌘O
                       </span>
                     </div>
@@ -289,13 +280,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                   {/* Bottom Phase Progress Capsule */}
                   <div className="mt-4 pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-200">
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
                       <span>100% Non-destructive Editing</span>
                     </div>
                     <button
                       onClick={() => onLoadSample('magazine')}
-                      className="text-xs font-bold text-[#ff6f42] hover:underline flex items-center gap-1"
+                      className="text-xs font-bold text-[#ff6f42] dark:text-[#ff946f] hover:underline flex items-center gap-1"
                     >
                       Open Sample <ArrowRight className="w-3.5 h-3.5" />
                     </button>
@@ -311,7 +302,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </div>
                     <span className="text-xs font-bold text-neutral-950 dark:text-white">Font Matcher</span>
                   </div>
-                  <div className="mt-2.5 space-y-1.5 text-xs text-neutral-700 dark:text-neutral-300">
+                  <div className="mt-2.5 space-y-1.5 text-xs text-neutral-700 dark:text-neutral-200">
                     <div className="flex justify-between font-semibold text-[11px]">
                       <span>Font Accuracy</span>
                       <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">98.4%</span>
@@ -320,7 +311,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       <div className="h-full bg-emerald-500 rounded-full w-[98%]" />
                     </div>
                   </div>
-                  <p className="mt-2 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 font-mono">Playfair · Inter · Lato</p>
+                  <p className="mt-2 text-[10px] font-semibold text-neutral-500 dark:text-neutral-300 font-mono">Playfair · Inter · Lato</p>
                 </div>
 
                 {/* Satellite 2: Bottom-Left (rotate-3) */}
@@ -334,24 +325,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="mt-2.5 grid grid-cols-3 gap-1.5">
                     <button
                       onClick={() => onLoadSample('magazine')}
-                      className="rounded-lg bg-neutral-100 hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] dark:bg-neutral-800 dark:text-neutral-200 py-1.5 px-1 text-center text-[11px] font-bold transition"
+                      className="rounded-lg bg-neutral-100 hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] dark:bg-neutral-800 dark:text-neutral-100 hover:dark:bg-neutral-700 py-1.5 px-1 text-center text-[11px] font-bold transition"
                     >
                       Magazine
                     </button>
                     <button
                       onClick={() => onLoadSample('coffee')}
-                      className="rounded-lg bg-neutral-100 hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] dark:bg-neutral-800 dark:text-neutral-200 py-1.5 px-1 text-center text-[11px] font-bold transition"
+                      className="rounded-lg bg-neutral-100 hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] dark:bg-neutral-800 dark:text-neutral-100 hover:dark:bg-neutral-700 py-1.5 px-1 text-center text-[11px] font-bold transition"
                     >
                       Coffee
                     </button>
                     <button
                       onClick={() => onLoadSample('tech')}
-                      className="rounded-lg bg-neutral-100 hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] dark:bg-neutral-800 dark:text-neutral-200 py-1.5 px-1 text-center text-[11px] font-bold transition"
+                      className="rounded-lg bg-neutral-100 hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] dark:bg-neutral-800 dark:text-neutral-100 hover:dark:bg-neutral-700 py-1.5 px-1 text-center text-[11px] font-bold transition"
                     >
                       Tech
                     </button>
                   </div>
-                  <p className="mt-2 text-center text-[10px] font-bold text-[#ff6f42]">1-click instant sample</p>
+                  <p className="mt-2 text-center text-[10px] font-bold text-[#ff6f42] dark:text-[#ff946f]">1-click instant sample</p>
                 </div>
 
                 {/* Satellite 3: Top-Right (rotate-6) */}
@@ -363,11 +354,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </div>
                       <span className="text-xs font-bold text-neutral-950 dark:text-white">Auto Text Scanner</span>
                     </div>
-                    <span className="rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-mono font-bold px-1.5 py-0.5">
+                    <span className="rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 text-[10px] font-mono font-bold px-1.5 py-0.5">
                       Active
                     </span>
                   </div>
-                  <p className="mt-2 text-xs/5 font-medium text-neutral-700 dark:text-neutral-300">
+                  <p className="mt-2 text-xs/5 font-medium text-neutral-700 dark:text-neutral-200">
                     Detects angles, sizes, and font positions instantly.
                   </p>
                   <div className="mt-2.5 flex items-center gap-1.5">
@@ -390,7 +381,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       Lossless
                     </span>
                   </div>
-                  <div className="mt-2 space-y-1 font-mono text-[10px] font-medium text-neutral-300">
+                  <div className="mt-2 space-y-1 font-mono text-[10px] font-medium text-neutral-200">
                     <p>Original Background Intact</p>
                     <p>Color Profiles Preserved</p>
                   </div>
@@ -410,7 +401,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 Upload Image to Edit <ArrowRight className="w-4 h-4 ml-1" />
               </button>
             </div>
-            <p className="mt-4 text-center text-xs font-bold text-neutral-600 dark:text-neutral-400">
+            <p className="mt-4 text-center text-xs font-bold text-neutral-600 dark:text-neutral-200">
               No account required • 100% local processing • Works with all resolutions
             </p>
           </section>
@@ -421,17 +412,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div>
                 <h2 className="max-w-[24ch] text-3xl font-extrabold tracking-tight text-balance sm:text-5xl text-neutral-950 dark:text-white">
                   One studio canvas.{' '}
-                  <span className="text-neutral-500 dark:text-neutral-400">Total typography control.</span>
+                  <span className="text-neutral-500 dark:text-neutral-300">Total typography control.</span>
                 </h2>
               </div>
-              <p className="max-w-[44ch] text-sm font-medium text-neutral-700 dark:text-neutral-300">
+              <p className="max-w-[44ch] text-sm font-medium text-neutral-700 dark:text-neutral-200">
                 Everything you need to find, style, and edit flattened text in seconds.
               </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               {/* Feature 1: Text Detection */}
-              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/10 dark:hover:ring-white/20 shadow-sm">
+              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/15 dark:hover:ring-white/20 shadow-sm">
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#fff3ec] dark:bg-[#ff6f42]/10 p-4 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="p-2 rounded-lg bg-white dark:bg-neutral-800 shadow-xs text-[#ff6f42]">
@@ -442,7 +433,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </span>
                   </div>
                   <div className="rounded-xl bg-neutral-950 p-2.5 text-white shadow-xs border border-white/10">
-                    <div className="flex items-center justify-between pb-1.5 border-b border-neutral-800 text-[10px] text-neutral-400 font-mono">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-neutral-800 text-[10px] text-neutral-300 font-mono">
                       <span>DETECTED_TEXT</span>
                       <span className="text-emerald-400 font-bold">99.8% match</span>
                     </div>
@@ -454,12 +445,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <div className="p-4">
                   <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Smart Text Detection</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Detects any text block, font angle, and position automatically.</p>
+                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-200">Detects any text block, font angle, and position automatically.</p>
                 </div>
               </div>
 
               {/* Feature 2: Clean Inpainting */}
-              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/10 dark:hover:ring-white/20 shadow-sm">
+              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/15 dark:hover:ring-white/20 shadow-sm">
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#f0fdf4] dark:bg-emerald-950/20 p-4 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="p-2 rounded-lg bg-white dark:bg-neutral-800 shadow-xs text-emerald-600">
@@ -470,7 +461,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </span>
                   </div>
                   <div className="rounded-xl bg-white dark:bg-neutral-800 p-2.5 shadow-xs border border-black/5 dark:border-white/10">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-400">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-300">
                       <span>CLEAN_TEXTURE</span>
                       <span className="text-emerald-600 dark:text-emerald-400 font-bold">Seamless</span>
                     </div>
@@ -483,12 +474,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <div className="p-4">
                   <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Background Inpainting</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Erases text seamlessly while perfectly restoring underlying texture.</p>
+                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-200">Erases text seamlessly while perfectly restoring underlying texture.</p>
                 </div>
               </div>
 
               {/* Feature 3: Font Matcher */}
-              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/10 dark:hover:ring-white/20 shadow-sm">
+              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/15 dark:hover:ring-white/20 shadow-sm">
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#eff6ff] dark:bg-sky-950/20 p-4 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="p-2 rounded-lg bg-white dark:bg-neutral-800 shadow-xs text-sky-600">
@@ -499,7 +490,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </span>
                   </div>
                   <div className="rounded-xl bg-white dark:bg-neutral-800 p-2.5 shadow-xs border border-black/5 dark:border-white/10">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-400">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-300">
                       <span>MATCHED_STYLE</span>
                       <span className="text-sky-600 dark:text-sky-400 font-bold">ACTIVE</span>
                     </div>
@@ -513,12 +504,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <div className="p-4">
                   <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Font Reconstruction</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Instantly matches serif, sans-serif, and weight to fonts.</p>
+                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-200">Instantly matches serif, sans-serif, and weight to fonts.</p>
                 </div>
               </div>
 
               {/* Feature 4: Vector Canvas */}
-              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/10 dark:hover:ring-white/20 shadow-sm">
+              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/15 dark:hover:ring-white/20 shadow-sm">
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#faf5ff] dark:bg-indigo-950/20 p-4 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="p-2 rounded-lg bg-white dark:bg-neutral-800 shadow-xs text-indigo-600">
@@ -529,11 +520,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </span>
                   </div>
                   <div className="rounded-xl bg-white dark:bg-neutral-800 p-2.5 shadow-xs border border-black/5 dark:border-white/10">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-400">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-300">
                       <span>TEXT_LAYER</span>
                       <span className="text-indigo-600 dark:text-indigo-400 font-bold">VECTOR</span>
                     </div>
-                    <div className="mt-2 flex items-center justify-between text-[10px] font-semibold text-neutral-800 dark:text-neutral-200">
+                    <div className="mt-2 flex items-center justify-between text-[10px] font-semibold text-neutral-800 dark:text-neutral-100">
                       <span className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700">Size: 48px</span>
                       <span className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700">Track: -0.02</span>
                     </div>
@@ -541,12 +532,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <div className="p-4">
                   <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Vector Typography Layer</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Rotate, scale, recolor, and change text with total design freedom.</p>
+                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-200">Rotate, scale, recolor, and change text with total design freedom.</p>
                 </div>
               </div>
 
               {/* Feature 5: Lossless Compositor */}
-              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/10 dark:hover:ring-white/20 shadow-sm">
+              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/15 dark:hover:ring-white/20 shadow-sm">
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#fefce8] dark:bg-amber-950/20 p-4 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="p-2 rounded-lg bg-white dark:bg-neutral-800 shadow-xs text-amber-600">
@@ -557,11 +548,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </span>
                   </div>
                   <div className="rounded-xl bg-white dark:bg-neutral-800 p-2.5 shadow-xs border border-black/5 dark:border-white/10">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-400">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-300">
                       <span>EXPORT_QUALITY</span>
                       <span className="text-amber-600 dark:text-amber-400 font-bold">ORIGINAL</span>
                     </div>
-                    <div className="mt-2 flex items-center justify-between text-[10px] font-mono font-bold text-neutral-800 dark:text-neutral-200">
+                    <div className="mt-2 flex items-center justify-between text-[10px] font-mono font-bold text-neutral-800 dark:text-neutral-100">
                       <span>High-Res</span>
                       <span className="text-emerald-600 dark:text-emerald-400">PNG, JPG, WebP</span>
                     </div>
@@ -569,7 +560,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <div className="p-4">
                   <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Lossless Quality Export</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Exports at full native source resolution with untouched pixels.</p>
+                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-200">Exports at full native source resolution with untouched pixels.</p>
                 </div>
               </div>
             </div>
@@ -581,7 +572,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl text-neutral-950 dark:text-white">
                 See the reconstruction in action.
               </h2>
-              <p className="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-300 max-w-xl">
+              <p className="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-200 max-w-xl">
                 Drag the divider below to inspect the transformation between the raw flattened raster image and Retypo's reconstructed editable vector typography.
               </p>
             </div>
@@ -660,7 +651,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
               </div>
 
-              <div className="mt-3 flex items-center justify-between text-xs font-semibold text-neutral-700 dark:text-neutral-300 px-2">
+              <div className="mt-3 flex items-center justify-between text-xs font-semibold text-neutral-700 dark:text-neutral-200 px-2">
                 <span>◀ Drag left for Reconstructed Vector</span>
                 <span>Drag right for Flattened Raster ▶</span>
               </div>
@@ -671,7 +662,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <section id="workflow" className="py-20 border-t border-neutral-200 dark:border-neutral-800">
             <div>
               <h2 className="max-w-[24ch] text-3xl font-extrabold tracking-tight text-balance sm:text-5xl text-neutral-950 dark:text-white">
-                Static image. <span className="text-neutral-500 dark:text-neutral-400">Editable canvas.</span>
+                Static image. <span className="text-neutral-500 dark:text-neutral-300">Editable canvas.</span>
               </h2>
             </div>
 
@@ -683,10 +674,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <UploadCloud className="w-6 h-6" />
                   </div>
                   <span className="text-xs font-bold text-neutral-950 dark:text-white">1. Ingest Image</span>
-                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">PNG, JPG, or WebP</span>
+                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-300">PNG, JPG, or WebP</span>
                 </div>
                 <p className="mt-4 text-sm font-extrabold text-neutral-950 dark:text-white">Drop image</p>
-                <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
+                <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-200">
                   Drag any image onto the canvas. Works directly in browser.
                 </p>
               </div>
@@ -709,10 +700,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <ScanText className="w-6 h-6" />
                   </div>
                   <span className="text-xs font-bold text-neutral-950 dark:text-white">2. Detect Text</span>
-                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Auto Angle & Position</span>
+                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-300">Auto Angle & Position</span>
                 </div>
                 <p className="mt-4 text-sm font-extrabold text-neutral-950 dark:text-white">Detect text</p>
-                <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
+                <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-200">
                   Instant scanner maps exact text angle, size, and position.
                 </p>
               </div>
@@ -735,10 +726,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <Eraser className="w-6 h-6" />
                   </div>
                   <span className="text-xs font-bold text-neutral-950 dark:text-white">3. Fill Background</span>
-                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Seamless Background Fill</span>
+                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-300">Seamless Background Fill</span>
                 </div>
                 <p className="mt-4 text-sm font-extrabold text-neutral-950 dark:text-white">Restore texture</p>
-                <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
+                <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-200">
                   Erase original text while seamlessly restoring underlying texture.
                 </p>
               </div>
@@ -761,10 +752,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <Download className="w-6 h-6" />
                   </div>
                   <span className="text-xs font-bold text-neutral-950 dark:text-white">4. Export Lossless</span>
-                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Original High Resolution</span>
+                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-300">Original High Resolution</span>
                 </div>
                 <p className="mt-4 text-sm font-extrabold text-neutral-950 dark:text-white">Edit & Export</p>
-                <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
+                <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-200">
                   Type new copy, resize typography, and export in full high resolution.
                 </p>
               </div>
@@ -778,7 +769,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl text-neutral-950 dark:text-white">
                   Common questions.
                 </h2>
-                <p className="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-300 max-w-sm">
+                <p className="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-200 max-w-sm">
                   Everything you need to know about font reconstruction, inpainting quality, and image safety.
                 </p>
               </div>
@@ -818,10 +809,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                         className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
                       >
                         <span className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white">{item.q}</span>
-                        <ChevronDown className={`w-4 h-4 text-neutral-600 dark:text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-4 h-4 text-neutral-600 dark:text-neutral-300 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                       </button>
                       {isOpen && (
-                        <div className="px-5 pb-5 text-xs/6 sm:text-sm/6 font-medium text-neutral-700 dark:text-neutral-300 border-t border-neutral-100 dark:border-neutral-800 pt-3">
+                        <div className="px-5 pb-5 text-xs/6 sm:text-sm/6 font-medium text-neutral-700 dark:text-neutral-100 border-t border-neutral-100 dark:border-neutral-800 pt-3">
                           {item.a}
                         </div>
                       )}
@@ -842,7 +833,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl text-neutral-950 dark:text-white">
                   Start editing text in your images now.
                 </h2>
-                <p className="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-300 max-w-md">
+                <p className="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-100 max-w-md">
                   Drop any flattened image into the studio to reconstruct and edit text in seconds.
                 </p>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -869,7 +860,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                   <span className="font-extrabold text-base tracking-tight text-neutral-950 dark:text-white">Retypo</span>
                 </div>
-                <p className="mt-4 text-xs/5 font-medium text-neutral-700 dark:text-neutral-400 max-w-xs">
+                <p className="mt-4 text-xs/5 font-medium text-neutral-700 dark:text-neutral-200 max-w-xs">
                   High-fidelity image text editor with automatic text detection, background fill, and typography reconstruction.
                 </p>
               </div>
@@ -877,16 +868,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 text-xs font-medium">
                 <div>
                   <p className="font-extrabold text-neutral-950 dark:text-white mb-3">Product</p>
-                  <ul className="space-y-2 text-neutral-700 dark:text-neutral-300">
-                    <li><a href="#features" className="hover:text-neutral-950 dark:hover:text-white font-semibold">Features</a></li>
-                    <li><a href="#demo" className="hover:text-neutral-950 dark:hover:text-white font-semibold">Interactive Demo</a></li>
-                    <li><a href="#workflow" className="hover:text-neutral-950 dark:hover:text-white font-semibold">Workflow</a></li>
-                    <li><a href="#faq" className="hover:text-neutral-950 dark:hover:text-white font-semibold">FAQ</a></li>
+                  <ul className="space-y-2 text-neutral-700 dark:text-neutral-200">
+                    <li><a href="#features" className="hover:text-neutral-950 dark:hover:text-white transition-colors font-semibold">Features</a></li>
+                    <li><a href="#demo" className="hover:text-neutral-950 dark:hover:text-white transition-colors font-semibold">Interactive Demo</a></li>
+                    <li><a href="#workflow" className="hover:text-neutral-950 dark:hover:text-white transition-colors font-semibold">Workflow</a></li>
+                    <li><a href="#faq" className="hover:text-neutral-950 dark:hover:text-white transition-colors font-semibold">FAQ</a></li>
                   </ul>
                 </div>
                 <div>
                   <p className="font-extrabold text-neutral-950 dark:text-white mb-3">Capabilities</p>
-                  <ul className="space-y-2 text-neutral-700 dark:text-neutral-300 font-semibold">
+                  <ul className="space-y-2 text-neutral-700 dark:text-neutral-200 font-semibold">
                     <li><span>Instant Text Scanner</span></li>
                     <li><span>Background Texture Fill</span></li>
                     <li><span>Automated Font Matcher</span></li>
@@ -895,7 +886,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <div>
                   <p className="font-extrabold text-neutral-950 dark:text-white mb-3">Legal & Safety</p>
-                  <ul className="space-y-2 text-neutral-700 dark:text-neutral-300 font-semibold">
+                  <ul className="space-y-2 text-neutral-700 dark:text-neutral-200 font-semibold">
                     <li><span>100% Non-Destructive</span></li>
                     <li><span>Zero Data Tracking</span></li>
                     <li><span>Local Processing</span></li>
@@ -905,7 +896,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
             </div>
 
-            <div className="mt-12 pt-6 border-t border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between text-xs font-semibold text-neutral-600 dark:text-neutral-400 gap-4">
+            <div className="mt-12 pt-6 border-t border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between text-xs font-semibold text-neutral-600 dark:text-neutral-300 gap-4">
               <p>© 2026 Retypo. All rights reserved.</p>
               <p>Designed with HeyRetro structure & precision typography.</p>
             </div>

@@ -39,9 +39,9 @@ describe('LandingPage Architecture & Presets', () => {
   });
 
   it('validates clean header layout actions', () => {
-    const headerActions = ['Retypo', 'Upload Image', 'Toggle dark mode'];
+    const headerActions = ['Retypo', 'Upload Image'];
     expect(headerActions).toContain('Retypo');
     expect(headerActions).toContain('Upload Image');
-    expect(headerActions).toContain('Toggle dark mode');
+    expect(headerActions).not.toContain('Toggle dark mode');
   });
 });
