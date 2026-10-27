@@ -11,7 +11,8 @@ import {
   Layers,
   Eraser,
   LayoutTemplate,
-  Download
+  Download,
+  Lock
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -999,87 +1000,138 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 See the reconstruction in action.
               </h2>
               <p className="mt-4 text-sm font-medium text-neutral-700 max-w-xl">
-                Drag the divider below to inspect the transformation between the raw flattened raster image and Retypo's reconstructed editable vector typography.
+                Compare the original flattened raster image with Retypo's reconstructed vector typography and seamlessly inpainted background.
               </p>
             </div>
 
-            <div className="scroll-reveal mx-auto max-w-3xl overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_-45px_rgba(15,23,42,0.4)] ring-1 ring-black/10 p-4">
+            <div className="scroll-reveal mx-auto max-w-4xl overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_-45px_rgba(15,23,42,0.35)] ring-1 ring-black/10 p-3 sm:p-4">
               <div
                 ref={sliderContainerRef}
-                className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-slate-900 cursor-ew-resize select-none touch-none"
+                className="relative aspect-[4/3] sm:aspect-[16/10] w-full overflow-hidden rounded-xl bg-neutral-900 cursor-ew-resize select-none touch-none shadow-inner"
                 onMouseDown={handleMouseDown}
                 onTouchStart={handleTouchStart}
               >
-                {/* AFTER STATE: Inpainted background + Reconstructed typography */}
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-8 flex flex-col justify-between text-white">
-                  <div className="flex justify-between items-center">
-                    <span className="px-3 py-1 rounded-full bg-emerald-500/20 backdrop-blur text-xs font-mono font-bold tracking-widest uppercase text-emerald-400 border border-emerald-500/40">
-                      ✓ Retypo Inpainted & Reconstructed
+                {/* AFTER STATE: Inpainted photograph + Reconstructed vector typography */}
+                <div className="absolute inset-0">
+                  <img
+                    src="/demo-editorial.jpg"
+                    alt="Retypo Inpainted Travertine Editorial"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/35" />
+
+                  {/* Top-Right Badge */}
+                  <div className="absolute top-3.5 right-3.5 z-10 pointer-events-none">
+                    <span className="px-3 py-1.5 rounded-full bg-emerald-500/25 backdrop-blur-md text-[11px] font-mono font-bold tracking-wider uppercase text-emerald-300 border border-emerald-400/35 flex items-center gap-1.5 shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      Retypo Reconstructed
                     </span>
-                    <span className="text-xs text-white/70 font-mono font-semibold">Editable Vector Text</span>
                   </div>
 
-                  <div className="my-auto space-y-3">
-                    <div className="inline-block px-3 py-1 rounded-md bg-[#ff6f42]/20 border border-[#ff6f42] text-[#ff6f42] font-mono font-bold text-xs">
-                      [Selected Layer: Playfair Display]
+                  {/* Reconstructed Vector Typography with Live Handles */}
+                  <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-4 sm:p-6 z-10 pointer-events-none">
+                    <div className="relative inline-block px-5 py-3.5 sm:px-8 sm:py-6 rounded-xl border-2 border-dashed border-[#ff6f42] bg-[#ff6f42]/15 backdrop-blur-[2px] shadow-2xl">
+                      {/* Corner vector transform handles */}
+                      <span className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
+                      <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
+                      <span className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
+                      <span className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
+
+                      {/* Floating Font Inspector Badge */}
+                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-neutral-950/90 backdrop-blur-md text-[#ff6f42] border border-[#ff6f42]/40 text-[10px] font-mono font-bold whitespace-nowrap shadow-md flex items-center gap-1">
+                        <Type className="w-3 h-3" />
+                        Playfair Display · 700 · 48px
+                      </div>
+
+                      <p className="text-[10px] sm:text-xs font-mono tracking-[0.25em] text-[#ffc1ad] uppercase font-bold mb-1 drop-shadow-sm">
+                        Architectural Monograph • Vol. 08
+                      </p>
+                      <h3 className="text-2xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-lg">
+                        Timeless Elegance
+                      </h3>
+                      <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-neutral-100 font-medium max-w-sm sm:max-w-md mx-auto drop-shadow-sm">
+                        Travertine stone restored seamlessly. Text converted to clean vector nodes.
+                      </p>
                     </div>
-                    <h3 className="text-3xl sm:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-md">
-                      Timeless Elegance
-                    </h3>
-                    <p className="text-sm sm:text-base text-slate-200 font-medium max-w-md">
-                      Every letter is now an editable vector object with matched font metrics, live sizing, and custom color controls.
-                    </p>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs font-semibold text-white/80">
-                    <span className="px-2 py-1 rounded bg-white/15">Font: Playfair Display</span>
-                    <span className="px-2 py-1 rounded bg-white/15">Size: 48px</span>
-                    <span className="px-2 py-1 rounded bg-white/15">Color: #FFFFFF</span>
+                  {/* Bottom Telemetry */}
+                  <div className="absolute bottom-3.5 left-3.5 right-3.5 flex justify-between items-center text-[10px] sm:text-[11px] font-mono font-semibold text-white/90 z-10 pointer-events-none">
+                    <span className="px-2.5 py-1 rounded-md bg-neutral-950/75 backdrop-blur-md border border-white/10 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      Inpainting: Grain Intact
+                    </span>
+                    <span className="px-2.5 py-1 rounded-md bg-neutral-950/75 backdrop-blur-md border border-white/10 text-neutral-300">
+                      Editable Vector Nodes
+                    </span>
                   </div>
                 </div>
 
                 {/* BEFORE STATE: Original flattened raster image */}
                 <div
-                  className="absolute inset-0 bg-gradient-to-br from-neutral-800 via-neutral-900 to-stone-900 p-8 flex flex-col justify-between text-white overflow-hidden pointer-events-none"
+                  className="absolute inset-0 overflow-hidden pointer-events-none"
                   style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
                 >
-                  <div className="flex justify-between items-center">
-                    <span className="px-3 py-1 rounded-full bg-amber-500/20 backdrop-blur text-xs font-mono font-bold tracking-widest uppercase text-amber-300 border border-amber-500/40">
-                      Original Flattened Raster (Uneditable)
+                  <img
+                    src="/demo-editorial.jpg"
+                    alt="Original Flattened Raster Editorial"
+                    className="absolute inset-0 w-full h-full object-cover filter contrast-[0.95]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/45" />
+
+                  {/* Top-Left Badge */}
+                  <div className="absolute top-3.5 left-3.5 z-10 pointer-events-none">
+                    <span className="px-3 py-1.5 rounded-full bg-amber-500/25 backdrop-blur-md text-[11px] font-mono font-bold tracking-wider uppercase text-amber-200 border border-amber-400/40 flex items-center gap-1.5 shadow-sm">
+                      <Lock className="w-3 h-3 text-amber-300" />
+                      Original Flattened Raster
                     </span>
                   </div>
 
-                  <div className="my-auto space-y-3">
-                    <div className="inline-block px-3 py-1 rounded-md bg-neutral-800 text-amber-200 border border-amber-500/30 font-mono font-bold text-xs">
-                      Locked Pixel Image
+                  {/* Flattened Raster Text with Locked Indicator */}
+                  <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-4 sm:p-6 z-10 pointer-events-none">
+                    <div className="relative inline-block px-5 py-3.5 sm:px-8 sm:py-6 rounded-xl border border-dashed border-amber-400/35 bg-black/40 backdrop-blur-xs">
+                      {/* Floating Lock Badge */}
+                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-neutral-950/90 backdrop-blur-md text-amber-300 border border-amber-400/40 text-[10px] font-mono font-bold whitespace-nowrap shadow-md flex items-center gap-1">
+                        <Lock className="w-3 h-3" />
+                        Locked Pixel Matrix
+                      </div>
+
+                      <p className="text-[10px] sm:text-xs font-mono tracking-[0.25em] text-neutral-300 uppercase font-bold mb-1 opacity-80">
+                        Architectural Monograph • Vol. 08
+                      </p>
+                      <h3 className="text-2xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-neutral-200 drop-shadow-md">
+                        Timeless Elegance
+                      </h3>
+                      <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-neutral-300 font-medium max-w-sm sm:max-w-md mx-auto opacity-80">
+                        Static raster pixels baked into stone. Cannot edit words, font, or styling.
+                      </p>
                     </div>
-                    <h3 className="text-3xl sm:text-5xl font-serif font-bold tracking-tight text-neutral-300 line-through opacity-80">
-                      Timeless Elegance
-                    </h3>
-                    <p className="text-sm sm:text-base text-neutral-300 font-medium max-w-md">
-                      Static image pixels locked into background texture. Cannot change words, fonts, or styling without repainting.
-                    </p>
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs font-mono font-semibold text-neutral-400">
-                    <span>Rasterized JPEG • No Layer Data</span>
+                  {/* Bottom Telemetry */}
+                  <div className="absolute bottom-3.5 left-3.5 z-10 pointer-events-none">
+                    <span className="px-2.5 py-1 rounded-md bg-neutral-950/75 backdrop-blur-md border border-white/10 text-[10px] sm:text-[11px] font-mono text-amber-200/90">
+                      Raster JPEG · No Layers
+                    </span>
                   </div>
                 </div>
 
                 {/* SLIDER DIVIDER LINE */}
                 <div
-                  className="absolute inset-y-0 w-1 bg-white shadow-2xl pointer-events-none"
+                  className="absolute inset-y-0 w-0.5 bg-white shadow-[0_0_12px_rgba(255,255,255,0.95)] pointer-events-none z-20"
                   style={{ left: `${sliderPosition}%` }}
                 >
-                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white text-neutral-950 shadow-xl flex items-center justify-center font-bold text-xs ring-2 ring-black/20">
-                    ⇄
+                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white text-neutral-950 shadow-2xl flex items-center justify-center font-bold text-xs ring-4 ring-black/20 hover:scale-110 transition-transform">
+                    <span className="text-[10px] tracking-tight font-black flex items-center">
+                      ◀▶
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-3 flex items-center justify-between text-xs font-semibold text-neutral-700 px-2">
-                <span>◀ Drag left for Reconstructed Vector</span>
-                <span>Drag right for Flattened Raster ▶</span>
+              {/* Drag divider helper sentence */}
+              <div className="mt-3 text-center text-xs font-medium text-neutral-500">
+                Drag the divider to compare
               </div>
             </div>
           </section>
