@@ -240,13 +240,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* HERO SECTION */}
           <section className="pt-10 pb-16 sm:pt-16 lg:pt-20 lg:pb-24">
             <div className="flex flex-col items-center text-center">
-              {/* Product Badge */}
-              <div className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-neutral-900 px-3.5 py-1 text-xs font-semibold ring-1 ring-black/8 dark:ring-white/15 shadow-xs mb-6 text-neutral-800 dark:text-neutral-200">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>PaddleOCR 2.8 + Lossless Vector Studio</span>
-                <span className="text-[#ff6f42] font-mono font-bold">v2.4</span>
-              </div>
-
               {/* Main Headline */}
               <h1 className="max-w-[22ch] text-5xl font-extrabold tracking-tight text-balance sm:text-7xl text-neutral-950 dark:text-white">
                 Images with text.{' '}
@@ -277,7 +270,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
-                      <ScanText className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> PaddleOCR Ready
+                      <ScanText className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Auto Text Detection Ready
                     </span>
                   </div>
                 </div>
@@ -335,7 +328,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="mt-4 pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span>Non-Destructive Compositor Ready</span>
+                    <span>100% Non-destructive Editing</span>
                   </div>
                   <button
                     onClick={() => onLoadSample('magazine')}
@@ -357,7 +350,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <div className="mt-2.5 space-y-1.5 text-xs text-neutral-700 dark:text-neutral-300">
                   <div className="flex justify-between font-semibold text-[11px]">
-                    <span>4-Signal Match</span>
+                    <span>Font Accuracy</span>
                     <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">98.4%</span>
                   </div>
                   <div className="h-1.5 w-full bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
@@ -398,25 +391,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <p className="mt-2 text-center text-[10px] font-bold text-[#ff6f42]">1-click instant demo</p>
               </div>
 
-              {/* Satellite 3: Top-Right (rotate-6) - FIXED OCR BADGE */}
+              {/* Satellite 3: Top-Right (rotate-6) */}
               <div className="absolute top-4 right-0 z-20 hidden w-56 rotate-6 rounded-xl bg-white p-4 shadow-[0_28px_60px_-30px_rgba(15,23,42,0.45)] ring-1 ring-black/10 lg:block dark:bg-neutral-900 dark:ring-white/15">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                       <ScanText className="w-3.5 h-3.5" />
                     </div>
-                    <span className="text-xs font-bold text-neutral-950 dark:text-white">PaddleOCR Engine</span>
+                    <span className="text-xs font-bold text-neutral-950 dark:text-white">Auto Text Scanner</span>
                   </div>
                   <span className="rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-mono font-bold px-1.5 py-0.5">
-                    v2.8
+                    Active
                   </span>
                 </div>
                 <p className="mt-2 text-xs/5 font-medium text-neutral-700 dark:text-neutral-300">
-                  Sub-pixel polygon geometry & text angle detection.
+                  Detects angles, sizes, and font positions instantly.
                 </p>
                 <div className="mt-2.5 flex items-center gap-1.5">
                   <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">
-                    Apple Silicon GPU Native
+                    Lightning Fast Processing
                   </span>
                 </div>
               </div>
@@ -428,18 +421,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <div className="w-6 h-6 rounded-lg bg-emerald-950/80 text-emerald-400 flex items-center justify-center">
                       <ShieldCheck className="w-3.5 h-3.5" />
                     </div>
-                    <p className="text-xs font-bold text-white">Lossless Compositor</p>
+                    <p className="text-xs font-bold text-white">Pixel Quality</p>
                   </div>
                   <span className="rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold px-2 py-0.5">
-                    SSIM 1.000
+                    Lossless
                   </span>
                 </div>
                 <div className="mt-2 space-y-1 font-mono text-[10px] font-medium text-neutral-300">
-                  <p>Delta E: 0.00 (Bitwise Safe)</p>
-                  <p>ICC Profile: Passthrough</p>
+                  <p>Original Background Intact</p>
+                  <p>Color Profiles Preserved</p>
                 </div>
                 <div className="mt-2.5 pt-2 border-t border-white/15 text-[11px] font-bold text-emerald-400 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> 100% Studio Fidelity
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 100% Pixel Perfect
                 </div>
               </div>
             </div>
@@ -484,7 +477,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              {/* Feature 1: OCR Detection */}
+              {/* Feature 1: Text Detection */}
               <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/10 dark:hover:ring-white/20 shadow-sm">
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#fff3ec] dark:bg-[#ff6f42]/10 p-4 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
@@ -492,13 +485,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       <ScanText className="w-5 h-5" />
                     </span>
                     <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-[#ff6f42]/15 text-[#ff6f42]">
-                      PaddleOCR
+                      Auto Scan
                     </span>
                   </div>
                   <div className="rounded-xl bg-neutral-950 p-2.5 text-white shadow-xs border border-white/10">
                     <div className="flex items-center justify-between pb-1.5 border-b border-neutral-800 text-[10px] text-neutral-400 font-mono">
-                      <span>BBOX_DETECT</span>
-                      <span className="text-emerald-400 font-bold">99.8% conf</span>
+                      <span>DETECTED_TEXT</span>
+                      <span className="text-emerald-400 font-bold">99.8% match</span>
                     </div>
                     <div className="mt-2 py-1 px-2 rounded border border-dashed border-[#ff6f42] bg-[#ff6f42]/20 flex items-center justify-between">
                       <span className="text-xs font-bold tracking-wider font-mono text-white">"EDITORIAL"</span>
@@ -507,12 +500,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                 </div>
                 <div className="p-4">
-                  <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Real-Time OCR Detection</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Sub-pixel polygon geometry & text angle detection.</p>
+                  <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Smart Text Detection</h3>
+                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Detects any text block, font angle, and position automatically.</p>
                 </div>
               </div>
 
-              {/* Feature 2: Inpainting */}
+              {/* Feature 2: Clean Inpainting */}
               <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition hover:ring-black/20 dark:bg-neutral-900 dark:ring-white/10 dark:hover:ring-white/20 shadow-sm">
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#f0fdf4] dark:bg-emerald-950/20 p-4 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
@@ -520,13 +513,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       <Eraser className="w-5 h-5" />
                     </span>
                     <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">
-                      Multi-Tier
+                      Background Fill
                     </span>
                   </div>
                   <div className="rounded-xl bg-white dark:bg-neutral-800 p-2.5 shadow-xs border border-black/5 dark:border-white/10">
                     <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-400">
-                      <span>TELEA_PDE</span>
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">ΔE 0.00</span>
+                      <span>CLEAN_TEXTURE</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">Seamless</span>
                     </div>
                     <div className="mt-2 h-7 rounded-lg bg-gradient-to-r from-emerald-100 via-teal-100 to-emerald-200 dark:from-emerald-950/60 dark:to-teal-950/60 flex items-center justify-center">
                       <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 font-mono">
@@ -537,7 +530,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <div className="p-4">
                   <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Background Inpainting</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Solid, gradient, Navier-Stokes & Telea PDE texture fill.</p>
+                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Erases text seamlessly while perfectly restoring underlying texture.</p>
                 </div>
               </div>
 
@@ -549,13 +542,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       <Type className="w-5 h-5" />
                     </span>
                     <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300">
-                      4-Signal Match
+                      Font Matcher
                     </span>
                   </div>
                   <div className="rounded-xl bg-white dark:bg-neutral-800 p-2.5 shadow-xs border border-black/5 dark:border-white/10">
                     <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-400">
-                      <span>CLASSIFIER</span>
-                      <span className="text-sky-600 dark:text-sky-400 font-bold">MATCHED</span>
+                      <span>MATCHED_STYLE</span>
+                      <span className="text-sky-600 dark:text-sky-400 font-bold">ACTIVE</span>
                     </div>
                     <div className="mt-1 flex items-baseline justify-between">
                       <span className="font-serif text-lg font-bold text-neutral-900 dark:text-white">Playfair</span>
@@ -567,7 +560,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <div className="p-4">
                   <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Font Reconstruction</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Matches serif, stroke distance, aspect ratio & contour.</p>
+                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Instantly matches serif, sans-serif, and weight to fonts.</p>
                 </div>
               </div>
 
@@ -579,12 +572,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       <Layers className="w-5 h-5" />
                     </span>
                     <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300">
-                      Fabric.js
+                      Full Controls
                     </span>
                   </div>
                   <div className="rounded-xl bg-white dark:bg-neutral-800 p-2.5 shadow-xs border border-black/5 dark:border-white/10">
                     <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-400">
-                      <span>CANVAS_LAYER</span>
+                      <span>TEXT_LAYER</span>
                       <span className="text-indigo-600 dark:text-indigo-400 font-bold">VECTOR</span>
                     </div>
                     <div className="mt-2 flex items-center justify-between text-[10px] font-semibold text-neutral-800 dark:text-neutral-200">
@@ -595,7 +588,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <div className="p-4">
                   <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Vector Typography Layer</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Full design freedom with rotation, scale & letter-spacing.</p>
+                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Rotate, scale, recolor, and change text with total design freedom.</p>
                 </div>
               </div>
 
@@ -607,23 +600,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       <ShieldCheck className="w-5 h-5" />
                     </span>
                     <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-900/50 dark:text-amber-300">
-                      SSIM 1.000
+                      Full Quality
                     </span>
                   </div>
                   <div className="rounded-xl bg-white dark:bg-neutral-800 p-2.5 shadow-xs border border-black/5 dark:border-white/10">
                     <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-400">
-                      <span>PIXEL_SAFETY</span>
-                      <span className="text-amber-600 dark:text-amber-400 font-bold">100% BITWISE</span>
+                      <span>EXPORT_QUALITY</span>
+                      <span className="text-amber-600 dark:text-amber-400 font-bold">ORIGINAL</span>
                     </div>
                     <div className="mt-2 flex items-center justify-between text-[10px] font-mono font-bold text-neutral-800 dark:text-neutral-200">
-                      <span>SSIM: 1.000</span>
-                      <span className="text-emerald-600 dark:text-emerald-400">PNG 24-bit</span>
+                      <span>High-Res</span>
+                      <span className="text-emerald-600 dark:text-emerald-400">PNG, JPG, WebP</span>
                     </div>
                   </div>
                 </div>
                 <div className="p-4">
                   <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Lossless Export Pipeline</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Untouched pixels remain bitwise identical with ICC preserved.</p>
+                  <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Exports at full native source resolution with untouched pixels.</p>
                 </div>
               </div>
             </div>
@@ -763,11 +756,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <ScanText className="w-6 h-6" />
                   </div>
                   <span className="text-xs font-bold text-neutral-950 dark:text-white">2. Detect Polygons</span>
-                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">PaddleOCR Geometry</span>
+                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Auto Angle & Position</span>
                 </div>
                 <p className="mt-4 text-sm font-extrabold text-neutral-950 dark:text-white">Detect text</p>
                 <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
-                  Instant OCR maps exact text angle, position, and confidence.
+                  Instant scanner maps exact text angle, position, and bounding box.
                 </p>
               </div>
 
@@ -789,7 +782,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <Eraser className="w-6 h-6" />
                   </div>
                   <span className="text-xs font-bold text-neutral-950 dark:text-white">3. Inpaint Background</span>
-                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Clean Texture Fill</span>
+                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Seamless Background Fill</span>
                 </div>
                 <p className="mt-4 text-sm font-extrabold text-neutral-950 dark:text-white">Restore texture</p>
                 <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
@@ -815,7 +808,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <Download className="w-6 h-6" />
                   </div>
                   <span className="text-xs font-bold text-neutral-950 dark:text-white">4. Export Lossless</span>
-                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Studio Bitwise Fidelity</span>
+                  <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Original High Resolution</span>
                 </div>
                 <p className="mt-4 text-sm font-extrabold text-neutral-950 dark:text-white">Edit & Export</p>
                 <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
@@ -976,7 +969,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Full PaddleOCR text detection</span>
+                      <span>Instant auto text detection</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
@@ -1020,15 +1013,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>4-Signal font matching</span>
+                      <span>Automated font matching</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Deep inpainting engine (Navier-Stokes)</span>
+                      <span>Deep background texture fill</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Studio JPEG 4:4:4 & WebP Ultra</span>
+                      <span>Studio JPEG & WebP Ultra</span>
                     </li>
                   </ul>
                 </div>
@@ -1075,11 +1068,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Color profile (ICC) preservation</span>
+                      <span>Color profile preservation</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-4 h-4 text-[#ff6f42] shrink-0 mt-0.5" />
-                      <span>Priority Apple Silicon GPU acceleration</span>
+                      <span>GPU-accelerated rendering</span>
                     </li>
                   </ul>
                 </div>
@@ -1170,9 +1163,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="flex items-start gap-3 rounded-xl bg-white/10 p-4 ring-1 ring-white/15">
                     <ShieldCheck className="w-5 h-5 text-[#ff6f42] shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-bold text-white">Bitwise 100% Pixel Safety</p>
+                      <p className="text-sm font-bold text-white">100% Pixel Safety</p>
                       <p className="mt-0.5 text-xs font-medium text-neutral-300">
-                        SSIM 1.000 guarantee ensures only edited text zones are touched.
+                        Pixel-perfect guarantee ensures only edited text zones are touched.
                       </p>
                     </div>
                   </div>
@@ -1181,7 +1174,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <div>
                       <p className="text-sm font-bold text-white">REST API & Batch Ingestion</p>
                       <p className="mt-0.5 text-xs font-medium text-neutral-300">
-                        Headless PaddleOCR & Telea inpainting runs inside containerized pipelines.
+                        Headless automated processing runs inside containerized pipelines.
                       </p>
                     </div>
                   </div>
@@ -1215,11 +1208,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 {[
                   {
                     q: 'Will editing text degrade the rest of my image?',
-                    a: 'No. Retypo uses non-destructive masked compositing. Only the exact text region is inpainted and updated. All surrounding pixels remain bitwise identical (Delta E: 0.00, SSIM: 1.000) with original color profiles preserved.'
+                    a: 'No. Retypo uses non-destructive masked compositing. Only the exact text region is inpainted and updated. All surrounding background pixels remain 100% untouched with original color profiles preserved.'
                   },
                   {
                     q: 'How does font reconstruction find the right font?',
-                    a: 'Retypo runs a 4-signal typography matcher analyzing contour normalized cross-correlation (NCC), stroke distance transforms, glyph aspect ratios, and serif classification against Google Fonts and system font libraries.'
+                    a: 'Retypo analyzes letter geometry, stroke weight, serifs, and aspect ratios to match the closest typeface from Google Fonts and system font libraries.'
                   },
                   {
                     q: 'What image formats and resolutions are supported?',
@@ -1227,11 +1220,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   },
                   {
                     q: 'Does it work with complex gradient or textured backgrounds?',
-                    a: 'Yes. Retypo incorporates multi-tier background restoration, from solid fills and directional gradients up to Navier-Stokes and Telea PDE inpainting for textured scenery.'
+                    a: 'Yes. Retypo incorporates multi-tier background restoration, from solid fills and directional gradients up to deep texture restoration for complex scenery.'
                   },
                   {
                     q: 'Can I use this completely offline or locally?',
-                    a: 'Yes. Retypo is powered by a local FastAPI backend and PaddleOCR running directly on your machine with zero external cloud dependencies or telemetry.'
+                    a: 'Yes. Retypo runs directly on your machine with zero external cloud dependencies or data sharing.'
                   }
                 ].map((item, idx) => {
                   const isOpen = openFaqIndex === idx;
@@ -1319,12 +1312,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </ul>
                 </div>
                 <div>
-                  <p className="font-extrabold text-neutral-950 dark:text-white mb-3">Engines</p>
+                  <p className="font-extrabold text-neutral-950 dark:text-white mb-3">Capabilities</p>
                   <ul className="space-y-2 text-neutral-700 dark:text-neutral-300 font-semibold">
-                    <li><span>PaddleOCR 2.8</span></li>
-                    <li><span>Navier-Stokes PDE</span></li>
-                    <li><span>4-Signal Matcher</span></li>
-                    <li><span>Fabric.js Canvas</span></li>
+                    <li><span>Instant Text Scanner</span></li>
+                    <li><span>Background Texture Fill</span></li>
+                    <li><span>Automated Font Matcher</span></li>
+                    <li><span>Vector Studio Canvas</span></li>
                   </ul>
                 </div>
                 <div>
@@ -1339,9 +1332,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <p className="font-extrabold text-neutral-950 dark:text-white mb-3">Legal & Safety</p>
                   <ul className="space-y-2 text-neutral-700 dark:text-neutral-300 font-semibold">
                     <li><span>100% Non-Destructive</span></li>
-                    <li><span>Zero Telemetry</span></li>
-                    <li><span>Local OCR Processing</span></li>
-                    <li><span>SSIM 1.000 Guarantee</span></li>
+                    <li><span>Zero Data Tracking</span></li>
+                    <li><span>Local Processing</span></li>
+                    <li><span>100% Native Resolution</span></li>
                   </ul>
                 </div>
               </div>
