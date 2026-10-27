@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Lenis from 'lenis';
+import ScrollStack, { ScrollStackItem } from './ScrollStack';
 import {
   UploadCloud,
   Type,
@@ -38,118 +39,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const heroHeadingRef = useRef<HTMLDivElement>(null);
   const sliderContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const featuresPinnedRef = useRef<HTMLDivElement>(null);
-  const cardsTrackRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
-  const activeFeatureIndexRef = useRef<number>(0);
   const isScrolledRef = useRef<boolean>(false);
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
-  const [activeFeatureIndex, setActiveFeatureIndex] = useState<number>(0);
-
-  const [isMobile, setIsMobile] = useState<boolean>(() => {
-    return typeof window !== 'undefined' ? window.innerWidth < 640 : false;
-  });
-
-  const [initialOffset, setInitialOffset] = useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      const w = window.innerWidth;
-      const cardW = Math.min(360, w * 0.88);
-      return (w - cardW) / 2;
-    }
-    return 24;
-  });
-
-  const FEATURE_NAMES = [
-    'Smart Text Detection',
-    'Background Inpainting',
-    'Font Reconstruction',
-    'Vector Typography Layer',
-    'Lossless Quality Export',
-  ];
-
-  // Cached layout metrics to eliminate layout thrashing (getBoundingClientRect / offsetHeight) during scrolling
-  const metricsRef = useRef({
-    sectionTop: 0,
-    totalDistance: 0,
-    cardStride: 376,
-    initialOffset: 24,
-    isMobile: false,
-  });
-
-  // Direct hardware-accelerated DOM update for mobile cards (Zero React re-render)
-  const updateMobileFeatureScroll = useCallback((currentScroll: number) => {
-    const m = metricsRef.current;
-    if (!m.isMobile || !cardsTrackRef.current) return;
-
-    if (m.totalDistance <= 0 && featuresPinnedRef.current) {
-      const rect = featuresPinnedRef.current.getBoundingClientRect();
-      m.sectionTop = rect.top + currentScroll;
-      m.totalDistance = featuresPinnedRef.current.offsetHeight - window.innerHeight;
-    }
-    if (m.totalDistance <= 0) return;
-
-    const currentScrolled = currentScroll - m.sectionTop;
-    const progress = Math.max(0, Math.min(1, currentScrolled / m.totalDistance));
-
-    const targetX = m.initialOffset - progress * 4 * m.cardStride;
-    cardsTrackRef.current.style.transform = `translate3d(${targetX}px, 0, 0)`;
-
-    // Only update React state when active card actually changes (5 total updates across entire section)
-    const activeIdx = Math.min(4, Math.max(0, Math.round(progress * 4)));
-    if (activeIdx !== activeFeatureIndexRef.current) {
-      activeFeatureIndexRef.current = activeIdx;
-      setActiveFeatureIndex(activeIdx);
-    }
-  }, []);
-
-  // Recalibrate layout metrics on mount & resize
-  const updateMetrics = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const mobile = w < 640;
-    setIsMobile(mobile);
-
-    const cardW = Math.min(360, w * 0.88);
-    const gap = 16;
-    const stride = cardW + gap;
-    const offset = (w - cardW) / 2;
-    setInitialOffset(offset);
-
-    let sectionTop = 0;
-    let totalDistance = 0;
-    if (featuresPinnedRef.current) {
-      const rect = featuresPinnedRef.current.getBoundingClientRect();
-      const currentScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
-      sectionTop = rect.top + currentScroll;
-      totalDistance = featuresPinnedRef.current.offsetHeight - h;
-    }
-
-    metricsRef.current = {
-      sectionTop,
-      totalDistance,
-      cardStride: stride,
-      initialOffset: offset,
-      isMobile: mobile,
-    };
-
-    if (mobile && cardsTrackRef.current) {
-      const currentScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
-      const progress = totalDistance > 0
-        ? Math.max(0, Math.min(1, (currentScroll - sectionTop) / totalDistance))
-        : 0;
-      const targetX = offset - progress * 4 * stride;
-      cardsTrackRef.current.style.transform = `translate3d(${targetX}px, 0, 0)`;
-    } else if (!mobile && cardsTrackRef.current) {
-      cardsTrackRef.current.style.transform = '';
-    }
-  }, []);
-
-  useEffect(() => {
-    updateMetrics();
-    window.addEventListener('resize', updateMetrics);
-    return () => window.removeEventListener('resize', updateMetrics);
-  }, [updateMetrics]);
 
   // Enforce light theme only - keep document element clean of 'dark' class
   useEffect(() => {
@@ -188,24 +80,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         if (!ticking) {
           ticking = true;
           requestAnimationFrame(() => {
-            // 1. Direct hardware-accelerated translation for feature cards (Zero React Re-render)
-            updateMobileFeatureScroll(current);
-
-            // 2. Direct DOM update for top reading progress bar (Zero React Re-render)
+            // 1. Direct DOM update for top reading progress bar (Zero React Re-render)
             if (progressBarRef.current) {
               const max = limit || (document.documentElement.scrollHeight - window.innerHeight) || 1;
               const pct = Math.min(100, Math.max(0, (current / max) * 100));
               progressBarRef.current.style.width = `${pct}%`;
             }
 
-            // 3. Header threshold boolean (Only 1 re-render across the entire page scroll)
+            // 2. Header threshold boolean (Only 1 re-render across the entire page scroll)
             const scrolled = current > 25;
             if (scrolled !== isScrolledRef.current) {
               isScrolledRef.current = scrolled;
               setIsScrolled(scrolled);
             }
 
-            // 4. Parallax satellites on desktop only
+            // 3. Parallax satellites on desktop only
             if (window.innerWidth >= 768) {
               setScrollY(current);
             }
@@ -230,7 +119,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       const handleResize = () => {
         lenis.resize();
-        updateMetrics();
       };
       window.addEventListener('resize', handleResize);
 
@@ -244,7 +132,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     } catch (err) {
       console.warn('Lenis scroll initialization', err);
     }
-  }, [updateMobileFeatureScroll, updateMetrics]);
+  }, []);
 
   // Scroll Reveal Observer (Smooth viewport entry animation)
   useEffect(() => {
@@ -789,54 +677,43 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           {/* SECTION 2: 5-COLUMN BENTO FEATURES (Scroll-driven pinned cards on Mobile, Grid on Tablet/Desktop) */}
-          <section
-            id="features"
-            ref={featuresPinnedRef}
-            className="relative sm:static h-[320vh] sm:h-auto -mx-4 sm:mx-0 border-t border-neutral-200"
-          >
-            <div className="sticky top-0 h-[100dvh] sm:h-auto flex flex-col justify-center sm:block overflow-hidden sm:overflow-visible pt-14 pb-6 sm:py-20">
-              <div className="scroll-reveal px-4 sm:px-0 flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between mb-4 sm:mb-12">
-                <div>
-                  <h2 className="max-w-[24ch] text-2xl font-extrabold tracking-tight text-balance sm:text-5xl text-neutral-950">
-                    One studio canvas.{' '}
-                    <span className="text-neutral-500">Total typography control.</span>
-                  </h2>
-                </div>
-                <p className="max-w-[44ch] text-xs sm:text-sm font-medium text-neutral-700">
-                  Everything you need to find, style, and edit flattened text in seconds.
-                </p>
+          {/* SECTION 2: 5-COLUMN BENTO FEATURES (ScrollStack on Mobile, Grid on Tablet/Desktop) */}
+          <section id="features" className="py-12 sm:py-20 border-t border-neutral-200">
+            <div className="scroll-reveal px-4 sm:px-0 flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between mb-8 sm:mb-12">
+              <div>
+                <h2 className="max-w-[24ch] text-2xl font-extrabold tracking-tight text-balance sm:text-5xl text-neutral-950">
+                  One studio canvas.{' '}
+                  <span className="text-neutral-500">Total typography control.</span>
+                </h2>
               </div>
+              <p className="max-w-[44ch] text-xs sm:text-sm font-medium text-neutral-700">
+                Everything you need to find, style, and edit flattened text in seconds.
+              </p>
+            </div>
 
-              {/* Cards Track: Direct GPU-accelerated horizontal translation on mobile, 5-column bento on desktop */}
-              <div
-                ref={cardsTrackRef}
-                className="flex w-max sm:w-full sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-4 overflow-visible will-change-transform transform-gpu"
-                style={
-                  isMobile
-                    ? {
-                        transform: `translate3d(${initialOffset}px, 0, 0)`,
-                      }
-                    : undefined
-                }
+            {/* Mobile View: React Bits <ScrollStack /> */}
+            <div className="block sm:hidden">
+              <ScrollStack
+                useWindowScroll={true}
+                stackPosition="76px"
+                itemDistance={75}
+                itemStackDistance={20}
+                itemScale={0.04}
+                baseScale={0.88}
+                dimAmount={0.16}
+                holdDistance={140}
+                smoothScroll={false}
               >
                 {/* Feature 1: Text Detection */}
-                <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-transform transition-opacity duration-300 ease-out transform-gpu will-change-transform shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
-                    isMobile
-                      ? activeFeatureIndex === 0
-                        ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
-                        : 'scale-[0.93] opacity-65 ring-1 ring-black/10 shadow-xs'
-                      : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
-                  }`}
-                >
-                  <div className="relative h-[68%] sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                <ScrollStackItem itemClassName="!h-[430px] !p-0 overflow-hidden rounded-2xl bg-white shadow-[0_22px_48px_-16px_rgba(15,23,42,0.35)] ring-1 ring-black/10 flex flex-col justify-between">
+                  <div className="relative h-[65%] overflow-hidden flex flex-col justify-between shrink-0">
                     <img
                       src="/features/text-detection.jpg"
                       alt="Smart Text Detection"
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/30" />
-                    <div className="relative z-10 p-3.5 sm:p-4 flex flex-col justify-between h-full">
+                    <div className="relative z-10 p-3.5 flex flex-col justify-between h-full">
                       <div className="flex items-center justify-between">
                         <span className="p-2 rounded-lg bg-white/90 backdrop-blur-md shadow-xs text-[#ff6f42]">
                           <ScanText className="w-5 h-5" />
@@ -846,8 +723,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                           Auto Scan
                         </span>
                       </div>
-                      <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-2.5 sm:p-3 text-white shadow-lg border border-white/15">
-                        <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[10px] sm:text-[11px] text-neutral-300 font-mono border-b">
+                      <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-2.5 text-white shadow-lg border border-white/15">
+                        <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[10px] text-neutral-300 font-mono border-b">
                           <span>DETECTED_REGION</span>
                           <span className="text-emerald-400 font-bold">99.8% match</span>
                         </div>
@@ -858,30 +735,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="h-[32%] sm:h-auto p-4 sm:p-4.5 flex flex-col justify-center sm:justify-between sm:flex-1 bg-white">
-                    <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-neutral-950">Smart Text Detection</h3>
-                    <p className="mt-1 text-xs sm:text-sm font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Detects any text block, font angle, and position automatically.</p>
+                  <div className="h-[35%] p-4 flex flex-col justify-center bg-white">
+                    <h3 className="text-base font-extrabold tracking-tight text-neutral-950">Smart Text Detection</h3>
+                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2">Detects any text block, font angle, and position automatically.</p>
                   </div>
-                </div>
+                </ScrollStackItem>
 
                 {/* Feature 2: Clean Inpainting */}
-                <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-transform transition-opacity duration-300 ease-out transform-gpu will-change-transform shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
-                    isMobile
-                      ? activeFeatureIndex === 1
-                        ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
-                        : 'scale-[0.93] opacity-65 ring-1 ring-black/10 shadow-xs'
-                      : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
-                  }`}
-                >
-                  <div className="relative h-[68%] sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                <ScrollStackItem itemClassName="!h-[430px] !p-0 overflow-hidden rounded-2xl bg-white shadow-[0_22px_48px_-16px_rgba(15,23,42,0.35)] ring-1 ring-black/10 flex flex-col justify-between">
+                  <div className="relative h-[65%] overflow-hidden flex flex-col justify-between shrink-0">
                     <img
                       src="/features/background-inpaint.jpg"
                       alt="Background Inpainting"
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/30" />
-                    <div className="relative z-10 p-3.5 sm:p-4 flex flex-col justify-between h-full">
+                    <div className="relative z-10 p-3.5 flex flex-col justify-between h-full">
                       <div className="flex items-center justify-between">
                         <span className="p-2 rounded-lg bg-white/90 backdrop-blur-md shadow-xs text-emerald-600">
                           <Eraser className="w-5 h-5" />
@@ -891,8 +760,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                           Background Fill
                         </span>
                       </div>
-                      <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-2.5 sm:p-3 text-white shadow-lg border border-white/15">
-                        <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[10px] sm:text-[11px] text-neutral-300 font-mono border-b">
+                      <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-2.5 text-white shadow-lg border border-white/15">
+                        <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[10px] text-neutral-300 font-mono border-b">
                           <span>CLEAN_TEXTURE</span>
                           <span className="text-emerald-400 font-bold">Travertine Stone</span>
                         </div>
@@ -903,30 +772,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="h-[32%] sm:h-auto p-4 sm:p-4.5 flex flex-col justify-center sm:justify-between sm:flex-1 bg-white">
-                    <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-neutral-950">Background Inpainting</h3>
-                    <p className="mt-1 text-xs sm:text-sm font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Erases text seamlessly while perfectly restoring underlying texture.</p>
+                  <div className="h-[35%] p-4 flex flex-col justify-center bg-white">
+                    <h3 className="text-base font-extrabold tracking-tight text-neutral-950">Background Inpainting</h3>
+                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2">Erases text seamlessly while perfectly restoring underlying texture.</p>
                   </div>
-                </div>
+                </ScrollStackItem>
 
                 {/* Feature 3: Font Matcher */}
-                <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-transform transition-opacity duration-300 ease-out transform-gpu will-change-transform shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
-                    isMobile
-                      ? activeFeatureIndex === 2
-                        ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
-                        : 'scale-[0.93] opacity-65 ring-1 ring-black/10 shadow-xs'
-                      : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
-                  }`}
-                >
-                  <div className="relative h-[68%] sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                <ScrollStackItem itemClassName="!h-[430px] !p-0 overflow-hidden rounded-2xl bg-white shadow-[0_22px_48px_-16px_rgba(15,23,42,0.35)] ring-1 ring-black/10 flex flex-col justify-between">
+                  <div className="relative h-[65%] overflow-hidden flex flex-col justify-between shrink-0">
                     <img
                       src="/features/font-matcher.jpg"
                       alt="Font Reconstruction"
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/30" />
-                    <div className="relative z-10 p-3.5 sm:p-4 flex flex-col justify-between h-full">
+                    <div className="relative z-10 p-3.5 flex flex-col justify-between h-full">
                       <div className="flex items-center justify-between">
                         <span className="p-2 rounded-lg bg-white/90 backdrop-blur-md shadow-xs text-sky-600">
                           <Type className="w-5 h-5" />
@@ -936,8 +797,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                           Font Matcher
                         </span>
                       </div>
-                      <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-2.5 sm:p-3 text-white shadow-lg border border-white/15">
-                        <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[10px] sm:text-[11px] text-neutral-300 font-mono border-b">
+                      <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-2.5 text-white shadow-lg border border-white/15">
+                        <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[10px] text-neutral-300 font-mono border-b">
                           <span>MATCHED_STYLE</span>
                           <span className="text-sky-400 font-bold">ACTIVE</span>
                         </div>
@@ -950,30 +811,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="h-[32%] sm:h-auto p-4 sm:p-4.5 flex flex-col justify-center sm:justify-between sm:flex-1 bg-white">
-                    <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-neutral-950">Font Reconstruction</h3>
-                    <p className="mt-1 text-xs sm:text-sm font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Instantly matches serif, sans-serif, and weight to fonts.</p>
+                  <div className="h-[35%] p-4 flex flex-col justify-center bg-white">
+                    <h3 className="text-base font-extrabold tracking-tight text-neutral-950">Font Reconstruction</h3>
+                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2">Instantly matches serif, sans-serif, and weight to fonts.</p>
                   </div>
-                </div>
+                </ScrollStackItem>
 
                 {/* Feature 4: Vector Canvas */}
-                <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-transform transition-opacity duration-300 ease-out transform-gpu will-change-transform shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
-                    isMobile
-                      ? activeFeatureIndex === 3
-                        ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
-                        : 'scale-[0.93] opacity-65 ring-1 ring-black/10 shadow-xs'
-                      : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
-                  }`}
-                >
-                  <div className="relative h-[68%] sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                <ScrollStackItem itemClassName="!h-[430px] !p-0 overflow-hidden rounded-2xl bg-white shadow-[0_22px_48px_-16px_rgba(15,23,42,0.35)] ring-1 ring-black/10 flex flex-col justify-between">
+                  <div className="relative h-[65%] overflow-hidden flex flex-col justify-between shrink-0">
                     <img
                       src="/features/vector-typography.jpg"
                       alt="Vector Typography Layer"
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/30" />
-                    <div className="relative z-10 p-3.5 sm:p-4 flex flex-col justify-between h-full">
+                    <div className="relative z-10 p-3.5 flex flex-col justify-between h-full">
                       <div className="flex items-center justify-between">
                         <span className="p-2 rounded-lg bg-white/90 backdrop-blur-md shadow-xs text-indigo-600">
                           <Layers className="w-5 h-5" />
@@ -983,8 +836,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                           Full Controls
                         </span>
                       </div>
-                      <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-2.5 sm:p-3 text-white shadow-lg border border-white/15">
-                        <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[10px] sm:text-[11px] text-neutral-300 font-mono border-b">
+                      <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-2.5 text-white shadow-lg border border-white/15">
+                        <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[10px] text-neutral-300 font-mono border-b">
                           <span>VECTOR_TRANSFORM</span>
                           <span className="text-indigo-400 font-bold">EDITABLE</span>
                         </div>
@@ -995,30 +848,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="h-[32%] sm:h-auto p-4 sm:p-4.5 flex flex-col justify-center sm:justify-between sm:flex-1 bg-white">
-                    <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-neutral-950">Vector Typography Layer</h3>
-                    <p className="mt-1 text-xs sm:text-sm font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Rotate, scale, recolor, and change text with total design freedom.</p>
+                  <div className="h-[35%] p-4 flex flex-col justify-center bg-white">
+                    <h3 className="text-base font-extrabold tracking-tight text-neutral-950">Vector Typography Layer</h3>
+                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2">Rotate, scale, recolor, and change text with total design freedom.</p>
                   </div>
-                </div>
+                </ScrollStackItem>
 
                 {/* Feature 5: Lossless Compositor */}
-                <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-transform transition-opacity duration-300 ease-out transform-gpu will-change-transform shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
-                    isMobile
-                      ? activeFeatureIndex === 4
-                        ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
-                        : 'scale-[0.93] opacity-65 ring-1 ring-black/10 shadow-xs'
-                      : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
-                  }`}
-                >
-                  <div className="relative h-[68%] sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                <ScrollStackItem itemClassName="!h-[430px] !p-0 overflow-hidden rounded-2xl bg-white shadow-[0_22px_48px_-16px_rgba(15,23,42,0.35)] ring-1 ring-black/10 flex flex-col justify-between">
+                  <div className="relative h-[65%] overflow-hidden flex flex-col justify-between shrink-0">
                     <img
                       src="/features/lossless-export.jpg"
                       alt="Lossless Quality Export"
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/30" />
-                    <div className="relative z-10 p-3.5 sm:p-4 flex flex-col justify-between h-full">
+                    <div className="relative z-10 p-3.5 flex flex-col justify-between h-full">
                       <div className="flex items-center justify-between">
                         <span className="p-2 rounded-lg bg-white/90 backdrop-blur-md shadow-xs text-amber-600">
                           <ShieldCheck className="w-5 h-5" />
@@ -1028,8 +873,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                           Full Quality
                         </span>
                       </div>
-                      <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-2.5 sm:p-3 text-white shadow-lg border border-white/15">
-                        <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[10px] sm:text-[11px] text-neutral-300 font-mono border-b">
+                      <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-2.5 text-white shadow-lg border border-white/15">
+                        <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[10px] text-neutral-300 font-mono border-b">
                           <span>EXPORT_RESOLUTION</span>
                           <span className="text-amber-400 font-bold">100% NATIVE</span>
                         </div>
@@ -1040,43 +885,200 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="h-[32%] sm:h-auto p-4 sm:p-4.5 flex flex-col justify-center sm:justify-between sm:flex-1 bg-white">
-                    <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-neutral-950">Lossless Quality Export</h3>
-                    <p className="mt-1 text-xs sm:text-sm font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Exports at full native source resolution with untouched pixels.</p>
+                  <div className="h-[35%] p-4 flex flex-col justify-center bg-white">
+                    <h3 className="text-base font-extrabold tracking-tight text-neutral-950">Lossless Quality Export</h3>
+                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2">Exports at full native source resolution with untouched pixels.</p>
                   </div>
+                </ScrollStackItem>
+              </ScrollStack>
+            </div>
+
+            {/* Desktop / Tablet View: 5-Column Bento Grid */}
+            <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {/* Feature 1: Text Detection */}
+              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm transition-all duration-300 flex flex-col justify-between">
+                <div className="relative h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                  <img
+                    src="/features/text-detection.jpg"
+                    alt="Smart Text Detection"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/30" />
+                  <div className="relative z-10 p-4 flex flex-col justify-between h-full">
+                    <div className="flex items-center justify-between">
+                      <span className="p-2 rounded-lg bg-white/90 backdrop-blur-md shadow-xs text-[#ff6f42]">
+                        <ScanText className="w-5 h-5" />
+                      </span>
+                      <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-[#ff6f42] text-white shadow-sm flex items-center gap-1.5">
+                        <span className="size-1.5 rounded-full bg-white animate-pulse" />
+                        Auto Scan
+                      </span>
+                    </div>
+                    <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-3 text-white shadow-lg border border-white/15">
+                      <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[11px] text-neutral-300 font-mono border-b">
+                        <span>DETECTED_REGION</span>
+                        <span className="text-emerald-400 font-bold">99.8% match</span>
+                      </div>
+                      <div className="mt-2 py-1.5 px-2.5 rounded border border-dashed border-[#ff6f42] bg-[#ff6f42]/25 flex items-center justify-between">
+                        <span className="text-xs font-bold tracking-wider font-mono text-white">"AURA • ART OF BEING"</span>
+                        <span className="size-1.5 bg-[#ff6f42] rounded-full animate-ping" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4.5 flex flex-col justify-between flex-1 bg-white">
+                  <h3 className="text-lg font-extrabold tracking-tight text-neutral-950">Smart Text Detection</h3>
+                  <p className="mt-1 text-sm font-medium text-neutral-600">Detects any text block, font angle, and position automatically.</p>
                 </div>
               </div>
 
-              {/* Mobile Scroll Progress Indicator (Only on mobile < sm) */}
-              <div className="flex sm:hidden items-center justify-between mt-4 px-5 text-xs text-neutral-500">
-                <span className="font-bold text-[11px] text-neutral-600 flex items-center gap-1.5 font-mono">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#ff6f42]" />
-                  0{activeFeatureIndex + 1} / 05 · {FEATURE_NAMES[activeFeatureIndex]}
-                </span>
-                <div className="flex items-center gap-1.5">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      aria-label={`Jump to feature ${i + 1}`}
-                      onClick={() => {
-                        const m = metricsRef.current;
-                        if (m.totalDistance > 0) {
-                          const target = m.sectionTop + (i / 4) * m.totalDistance;
-                          if (lenisRef.current) {
-                            lenisRef.current.scrollTo(target);
-                          } else {
-                            window.scrollTo({ top: target, behavior: 'smooth' });
-                          }
-                        }
-                      }}
-                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                        activeFeatureIndex === i
-                          ? 'w-7 bg-[#ff6f42]'
-                          : 'w-2 bg-neutral-300 hover:bg-neutral-400'
-                      }`}
-                    />
-                  ))}
+              {/* Feature 2: Clean Inpainting */}
+              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm transition-all duration-300 flex flex-col justify-between">
+                <div className="relative h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                  <img
+                    src="/features/background-inpaint.jpg"
+                    alt="Background Inpainting"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/30" />
+                  <div className="relative z-10 p-4 flex flex-col justify-between h-full">
+                    <div className="flex items-center justify-between">
+                      <span className="p-2 rounded-lg bg-white/90 backdrop-blur-md shadow-xs text-emerald-600">
+                        <Eraser className="w-5 h-5" />
+                      </span>
+                      <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-600 text-white shadow-sm flex items-center gap-1.5">
+                        <span className="size-1.5 rounded-full bg-white animate-pulse" />
+                        Background Fill
+                      </span>
+                    </div>
+                    <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-3 text-white shadow-lg border border-white/15">
+                      <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[11px] text-neutral-300 font-mono border-b">
+                        <span>CLEAN_TEXTURE</span>
+                        <span className="text-emerald-400 font-bold">Travertine Stone</span>
+                      </div>
+                      <div className="mt-2 py-1.5 px-2.5 rounded bg-emerald-500/25 border border-emerald-500/40 flex items-center justify-between text-xs font-mono font-bold text-emerald-300">
+                        <span>Texture Restored ✓</span>
+                        <span className="text-[10px] text-neutral-300">Grain Intact</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4.5 flex flex-col justify-between flex-1 bg-white">
+                  <h3 className="text-lg font-extrabold tracking-tight text-neutral-950">Background Inpainting</h3>
+                  <p className="mt-1 text-sm font-medium text-neutral-600">Erases text seamlessly while perfectly restoring underlying texture.</p>
+                </div>
+              </div>
+
+              {/* Feature 3: Font Matcher */}
+              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm transition-all duration-300 flex flex-col justify-between">
+                <div className="relative h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                  <img
+                    src="/features/font-matcher.jpg"
+                    alt="Font Reconstruction"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/30" />
+                  <div className="relative z-10 p-4 flex flex-col justify-between h-full">
+                    <div className="flex items-center justify-between">
+                      <span className="p-2 rounded-lg bg-white/90 backdrop-blur-md shadow-xs text-sky-600">
+                        <Type className="w-5 h-5" />
+                      </span>
+                      <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-sky-600 text-white shadow-sm flex items-center gap-1.5">
+                        <span className="size-1.5 rounded-full bg-white animate-pulse" />
+                        Font Matcher
+                      </span>
+                    </div>
+                    <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-3 text-white shadow-lg border border-white/15">
+                      <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[11px] text-neutral-300 font-mono border-b">
+                        <span>MATCHED_STYLE</span>
+                        <span className="text-sky-400 font-bold">ACTIVE</span>
+                      </div>
+                      <div className="mt-2 flex items-baseline justify-between">
+                        <span className="font-serif text-lg font-bold text-white tracking-wide">Playfair Display</span>
+                        <span className="text-[10px] font-mono bg-sky-500/30 text-sky-200 border border-sky-400/30 px-2 py-0.5 rounded font-semibold">
+                          Serif · 700
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4.5 flex flex-col justify-between flex-1 bg-white">
+                  <h3 className="text-lg font-extrabold tracking-tight text-neutral-950">Font Reconstruction</h3>
+                  <p className="mt-1 text-sm font-medium text-neutral-600">Instantly matches serif, sans-serif, and weight to fonts.</p>
+                </div>
+              </div>
+
+              {/* Feature 4: Vector Canvas */}
+              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm transition-all duration-300 flex flex-col justify-between">
+                <div className="relative h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                  <img
+                    src="/features/vector-typography.jpg"
+                    alt="Vector Typography Layer"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/30" />
+                  <div className="relative z-10 p-4 flex flex-col justify-between h-full">
+                    <div className="flex items-center justify-between">
+                      <span className="p-2 rounded-lg bg-white/90 backdrop-blur-md shadow-xs text-indigo-600">
+                        <Layers className="w-5 h-5" />
+                      </span>
+                      <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-indigo-600 text-white shadow-sm flex items-center gap-1.5">
+                        <span className="size-1.5 rounded-full bg-white animate-pulse" />
+                        Full Controls
+                      </span>
+                    </div>
+                    <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-3 text-white shadow-lg border border-white/15">
+                      <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[11px] text-neutral-300 font-mono border-b">
+                        <span>VECTOR_TRANSFORM</span>
+                        <span className="text-indigo-400 font-bold">EDITABLE</span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-[11px] font-mono font-semibold text-neutral-200">
+                        <span className="px-2 py-0.5 rounded bg-white/15 border border-white/15">Size: 48px</span>
+                        <span className="px-2 py-0.5 rounded bg-white/15 border border-white/15">Tracking: -0.02</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4.5 flex flex-col justify-between flex-1 bg-white">
+                  <h3 className="text-lg font-extrabold tracking-tight text-neutral-950">Vector Typography Layer</h3>
+                  <p className="mt-1 text-sm font-medium text-neutral-600">Rotate, scale, recolor, and change text with total design freedom.</p>
+                </div>
+              </div>
+
+              {/* Feature 5: Lossless Compositor */}
+              <div className="group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm transition-all duration-300 flex flex-col justify-between">
+                <div className="relative h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                  <img
+                    src="/features/lossless-export.jpg"
+                    alt="Lossless Quality Export"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/30" />
+                  <div className="relative z-10 p-4 flex flex-col justify-between h-full">
+                    <div className="flex items-center justify-between">
+                      <span className="p-2 rounded-lg bg-white/90 backdrop-blur-md shadow-xs text-amber-600">
+                        <ShieldCheck className="w-5 h-5" />
+                      </span>
+                      <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-amber-600 text-white shadow-sm flex items-center gap-1.5">
+                        <span className="size-1.5 rounded-full bg-white animate-pulse" />
+                        Full Quality
+                      </span>
+                    </div>
+                    <div className="rounded-xl bg-neutral-950/80 backdrop-blur-md p-3 text-white shadow-lg border border-white/15">
+                      <div className="flex items-center justify-between pb-1.5 border-neutral-700 text-[11px] text-neutral-300 font-mono border-b">
+                        <span>EXPORT_RESOLUTION</span>
+                        <span className="text-amber-400 font-bold">100% NATIVE</span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-[11px] font-mono font-bold text-white">
+                        <span className="text-emerald-400">High-Res Master</span>
+                        <span className="px-2 py-0.5 rounded bg-white/15 text-neutral-200 text-[10px]">PNG · JPG · WebP</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4.5 flex flex-col justify-between flex-1 bg-white">
+                  <h3 className="text-lg font-extrabold tracking-tight text-neutral-950">Lossless Quality Export</h3>
+                  <p className="mt-1 text-sm font-medium text-neutral-600">Exports at full native source resolution with untouched pixels.</p>
                 </div>
               </div>
             </div>
