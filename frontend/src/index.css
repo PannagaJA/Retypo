@@ -90,3 +90,108 @@
   -webkit-text-fill-color: transparent;
 }
 
+/* Lenis Smooth Scroll Configuration (Two26 & Roveia style) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Kinetic Infinite Marquee */
+@keyframes marquee-glide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee-tape {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-glide 32s linear infinite;
+}
+
+.animate-marquee-tape:hover {
+  animation-play-state: paused;
+}
+
+/* Floating Satellite Micro-interactions */
+@keyframes float-glide-1 {
+  0%, 100% {
+    transform: translateY(0px) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-5.5deg);
+  }
+}
+
+@keyframes float-glide-2 {
+  0%, 100% {
+    transform: translateY(0px) rotate(3deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(3.5deg);
+  }
+}
+
+@keyframes float-glide-3 {
+  0%, 100% {
+    transform: translateY(0px) rotate(6deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(5.5deg);
+  }
+}
+
+@keyframes float-glide-4 {
+  0%, 100% {
+    transform: translateY(0px) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(-2.5deg);
+  }
+}
+
+.animate-float-satellite-1 {
+  animation: float-glide-1 5.5s ease-in-out infinite;
+}
+
+.animate-float-satellite-2 {
+  animation: float-glide-2 6.2s ease-in-out 0.8s infinite;
+}
+
+.animate-float-satellite-3 {
+  animation: float-glide-3 5.8s ease-in-out 1.6s infinite;
+}
+
+.animate-float-satellite-4 {
+  animation: float-glide-4 6.5s ease-in-out 2.2s infinite;
+}
+
+/* Scroll reveal items */
+.scroll-reveal {
+  opacity: 0;
+  transform: translate3d(0, 32px, 0);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal.is-in-view {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+

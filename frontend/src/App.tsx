@@ -826,7 +826,7 @@ export const App: React.FC = () => {
 
   if (!image) {
     return (
-      <div className="flex flex-col min-h-screen min-h-[100dvh] w-screen bg-[#f7f5f0] text-slate-900 relative overflow-y-auto">
+      <div id="landing-scroll-container" className="flex flex-col min-h-screen min-h-[100dvh] w-screen bg-[#f7f5f0] text-slate-900 relative overflow-y-auto overflow-x-hidden">
         <LandingPage
           onSelectImage={handleImageSelected}
           onLoadSample={handleLoadSample}

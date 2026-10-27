@@ -98,28 +98,16 @@ export const Header: React.FC<HeaderProps> = ({
         )}
         <div
           onClick={onHome}
-          className={`flex items-center gap-1.5 sm:gap-2.5 shrink-0 ${onHome ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+          className={`flex items-center gap-2 sm:gap-2.5 shrink-0 ${onHome ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
         >
-          <div className="w-7.5 h-7.5 sm:w-9 sm:h-9 rounded-xl bg-slate-900 flex items-center justify-center shadow-xs shrink-0 ring-1 ring-slate-900/10 overflow-hidden">
-            <svg viewBox="0 0 48 48" className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5" fill="none">
-              <path d="M14 12C14 10.8954 14.8954 10 16 10H26C31.5228 10 36 14.4772 36 20C36 24.3427 33.2274 28.0378 29.3512 29.3879L36.4142 36.4509C37.1953 37.232 36.6409 38.5714 35.5355 38.5714H30.5C29.7044 38.5714 28.9413 38.2554 28.3787 37.6928L22 31.3142V37C22 37.5523 21.5523 38 21 38H15C14.4477 38 14 37.5523 14 37V12Z" fill="white"/>
-              <path d="M22 17H25C26.6569 17 28 18.3431 28 20C28 21.6569 26.6569 23 25 23H22V17Z" fill="#0f172a"/>
-              <circle cx="34" cy="14" r="2.5" fill="#38bdf8"/>
-            </svg>
-          </div>
-          <div className="flex flex-col justify-center">
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 leading-none">
-                Retypo
-              </span>
-              <span className="hidden md:inline-flex px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[9px] font-mono uppercase tracking-wider font-semibold leading-none">
-                Studio
-              </span>
-            </div>
-            <span className="text-[10px] text-slate-400 hidden lg:block leading-tight font-medium mt-0.5">
-              AI Image Text Editor
-            </span>
-          </div>
+          <img
+            src="/Retypo Logo with Orange Accents.png"
+            alt="Retypo"
+            className="h-7 sm:h-8 w-auto object-contain"
+          />
+          <span className="hidden md:inline-flex px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[9px] font-mono uppercase tracking-wider font-semibold leading-none">
+            Studio
+          </span>
         </div>
       </div>
 
