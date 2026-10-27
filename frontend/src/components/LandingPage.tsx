@@ -12,7 +12,6 @@ import {
   Layers,
   Eraser,
   LayoutTemplate,
-  Play,
   Download,
   Share2,
   FileCheck,
@@ -203,14 +202,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </button>
 
                 <button
-                  onClick={() => onLoadSample('magazine')}
-                  className="hidden sm:inline-flex items-center justify-center gap-1.5 h-9 rounded-full bg-white px-4 text-sm font-semibold text-neutral-900 shadow-none ring-1 ring-black/10 hover:bg-neutral-50 dark:bg-neutral-800 dark:text-white dark:ring-white/15 dark:hover:bg-neutral-700 transition-all"
-                >
-                  <Play className="w-3 h-3 text-[#ff6f42] fill-[#ff6f42]" />
-                  Try Live Demo
-                </button>
-
-                <button
                   onClick={() => fileInputRef.current?.click()}
                   className="inline-flex items-center justify-center gap-1.5 h-9 rounded-full bg-neutral-950 px-4 text-sm font-semibold text-white shadow-sm hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 transition-all"
                 >
@@ -238,7 +229,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* Main Content */}
         <main className="mx-auto max-w-[1200px] px-5 sm:px-8 pt-28">
           {/* HERO SECTION */}
-          <section className="pt-10 pb-16 sm:pt-16 lg:pt-20 lg:pb-24">
+          <section className="pt-10 pb-16 sm:pt-16 lg:pt-10 lg:pb-24">
             <div className="flex flex-col items-center text-center">
               {/* Main Headline */}
               <h1 className="max-w-[22ch] text-5xl font-extrabold tracking-tight text-balance sm:text-7xl text-neutral-950 dark:text-white">
@@ -388,7 +379,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     Tech
                   </button>
                 </div>
-                <p className="mt-2 text-center text-[10px] font-bold text-[#ff6f42]">1-click instant demo</p>
+                <p className="mt-2 text-center text-[10px] font-bold text-[#ff6f42]">1-click instant sample</p>
               </div>
 
               {/* Satellite 3: Top-Right (rotate-6) */}
@@ -444,17 +435,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 className="inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-neutral-950 px-7 text-base font-bold text-white shadow-[0_18px_38px_-18px_rgba(15,23,42,0.65)] hover:bg-neutral-800 transition-all sm:text-sm dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100"
               >
                 Upload Image to Edit <ArrowRight className="w-4 h-4 ml-1" />
-              </button>
-
-              <button
-                onClick={() => onLoadSample('magazine')}
-                className="inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-white px-6 text-base font-bold text-neutral-950 shadow-sm ring-1 ring-black/10 hover:bg-neutral-50 transition-all sm:text-sm dark:bg-neutral-800 dark:text-white dark:ring-white/15 dark:hover:bg-neutral-700"
-              >
-                <span className="relative mr-1.5 inline-flex size-2 items-center justify-center">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-                </span>
-                Try the live demo
               </button>
             </div>
             <p className="mt-4 text-center text-xs font-bold text-neutral-600 dark:text-neutral-400">
@@ -1151,7 +1131,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       onClick={() => onLoadSample('tech')}
                       className="inline-flex items-center justify-center gap-1.5 h-10 rounded-full bg-[#ff6f42] px-5 text-xs font-bold text-white shadow-sm hover:bg-[#ee6037] transition"
                     >
-                      Explore Enterprise Demo <ArrowRight className="w-3.5 h-3.5" />
+                      Explore Enterprise <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <a href="#pricing" className="text-xs font-bold text-neutral-300 hover:text-white">
                       See plan comparison
@@ -1266,18 +1246,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <p className="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-300 max-w-md">
                   Drop any flattened image into the studio or test with our sample presets in one click.
                 </p>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="inline-flex items-center justify-center gap-2 h-12 rounded-full bg-[#ff6f42] hover:bg-[#ee6037] px-6 text-sm font-bold text-white shadow-md transition"
                   >
                     Upload Image to Edit <ArrowRight className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => onLoadSample('magazine')}
-                    className="inline-flex items-center justify-center gap-1.5 h-12 rounded-full px-5 text-sm font-bold text-neutral-800 hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-800 transition"
-                  >
-                    Try Live Demo
                   </button>
                 </div>
               </div>
