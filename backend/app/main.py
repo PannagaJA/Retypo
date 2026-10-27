@@ -125,10 +125,13 @@ app.add_middleware(
 
 @app.get("/api/health")
 def health_check():
+    from app.services.google_vision_service import GoogleVisionService
+    gv_active = GoogleVisionService.is_available()
     return {
         "status": "healthy",
         "version": "1.2.0",
-        "ocr_engine": "PaddleOCR v3.7",
+        "ocr_engine": "Google Cloud Vision API" if gv_active else "PaddleOCR v3.7",
+        "google_vision_active": gv_active,
         "inpaint_engine": "Multi-tier (Solid, Gradient, Telea, NS, LaMa Interface)"
     }
 

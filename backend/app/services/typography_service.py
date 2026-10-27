@@ -361,29 +361,25 @@ class TypographyService:
         font_size_hint: Optional[float] = None
     ) -> Tuple[str, str, str]:
         """
-        High-accuracy fast typography estimation for initial OCR scanning.
-        Uses visual contour cross-correlation, aspect ratio, stroke weight, and serif classification
-        against official rendered font templates.
+        Ultra-fast typography estimation for bulk OCR scanning (<1ms per box).
+        Uses stroke-weight distance transform and morphological serif classification.
+        Deep 12-font template cross-correlation is available on-demand via match_typography.
         Returns: (font_family, category, css_weight)
         """
         if crop_bgr is None or crop_bgr.size == 0 or not text.strip():
             return "Inter", "sans-serif", "400"
 
         try:
-            res = self.match_typography(crop_bgr, text, font_size_hint=font_size_hint, top_k=1)
-            if res.candidates:
-                best = res.candidates[0]
-                return best.family, best.category, best.weight
+            orig_mask = self.extract_text_mask(crop_bgr)
+            effective_font_size = font_size_hint if font_size_hint and font_size_hint > 8 else float(crop_bgr.shape[0] * 0.85)
+            _, detected_weight = self.estimate_stroke_weight(orig_mask, effective_font_size)
+            detected_serif, _ = self.classify_serif(orig_mask)
+            cat = "serif" if detected_serif else "sans-serif"
+            fam = "Georgia" if detected_serif else "Inter"
+            return fam, cat, detected_weight
         except Exception as e:
             print(f"Typography quick estimate fallback: {e}")
-
-        orig_mask = self.extract_text_mask(crop_bgr)
-        effective_font_size = font_size_hint if font_size_hint and font_size_hint > 8 else float(crop_bgr.shape[0] * 0.85)
-        _, detected_weight = self.estimate_stroke_weight(orig_mask, effective_font_size)
-        detected_serif, _ = self.classify_serif(orig_mask)
-        cat = "serif" if detected_serif else "sans-serif"
-        fam = "Georgia" if detected_serif else "Inter"
-        return fam, cat, detected_weight
+            return "Inter", "sans-serif", "400"
 
     def match_typography(
         self,
