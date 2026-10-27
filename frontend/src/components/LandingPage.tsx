@@ -158,33 +158,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="w-8 h-8 rounded-xl bg-neutral-950 dark:bg-white flex items-center justify-center text-white dark:text-neutral-950 font-bold shadow-sm transition-transform group-hover:scale-105">
                   <span className="font-serif text-lg tracking-tight">R</span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-base font-extrabold tracking-tight text-neutral-950 dark:text-white">Retypo</span>
-                  <span className="text-[10px] text-neutral-600 dark:text-neutral-400 -mt-1 font-semibold">Starlight Canvas</span>
-                </div>
+                <span className="text-base font-extrabold tracking-tight text-neutral-950 dark:text-white">Retypo</span>
               </a>
-
-              {/* Navigation Links */}
-              <nav className="hidden items-center gap-0.5 md:flex lg:gap-1 text-xs lg:text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-                <a href="#features" className="rounded-md px-2 lg:px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
-                  Features
-                </a>
-                <a href="#demo" className="rounded-md px-2 lg:px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
-                  Interactive Demo
-                </a>
-                <a href="#workflow" className="rounded-md px-2 lg:px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
-                  Workflow
-                </a>
-                <a href="#presets" className="rounded-md px-2 lg:px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
-                  Templates
-                </a>
-                <a href="#pricing" className="rounded-md px-2 lg:px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
-                  Pricing
-                </a>
-                <a href="#faq" className="rounded-md px-2 lg:px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
-                  FAQ
-                </a>
-              </nav>
 
               {/* Action Buttons & Theme Switcher */}
               <div className="flex items-center gap-2.5">
@@ -1318,7 +1293,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <div className="mt-12 pt-6 border-t border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between text-xs font-semibold text-neutral-600 dark:text-neutral-400 gap-4">
-              <p>© 2026 Retypo — Starlight Canvas. All rights reserved.</p>
+              <p>© 2026 Retypo. All rights reserved.</p>
               <p>Designed with HeyRetro structure & precision typography.</p>
             </div>
           </div>

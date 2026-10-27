@@ -48,17 +48,10 @@ describe('LandingPage Architecture & Presets', () => {
     expect(satelliteTitles).toContain('Pixel Quality');
   });
 
-  it('validates responsive navigation items for tablet and desktop', () => {
-    const navItems = [
-      'Features',
-      'Interactive Demo',
-      'Workflow',
-      'Templates',
-      'Pricing',
-      'FAQ'
-    ];
-    expect(navItems.length).toBe(6);
-    expect(navItems).toContain('Features');
-    expect(navItems).toContain('FAQ');
+  it('validates clean header layout actions', () => {
+    const headerActions = ['Retypo', 'Upload Image', 'Toggle dark mode'];
+    expect(headerActions).toContain('Retypo');
+    expect(headerActions).toContain('Upload Image');
+    expect(headerActions).toContain('Toggle dark mode');
   });
 });
