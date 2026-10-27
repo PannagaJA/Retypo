@@ -1352,7 +1352,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             <div className="mt-12 pt-6 border-t border-neutral-200 flex flex-col sm:flex-row items-center justify-between text-xs font-semibold text-neutral-600 gap-4">
               <p>© 2026 Retypo. All rights reserved.</p>
-              <p>Designed with HeyRetro structure & precision typography.</p>
+              <p className="flex items-center gap-1.5">
+                <span>Designed & built by</span>
+                <a
+                  href="https://pannagaja.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-neutral-900 hover:text-[#ff6f42] underline decoration-neutral-300 hover:decoration-[#ff6f42] underline-offset-4 transition-colors"
+                >
+                  Pannaga J A
+                </a>
+              </p>
             </div>
           </div>
         </footer>
