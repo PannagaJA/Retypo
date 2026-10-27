@@ -7,13 +7,10 @@ import {
   ArrowRight,
   ChevronDown,
   CheckCircle2,
-  Lock,
   Layers,
   Eraser,
   LayoutTemplate,
   Download,
-  Share2,
-  FileCheck,
   Sun,
   Moon
 } from 'lucide-react';
@@ -141,7 +138,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <h3 className="text-2xl font-bold tracking-tight text-neutral-950 dark:text-white">Drop Image to Open</h3>
               <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                Release anywhere to instantly launch Retypo Studio with sub-pixel OCR detection.
+                Release anywhere to instantly open your image in Retypo Studio.
               </p>
             </div>
           </div>
@@ -214,7 +211,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
               {/* Subtitle - HIGH CONTRAST */}
               <p className="mt-5 max-w-[56ch] text-base/7 text-pretty text-neutral-700 sm:text-lg/8 dark:text-neutral-200 font-medium">
-                Upload any flattened PNG, JPG, or WebP. Retypo detects text with sub-pixel geometry, inpaints the background cleanly, and reconstructs editable typography while preserving 100% untouched pixels.
+                Upload any flattened PNG, JPG, or WebP. Retypo detects text automatically, cleans the background seamlessly, and lets you edit typography while keeping all your image pixels untouched.
               </p>
             </div>
 
@@ -428,7 +425,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </h2>
               </div>
               <p className="max-w-[44ch] text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                Five purpose-built deep imaging pipelines seamlessly connected to let you edit flattened text in seconds.
+                Everything you need to find, style, and edit flattened text in seconds.
               </p>
             </div>
 
@@ -571,7 +568,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                 </div>
                 <div className="p-4">
-                  <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Lossless Export Pipeline</h3>
+                  <h3 className="text-sm font-extrabold tracking-tight text-neutral-950 dark:text-white">Lossless Quality Export</h3>
                   <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">Exports at full native source resolution with untouched pixels.</p>
                 </div>
               </div>
@@ -711,12 +708,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 flex items-center justify-center mb-2.5">
                     <ScanText className="w-6 h-6" />
                   </div>
-                  <span className="text-xs font-bold text-neutral-950 dark:text-white">2. Detect Polygons</span>
+                  <span className="text-xs font-bold text-neutral-950 dark:text-white">2. Detect Text</span>
                   <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Auto Angle & Position</span>
                 </div>
                 <p className="mt-4 text-sm font-extrabold text-neutral-950 dark:text-white">Detect text</p>
                 <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
-                  Instant scanner maps exact text angle, position, and bounding box.
+                  Instant scanner maps exact text angle, size, and position.
                 </p>
               </div>
 
@@ -737,12 +734,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center mb-2.5">
                     <Eraser className="w-6 h-6" />
                   </div>
-                  <span className="text-xs font-bold text-neutral-950 dark:text-white">3. Inpaint Background</span>
+                  <span className="text-xs font-bold text-neutral-950 dark:text-white">3. Fill Background</span>
                   <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Seamless Background Fill</span>
                 </div>
                 <p className="mt-4 text-sm font-extrabold text-neutral-950 dark:text-white">Restore texture</p>
                 <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
-                  Erase original raster text while reconstructing underlying texture.
+                  Erase original text while seamlessly restoring underlying texture.
                 </p>
               </div>
 
@@ -768,65 +765,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <p className="mt-4 text-sm font-extrabold text-neutral-950 dark:text-white">Edit & Export</p>
                 <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600 dark:text-neutral-300">
-                  Type new copy, resize typography, and export untouched pixels.
+                  Type new copy, resize typography, and export in full high resolution.
                 </p>
-              </div>
-            </div>
-          </section>
-
-          {/* SECTION 5: ENTERPRISE CALLOUT BANNER (HeyRetro Layout) */}
-          <section className="py-16 border-t border-neutral-200 dark:border-neutral-800">
-            <div className="overflow-hidden rounded-[2rem] bg-neutral-950 p-8 text-white shadow-[0_34px_90px_-44px_rgba(15,23,42,0.8)] sm:p-10 lg:p-12">
-              <div className="grid gap-10 lg:grid-cols-[7fr_5fr] lg:items-center">
-                <div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold text-white ring-1 ring-white/20">
-                    <Lock className="w-3.5 h-3.5" /> Enterprise Grade
-                  </div>
-                  <h2 className="mt-5 max-w-[28ch] text-2xl font-extrabold tracking-tight text-balance sm:text-4xl text-white">
-                    Built for high-volume catalog & localization pipelines.
-                  </h2>
-                  <p className="mt-4 max-w-[50ch] text-sm font-medium text-neutral-300">
-                    Deploy Retypo on-premises or connect our batch REST endpoints to automatically translate product labels and update brand banners at scale.
-                  </p>
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <button
-                      onClick={() => onLoadSample('tech')}
-                      className="inline-flex items-center justify-center gap-1.5 h-10 rounded-full bg-[#ff6f42] px-5 text-xs font-bold text-white shadow-sm hover:bg-[#ee6037] transition"
-                    >
-                      Explore Enterprise <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 rounded-xl bg-white/10 p-4 ring-1 ring-white/15">
-                    <ShieldCheck className="w-5 h-5 text-[#ff6f42] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-bold text-white">100% Pixel Safety</p>
-                      <p className="mt-0.5 text-xs font-medium text-neutral-300">
-                        Pixel-perfect guarantee ensures only edited text zones are touched.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 rounded-xl bg-white/10 p-4 ring-1 ring-white/15">
-                    <Share2 className="w-5 h-5 text-[#ff6f42] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-bold text-white">REST API & Batch Ingestion</p>
-                      <p className="mt-0.5 text-xs font-medium text-neutral-300">
-                        Headless automated processing runs inside containerized pipelines.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 rounded-xl bg-white/10 p-4 ring-1 ring-white/15">
-                    <FileCheck className="w-5 h-5 text-[#ff6f42] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-bold text-white">ICC Color Profile Passthrough</p>
-                      <p className="mt-0.5 text-xs font-medium text-neutral-300">
-                        Preserves CMYK & sRGB profiles for professional printing houses.
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </section>
@@ -930,11 +870,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <span className="font-extrabold text-base tracking-tight text-neutral-950 dark:text-white">Retypo</span>
                 </div>
                 <p className="mt-4 text-xs/5 font-medium text-neutral-700 dark:text-neutral-400 max-w-xs">
-                  High-fidelity AI image text editor with OCR detection, background inpainting, and typography reconstruction.
+                  High-fidelity image text editor with automatic text detection, background fill, and typography reconstruction.
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 text-xs font-medium">
+              <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 text-xs font-medium">
                 <div>
                   <p className="font-extrabold text-neutral-950 dark:text-white mb-3">Product</p>
                   <ul className="space-y-2 text-neutral-700 dark:text-neutral-300">
@@ -951,14 +891,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <li><span>Background Texture Fill</span></li>
                     <li><span>Automated Font Matcher</span></li>
                     <li><span>Vector Studio Canvas</span></li>
-                  </ul>
-                </div>
-                <div>
-                  <p className="font-extrabold text-neutral-950 dark:text-white mb-3">Sample Presets</p>
-                  <ul className="space-y-2 text-neutral-700 dark:text-neutral-300">
-                    <li><button onClick={() => onLoadSample('magazine')} className="hover:text-neutral-950 dark:hover:text-white text-left font-semibold">Editorial Magazine</button></li>
-                    <li><button onClick={() => onLoadSample('coffee')} className="hover:text-neutral-950 dark:hover:text-white text-left font-semibold">Artisan Coffee</button></li>
-                    <li><button onClick={() => onLoadSample('tech')} className="hover:text-neutral-950 dark:hover:text-white text-left font-semibold">Tech Conference</button></li>
                   </ul>
                 </div>
                 <div>

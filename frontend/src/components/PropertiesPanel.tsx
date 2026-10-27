@@ -286,7 +286,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           </div>
           {layer.origin === 'ocr_detected' && (
             <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-mono font-semibold ml-1">
-              OCR
+              Detected
             </span>
           )}
         </div>

@@ -188,8 +188,8 @@ export const App: React.FC = () => {
         console.log('Previous OCR request aborted.');
         return;
       }
-      console.warn('OCR API request error:', err);
-      showToast('OCR detection failed. Please check backend connection.', 'warn');
+      console.warn('Text detection error:', err);
+      showToast('Text detection failed. Please check connection.', 'warn');
     } finally {
       if (ocrAbortControllerRef.current === abortController) {
         ocrAbortControllerRef.current = null;

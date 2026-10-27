@@ -1045,7 +1045,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
               Drag & Drop your Image here
             </h2>
             <p className="text-xs text-slate-500 mt-1 max-w-sm px-2">
-              Supports PNG, JPG, JPEG, and WebP. Automatically detects text regions with PaddleOCR.
+              Supports PNG, JPG, JPEG, and WebP. Automatically detects text regions and styles.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 mt-6 w-full sm:w-auto">

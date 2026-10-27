@@ -131,7 +131,7 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
             }`}
           >
             <ScanText className="w-3.5 h-3.5" />
-            <span>OCR</span>
+            <span>Detected</span>
             {unconvertedCount > 0 && (
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
                 activeTab === 'detected' ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-700'
@@ -206,7 +206,7 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                     </div>
                     {layer.origin === 'ocr_detected' && (
                       <span className="shrink-0 text-[8px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-mono font-semibold">
-                        OCR
+                        Detected
                       </span>
                     )}
                   </div>
@@ -316,7 +316,7 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
               </div>
               <h3 className="text-xs font-medium text-slate-800">No Detected Text Yet</h3>
               <p className="text-[11px] text-slate-500 mt-1 max-w-[200px]">
-                Run OCR on your image to automatically detect and transcribe all visible text.
+                Scan your image to automatically detect and transcribe all visible text.
               </p>
               {image && (
                 <button
