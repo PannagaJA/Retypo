@@ -165,23 +165,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </a>
 
               {/* Navigation Links */}
-              <nav className="hidden items-center gap-1 text-sm font-semibold text-neutral-700 lg:flex dark:text-neutral-300">
-                <a href="#features" className="rounded-md px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
+              <nav className="hidden items-center gap-0.5 md:flex lg:gap-1 text-xs lg:text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+                <a href="#features" className="rounded-md px-2 lg:px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
                   Features
                 </a>
-                <a href="#demo" className="rounded-md px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
+                <a href="#demo" className="rounded-md px-2 lg:px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
                   Interactive Demo
                 </a>
-                <a href="#workflow" className="rounded-md px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
+                <a href="#workflow" className="rounded-md px-2 lg:px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
                   Workflow
                 </a>
-                <a href="#presets" className="rounded-md px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
+                <a href="#presets" className="rounded-md px-2 lg:px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
                   Templates
                 </a>
-                <a href="#pricing" className="rounded-md px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
+                <a href="#pricing" className="rounded-md px-2 lg:px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
                   Pricing
                 </a>
-                <a href="#faq" className="rounded-md px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
+                <a href="#faq" className="rounded-md px-2 lg:px-3 py-1.5 transition-colors hover:bg-neutral-950/5 hover:text-neutral-950 dark:hover:bg-white/10 dark:hover:text-white">
                   FAQ
                 </a>
               </nav>
@@ -227,12 +227,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         />
 
         {/* Main Content */}
-        <main className="mx-auto max-w-[1200px] px-5 sm:px-8 pt-28">
+        <main className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8 pt-20 md:pt-24 lg:pt-28">
           {/* HERO SECTION */}
-          <section className="pt-10 pb-16 sm:pt-16 lg:pt-10 lg:pb-24">
+          <section className="pt-6 pb-12 sm:pt-8 md:pt-8 lg:pt-10 lg:pb-20">
             <div className="flex flex-col items-center text-center">
               {/* Main Headline */}
-              <h1 className="max-w-[22ch] text-5xl font-extrabold tracking-tight text-balance sm:text-7xl text-neutral-950 dark:text-white">
+              <h1 className="max-w-[22ch] text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-balance text-neutral-950 dark:text-white">
                 Images with text.{' '}
                 <span className="hero-shimmer bg-clip-text text-transparent">
                   Now editable.
@@ -240,190 +240,193 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </h1>
 
               {/* Subtitle - HIGH CONTRAST */}
-              <p className="mt-6 max-w-[56ch] text-base/7 text-pretty text-neutral-700 sm:text-lg/8 dark:text-neutral-200 font-medium">
+              <p className="mt-5 max-w-[56ch] text-base/7 text-pretty text-neutral-700 sm:text-lg/8 dark:text-neutral-200 font-medium">
                 Upload any flattened PNG, JPG, or WebP. Retypo detects text with sub-pixel geometry, inpaints the background cleanly, and reconstructs editable typography while preserving 100% untouched pixels.
               </p>
             </div>
 
             {/* HERO CENTERPIECE WITH FLOATING SATELLITES */}
-            <div className="relative mx-auto mt-12 max-w-[1020px] pb-10 sm:mt-16">
+            <div className="relative mx-auto mt-8 md:mt-10 lg:mt-12 max-w-[1020px] pb-4 md:pb-6">
               {/* Diffuse Colorful Radial Ambient Backlight */}
               <div className="pointer-events-none absolute -inset-x-12 -top-12 -z-10 h-[calc(100%+7rem)] rounded-[4rem] bg-gradient-to-br from-[#ffd3bd] via-[#fdeee2] to-[#dceefb] opacity-90 blur-3xl sm:-inset-x-24 dark:from-[#ff6f42]/20 dark:via-transparent dark:to-sky-500/15" />
 
-              {/* Centerpiece Studio Dropzone Card */}
-              <div className="relative z-10 mx-auto w-full max-w-[500px] rounded-2xl bg-white shadow-[0_44px_90px_-36px_rgba(15,23,42,0.4)] ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/15 p-5">
-                {/* Mock Card Header */}
-                <div className="flex items-center justify-between pb-3.5 border-b border-neutral-100 dark:border-neutral-800">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                    <span className="text-xs font-bold tracking-tight text-neutral-900 dark:text-white">Studio Canvas Workspace</span>
-                    <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-mono font-medium">1920×1080</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
-                      <ScanText className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Auto Text Detection Ready
-                    </span>
-                  </div>
-                </div>
-
-                {/* Animated Interactive Drop Target */}
-                <div
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setIsDraggingOver(true);
-                  }}
-                  onDragLeave={() => setIsDraggingOver(false)}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    setIsDraggingOver(false);
-                    if (e.dataTransfer?.files?.[0]) {
-                      onSelectImage(e.dataTransfer.files[0]);
-                    }
-                  }}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`relative mt-4 overflow-hidden rounded-xl border-2 border-dashed p-7 text-center transition-all cursor-pointer group ${
-                    isDraggingOver
-                      ? 'border-[#ff6f42] bg-[#fff6f2] scale-[1.02] dark:bg-[#ff6f42]/10'
-                      : 'border-neutral-300 bg-[#fdfbf9] hover:border-[#ff6f42] hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800/60'
-                  }`}
-                >
-                  {/* Upload Icon Container */}
-                  <div className="mx-auto w-14 h-14 rounded-2xl bg-white dark:bg-neutral-800 shadow-md ring-1 ring-black/10 dark:ring-white/10 flex items-center justify-center text-[#ff6f42] mb-3 transition-transform duration-200 group-hover:scale-110">
-                    <UploadCloud className="w-7 h-7" />
-                  </div>
-
-                  <p className="text-base font-extrabold tracking-tight text-neutral-950 dark:text-white">
-                    Drag & Drop your image here
-                  </p>
-                  <p className="mt-1 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
-                    Supports PNG, JPG, JPEG, WebP • Auto detects text & background
-                  </p>
-
-                  <div className="mt-4 flex items-center justify-center gap-2">
-                    <span className="rounded-md bg-white dark:bg-neutral-700 px-2.5 py-1 text-xs font-bold text-neutral-800 dark:text-white shadow-xs ring-1 ring-black/10">
-                      PNG
-                    </span>
-                    <span className="rounded-md bg-white dark:bg-neutral-700 px-2.5 py-1 text-xs font-bold text-neutral-800 dark:text-white shadow-xs ring-1 ring-black/10">
-                      JPG
-                    </span>
-                    <span className="rounded-md bg-white dark:bg-neutral-700 px-2.5 py-1 text-xs font-bold text-neutral-800 dark:text-white shadow-xs ring-1 ring-black/10">
-                      WebP
-                    </span>
-                    <span className="rounded-md bg-neutral-100 dark:bg-neutral-700 px-2.5 py-1 text-xs font-mono font-bold text-neutral-700 dark:text-neutral-200 ring-1 ring-black/5">
-                      ⌘O
-                    </span>
-                  </div>
-                </div>
-
-                {/* Bottom Phase Progress Capsule */}
-                <div className="mt-4 pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span>100% Non-destructive Editing</span>
-                  </div>
-                  <button
-                    onClick={() => onLoadSample('magazine')}
-                    className="text-xs font-bold text-[#ff6f42] hover:underline flex items-center gap-1"
-                  >
-                    Open Sample <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* 4 TILTED SATELLITE CARDS (Cleaned, Pro Layout) */}
-              {/* Satellite 1: Top-Left (-rotate-6) */}
-              <div className="absolute top-2 left-0 z-0 hidden w-52 -rotate-6 rounded-xl bg-white p-4 shadow-[0_28px_60px_-30px_rgba(15,23,42,0.45)] ring-1 ring-black/10 lg:block dark:bg-neutral-900 dark:ring-white/15">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                    <Type className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-xs font-bold text-neutral-950 dark:text-white">Font Matcher</span>
-                </div>
-                <div className="mt-2.5 space-y-1.5 text-xs text-neutral-700 dark:text-neutral-300">
-                  <div className="flex justify-between font-semibold text-[11px]">
-                    <span>Font Accuracy</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">98.4%</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full w-[98%]" />
-                  </div>
-                </div>
-                <p className="mt-2 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 font-mono">Playfair · Inter · Lato</p>
-              </div>
-
-              {/* Satellite 2: Bottom-Left (rotate-3) */}
-              <div className="absolute bottom-4 left-6 z-20 hidden w-56 rotate-3 rounded-xl bg-white p-4 shadow-[0_28px_60px_-30px_rgba(15,23,42,0.45)] ring-1 ring-black/10 lg:block dark:bg-neutral-900 dark:ring-white/15">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 flex items-center justify-center">
-                    <LayoutTemplate className="w-3.5 h-3.5 text-[#ff6f42]" />
-                  </div>
-                  <span className="text-xs font-bold text-neutral-950 dark:text-white">Sample Templates</span>
-                </div>
-                <div className="mt-2.5 grid grid-cols-3 gap-1.5">
-                  <button
-                    onClick={() => onLoadSample('magazine')}
-                    className="rounded-lg bg-neutral-100 hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] dark:bg-neutral-800 dark:text-neutral-200 py-1.5 px-1 text-center text-[11px] font-bold transition"
-                  >
-                    Magazine
-                  </button>
-                  <button
-                    onClick={() => onLoadSample('coffee')}
-                    className="rounded-lg bg-neutral-100 hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] dark:bg-neutral-800 dark:text-neutral-200 py-1.5 px-1 text-center text-[11px] font-bold transition"
-                  >
-                    Coffee
-                  </button>
-                  <button
-                    onClick={() => onLoadSample('tech')}
-                    className="rounded-lg bg-neutral-100 hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] dark:bg-neutral-800 dark:text-neutral-200 py-1.5 px-1 text-center text-[11px] font-bold transition"
-                  >
-                    Tech
-                  </button>
-                </div>
-                <p className="mt-2 text-center text-[10px] font-bold text-[#ff6f42]">1-click instant sample</p>
-              </div>
-
-              {/* Satellite 3: Top-Right (rotate-6) */}
-              <div className="absolute top-4 right-0 z-20 hidden w-56 rotate-6 rounded-xl bg-white p-4 shadow-[0_28px_60px_-30px_rgba(15,23,42,0.45)] ring-1 ring-black/10 lg:block dark:bg-neutral-900 dark:ring-white/15">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                      <ScanText className="w-3.5 h-3.5" />
+              {/* Responsive Scaling Container: Preserves exact floating satellite composition on tablet and desktop */}
+              <div className="relative w-full transition-transform duration-200 md:scale-[0.76] min-[840px]:scale-[0.84] min-[940px]:scale-[0.92] lg:scale-100 origin-top md:-mb-24 min-[840px]:-mb-16 min-[940px]:-mb-8 lg:mb-0">
+                {/* Centerpiece Studio Dropzone Card */}
+                <div className="relative z-10 mx-auto w-full max-w-[500px] rounded-2xl bg-white shadow-[0_44px_90px_-36px_rgba(15,23,42,0.4)] ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/15 p-5">
+                  {/* Mock Card Header */}
+                  <div className="flex items-center justify-between pb-3.5 border-b border-neutral-100 dark:border-neutral-800">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      <span className="text-xs font-bold tracking-tight text-neutral-900 dark:text-white">Studio Canvas Workspace</span>
+                      <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-mono font-medium">1920×1080</span>
                     </div>
-                    <span className="text-xs font-bold text-neutral-950 dark:text-white">Auto Text Scanner</span>
-                  </div>
-                  <span className="rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-mono font-bold px-1.5 py-0.5">
-                    Active
-                  </span>
-                </div>
-                <p className="mt-2 text-xs/5 font-medium text-neutral-700 dark:text-neutral-300">
-                  Detects angles, sizes, and font positions instantly.
-                </p>
-                <div className="mt-2.5 flex items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">
-                    Lightning Fast Processing
-                  </span>
-                </div>
-              </div>
-
-              {/* Satellite 4: Bottom-Right (-rotate-3 dark card) */}
-              <div className="absolute right-4 bottom-2 z-20 hidden w-60 -rotate-3 rounded-xl bg-neutral-950 p-4 shadow-[0_28px_60px_-30px_rgba(15,23,42,0.55)] ring-1 ring-neutral-800 lg:block text-white">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-emerald-950/80 text-emerald-400 flex items-center justify-center">
-                      <ShieldCheck className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
+                        <ScanText className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Auto Text Detection Ready
+                      </span>
                     </div>
-                    <p className="text-xs font-bold text-white">Pixel Quality</p>
                   </div>
-                  <span className="rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold px-2 py-0.5">
-                    Lossless
-                  </span>
+
+                  {/* Animated Interactive Drop Target */}
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDraggingOver(true);
+                    }}
+                    onDragLeave={() => setIsDraggingOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDraggingOver(false);
+                      if (e.dataTransfer?.files?.[0]) {
+                        onSelectImage(e.dataTransfer.files[0]);
+                      }
+                    }}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`relative mt-4 overflow-hidden rounded-xl border-2 border-dashed p-7 text-center transition-all cursor-pointer group ${
+                      isDraggingOver
+                        ? 'border-[#ff6f42] bg-[#fff6f2] scale-[1.02] dark:bg-[#ff6f42]/10'
+                        : 'border-neutral-300 bg-[#fdfbf9] hover:border-[#ff6f42] hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800/60'
+                    }`}
+                  >
+                    {/* Upload Icon Container */}
+                    <div className="mx-auto w-14 h-14 rounded-2xl bg-white dark:bg-neutral-800 shadow-md ring-1 ring-black/10 dark:ring-white/10 flex items-center justify-center text-[#ff6f42] mb-3 transition-transform duration-200 group-hover:scale-110">
+                      <UploadCloud className="w-7 h-7" />
+                    </div>
+
+                    <p className="text-base font-extrabold tracking-tight text-neutral-950 dark:text-white">
+                      Drag & Drop your image here
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+                      Supports PNG, JPG, JPEG, WebP • Auto detects text & background
+                    </p>
+
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      <span className="rounded-md bg-white dark:bg-neutral-700 px-2.5 py-1 text-xs font-bold text-neutral-800 dark:text-white shadow-xs ring-1 ring-black/10">
+                        PNG
+                      </span>
+                      <span className="rounded-md bg-white dark:bg-neutral-700 px-2.5 py-1 text-xs font-bold text-neutral-800 dark:text-white shadow-xs ring-1 ring-black/10">
+                        JPG
+                      </span>
+                      <span className="rounded-md bg-white dark:bg-neutral-700 px-2.5 py-1 text-xs font-bold text-neutral-800 dark:text-white shadow-xs ring-1 ring-black/10">
+                        WebP
+                      </span>
+                      <span className="rounded-md bg-neutral-100 dark:bg-neutral-700 px-2.5 py-1 text-xs font-mono font-bold text-neutral-700 dark:text-neutral-200 ring-1 ring-black/5">
+                        ⌘O
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bottom Phase Progress Capsule */}
+                  <div className="mt-4 pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <span>100% Non-destructive Editing</span>
+                    </div>
+                    <button
+                      onClick={() => onLoadSample('magazine')}
+                      className="text-xs font-bold text-[#ff6f42] hover:underline flex items-center gap-1"
+                    >
+                      Open Sample <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="mt-2 space-y-1 font-mono text-[10px] font-medium text-neutral-300">
-                  <p>Original Background Intact</p>
-                  <p>Color Profiles Preserved</p>
+
+                {/* 4 TILTED SATELLITE CARDS (Preserved across all large and tablet screens) */}
+                {/* Satellite 1: Top-Left (-rotate-6) */}
+                <div className="absolute top-2 left-0 z-0 hidden w-52 -rotate-6 rounded-xl bg-white p-4 shadow-[0_28px_60px_-30px_rgba(15,23,42,0.45)] ring-1 ring-black/10 md:block dark:bg-neutral-900 dark:ring-white/15">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                      <Type className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-xs font-bold text-neutral-950 dark:text-white">Font Matcher</span>
+                  </div>
+                  <div className="mt-2.5 space-y-1.5 text-xs text-neutral-700 dark:text-neutral-300">
+                    <div className="flex justify-between font-semibold text-[11px]">
+                      <span>Font Accuracy</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">98.4%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 rounded-full w-[98%]" />
+                    </div>
+                  </div>
+                  <p className="mt-2 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 font-mono">Playfair · Inter · Lato</p>
                 </div>
-                <div className="mt-2.5 pt-2 border-t border-white/15 text-[11px] font-bold text-emerald-400 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> 100% Pixel Perfect
+
+                {/* Satellite 2: Bottom-Left (rotate-3) */}
+                <div className="absolute bottom-4 left-6 z-20 hidden w-56 rotate-3 rounded-xl bg-white p-4 shadow-[0_28px_60px_-30px_rgba(15,23,42,0.45)] ring-1 ring-black/10 md:block dark:bg-neutral-900 dark:ring-white/15">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 flex items-center justify-center">
+                      <LayoutTemplate className="w-3.5 h-3.5 text-[#ff6f42]" />
+                    </div>
+                    <span className="text-xs font-bold text-neutral-950 dark:text-white">Sample Templates</span>
+                  </div>
+                  <div className="mt-2.5 grid grid-cols-3 gap-1.5">
+                    <button
+                      onClick={() => onLoadSample('magazine')}
+                      className="rounded-lg bg-neutral-100 hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] dark:bg-neutral-800 dark:text-neutral-200 py-1.5 px-1 text-center text-[11px] font-bold transition"
+                    >
+                      Magazine
+                    </button>
+                    <button
+                      onClick={() => onLoadSample('coffee')}
+                      className="rounded-lg bg-neutral-100 hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] dark:bg-neutral-800 dark:text-neutral-200 py-1.5 px-1 text-center text-[11px] font-bold transition"
+                    >
+                      Coffee
+                    </button>
+                    <button
+                      onClick={() => onLoadSample('tech')}
+                      className="rounded-lg bg-neutral-100 hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] dark:bg-neutral-800 dark:text-neutral-200 py-1.5 px-1 text-center text-[11px] font-bold transition"
+                    >
+                      Tech
+                    </button>
+                  </div>
+                  <p className="mt-2 text-center text-[10px] font-bold text-[#ff6f42]">1-click instant sample</p>
+                </div>
+
+                {/* Satellite 3: Top-Right (rotate-6) */}
+                <div className="absolute top-4 right-0 z-20 hidden w-56 rotate-6 rounded-xl bg-white p-4 shadow-[0_28px_60px_-30px_rgba(15,23,42,0.45)] ring-1 ring-black/10 md:block dark:bg-neutral-900 dark:ring-white/15">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                        <ScanText className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-bold text-neutral-950 dark:text-white">Auto Text Scanner</span>
+                    </div>
+                    <span className="rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-mono font-bold px-1.5 py-0.5">
+                      Active
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs/5 font-medium text-neutral-700 dark:text-neutral-300">
+                    Detects angles, sizes, and font positions instantly.
+                  </p>
+                  <div className="mt-2.5 flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">
+                      Lightning Fast Processing
+                    </span>
+                  </div>
+                </div>
+
+                {/* Satellite 4: Bottom-Right (-rotate-3 dark card) */}
+                <div className="absolute right-4 bottom-2 z-20 hidden w-60 -rotate-3 rounded-xl bg-neutral-950 p-4 shadow-[0_28px_60px_-30px_rgba(15,23,42,0.55)] ring-1 ring-neutral-800 md:block text-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-emerald-950/80 text-emerald-400 flex items-center justify-center">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                      </div>
+                      <p className="text-xs font-bold text-white">Pixel Quality</p>
+                    </div>
+                    <span className="rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold px-2 py-0.5">
+                      Lossless
+                    </span>
+                  </div>
+                  <div className="mt-2 space-y-1 font-mono text-[10px] font-medium text-neutral-300">
+                    <p>Original Background Intact</p>
+                    <p>Color Profiles Preserved</p>
+                  </div>
+                  <div className="mt-2.5 pt-2 border-t border-white/15 text-[11px] font-bold text-emerald-400 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> 100% Pixel Perfect
+                  </div>
                 </div>
               </div>
             </div>

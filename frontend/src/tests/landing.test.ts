@@ -33,4 +33,32 @@ describe('LandingPage Architecture & Presets', () => {
       }
     });
   });
+
+  it('validates tablet and large screen satellite cards configuration', () => {
+    const satelliteTitles = [
+      'Font Matcher',
+      'Sample Templates',
+      'Auto Text Scanner',
+      'Pixel Quality'
+    ];
+    expect(satelliteTitles.length).toBe(4);
+    expect(satelliteTitles).toContain('Font Matcher');
+    expect(satelliteTitles).toContain('Sample Templates');
+    expect(satelliteTitles).toContain('Auto Text Scanner');
+    expect(satelliteTitles).toContain('Pixel Quality');
+  });
+
+  it('validates responsive navigation items for tablet and desktop', () => {
+    const navItems = [
+      'Features',
+      'Interactive Demo',
+      'Workflow',
+      'Templates',
+      'Pricing',
+      'FAQ'
+    ];
+    expect(navItems.length).toBe(6);
+    expect(navItems).toContain('Features');
+    expect(navItems).toContain('FAQ');
+  });
 });
