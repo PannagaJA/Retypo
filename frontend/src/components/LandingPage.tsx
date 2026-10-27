@@ -355,12 +355,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* Dynamic Capsule Header (Scroll-reactive) */}
         <header
           className={`fixed inset-x-0 top-0 z-40 transition-all duration-300 ${
-            isScrolled ? 'pt-2.5 pb-2' : 'pt-4 pb-3'
+            isScrolled ? 'pt-2 pb-1.5' : 'pt-2.5 pb-2 sm:pt-4 sm:pb-3'
           }`}
         >
-          <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+          <div className="mx-auto max-w-[1200px] px-3.5 sm:px-8">
             <div
-              className={`relative flex items-center justify-between gap-4 rounded-[1.75rem] px-5 py-3 transition-all duration-300 ${
+              className={`relative flex items-center justify-between gap-4 rounded-[1.75rem] px-4 py-2 sm:px-5 sm:py-3 transition-all duration-300 ${
                 isScrolled
                   ? 'bg-white/95 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.2)] ring-1 ring-black/10 backdrop-blur-2xl scale-[0.99]'
                   : 'bg-white/90 shadow-[0_18px_55px_-28px_rgba(15,23,42,0.35)] ring-1 ring-black/8 backdrop-blur-xl'
@@ -435,9 +435,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         />
 
         {/* Main Content */}
-        <main className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8 pt-20 md:pt-24 lg:pt-28">
+        <main className="mx-auto max-w-[1200px] px-3.5 sm:px-6 lg:px-8 pt-16 sm:pt-20 md:pt-24 lg:pt-28">
           {/* HERO SECTION */}
-          <section className="pt-6 pb-12 sm:pt-8 md:pt-8 lg:pt-10 lg:pb-16">
+          <section className="pt-15 pb-6 sm:pt-8 sm:pb-12 md:pt-8 lg:pt-10 lg:pb-16 flex flex-col items-center">
+            {/* HEADINGS */}
             <div className="flex flex-col items-center text-center">
               {/* TWO26 MAGNETIC DUAL HEADING COMPONENT */}
               <div
@@ -447,7 +448,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 className="relative inline-block cursor-default select-none group"
               >
                 {/* Sharp foreground primary heading */}
-                <h1 className="relative z-10 max-w-[22ch] text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-balance text-neutral-950 pointer-events-none">
+                <h1 className="relative z-10 max-w-[22ch] text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-balance text-neutral-950 pointer-events-none">
                   Images with text.{' '}
                   <span className="hero-shimmer bg-clip-text text-transparent">
                     Now editable.
@@ -461,29 +462,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     transform: `translate3d(${headingOffset.x}px, ${headingOffset.y}px, 0)`,
                     transition: headingOffset.x === 0 ? 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'transform 0.12s ease-out',
                   }}
-                  className="absolute inset-0 z-0 max-w-[22ch] text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-balance text-[#ff6f42] opacity-75 blur-[0.6px] pointer-events-none select-none"
+                  className="absolute inset-0 z-0 max-w-[22ch] text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-balance text-[#ff6f42] opacity-75 blur-[0.6px] pointer-events-none select-none"
                 >
                   Images with text. <span>Now editable.</span>
                 </h1>
               </div>
 
               {/* Subtitle - HIGH CONTRAST */}
-              <p className="mt-5 max-w-[56ch] text-base/7 text-pretty text-neutral-700 sm:text-lg/8 font-medium">
+              <p className="mt-2.5 sm:mt-5 max-w-[56ch] text-xs/5 xs:text-sm/6 sm:text-lg/8 text-pretty text-neutral-700 font-medium">
                 Upload any flattened PNG, JPG, or WebP. Retypo detects text automatically, cleans the background seamlessly, and lets you edit typography while keeping all your image pixels untouched.
               </p>
             </div>
 
             {/* HERO CENTERPIECE WITH FLOATING SATELLITES */}
-            <div className="relative mx-auto mt-8 md:mt-10 lg:mt-12 max-w-[1020px] pb-4 md:pb-6">
+            <div className="relative mx-auto mt-4 sm:mt-8 md:mt-10 lg:mt-12 w-full max-w-[1020px] pb-1 sm:pb-4 md:pb-6">
               {/* Diffuse Colorful Radial Ambient Backlight */}
               <div className="pointer-events-none absolute -inset-x-12 -top-12 -z-10 h-[calc(100%+7rem)] rounded-[4rem] bg-gradient-to-br from-[#ffd3bd] via-[#fdeee2] to-[#dceefb] opacity-90 blur-3xl sm:-inset-x-24" />
 
               {/* Responsive Scaling Container: Preserves exact floating satellite composition on tablet and desktop */}
               <div className="relative w-full transition-transform duration-200 md:scale-[0.76] min-[840px]:scale-[0.84] min-[940px]:scale-[0.92] lg:scale-100 origin-top md:-mb-24 min-[840px]:-mb-16 min-[940px]:-mb-8 lg:mb-0">
-                {/* Centerpiece Studio Dropzone Card */}
-                <div className="relative z-10 mx-auto w-full max-w-[500px] rounded-2xl bg-white shadow-[0_44px_90px_-36px_rgba(15,23,42,0.4)] ring-1 ring-black/10 p-5">
+                {/* Centerpiece Studio Dropzone Card - Properly Enlarged */}
+                <div className="relative z-10 mx-auto w-full max-w-[500px] rounded-2xl bg-white shadow-[0_30px_70px_-28px_rgba(15,23,42,0.35)] sm:shadow-[0_44px_90px_-36px_rgba(15,23,42,0.4)] ring-1 ring-black/10 p-4 xs:p-5 sm:p-6">
                   {/* Mock Card Header */}
-                  <div className="flex items-center justify-between pb-3.5 border-b border-neutral-100">
+                  <div className="flex items-center justify-between pb-3 sm:pb-3.5 border-b border-neutral-100">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                       <span className="text-xs font-bold tracking-tight text-neutral-900">Studio Canvas Workspace</span>
@@ -511,25 +512,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       }
                     }}
                     onClick={() => fileInputRef.current?.click()}
-                    className={`relative mt-4 overflow-hidden rounded-xl border-2 border-dashed p-7 text-center transition-all cursor-pointer group ${
+                    className={`relative mt-3.5 sm:mt-4 overflow-hidden rounded-xl border-2 border-dashed p-5 xs:p-6 sm:p-7 text-center transition-all cursor-pointer group ${
                       isDraggingOver
                         ? 'border-[#ff6f42] bg-[#fff6f2] scale-[1.02]'
                         : 'border-neutral-300 bg-[#fdfbf9] hover:border-[#ff6f42] hover:bg-neutral-50'
                     }`}
                   >
                     {/* Upload Icon Container */}
-                    <div className="mx-auto w-14 h-14 rounded-2xl bg-white shadow-md ring-1 ring-black/10 flex items-center justify-center text-[#ff6f42] mb-3 transition-transform duration-200 group-hover:scale-110">
-                      <UploadCloud className="w-7 h-7" />
+                    <div className="mx-auto w-12 h-12 xs:w-14 xs:h-14 rounded-2xl bg-white shadow-md ring-1 ring-black/10 flex items-center justify-center text-[#ff6f42] mb-2.5 sm:mb-3 transition-transform duration-200 group-hover:scale-110">
+                      <UploadCloud className="w-6 h-6 xs:w-7 xs:h-7" />
                     </div>
 
-                    <p className="text-base font-extrabold tracking-tight text-neutral-950">
+                    <p className="text-sm xs:text-base sm:text-base font-extrabold tracking-tight text-neutral-950">
                       Drag & Drop your image here
                     </p>
                     <p className="mt-1 text-xs font-semibold text-neutral-600">
                       Supports PNG, JPG, JPEG, WebP • Auto detects text & background
                     </p>
 
-                    <div className="mt-4 flex items-center justify-center gap-2">
+                    <div className="mt-3.5 sm:mt-4 flex items-center justify-center gap-2">
                       <span className="rounded-md bg-white px-2.5 py-1 text-xs font-bold text-neutral-800 shadow-xs ring-1 ring-black/10">
                         PNG
                       </span>
@@ -546,7 +547,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
 
                   {/* Bottom Phase Progress Capsule */}
-                  <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between">
+                  <div className="mt-3.5 sm:mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700">
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
                       <span>100% Non-destructive Editing</span>
@@ -671,18 +672,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
             </div>
 
-            {/* HERO CTA BUTTONS */}
-            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-neutral-950 px-7 text-base font-bold text-white shadow-[0_18px_38px_-18px_rgba(15,23,42,0.65)] hover:bg-neutral-800 transition-all sm:text-sm hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Upload Image to Edit <ArrowRight className="w-4 h-4 ml-1" />
-              </button>
+            {/* HERO CTA BUTTONS & FOOTER */}
+            <div className="mt-4 sm:mt-8 flex flex-col items-center shrink-0 text-center">
+              <div className="flex flex-col items-center gap-2.5 sm:gap-3 sm:flex-row sm:justify-center w-full">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center justify-center gap-2 h-11 xs:h-12 rounded-xl bg-neutral-950 px-7 sm:px-8 text-sm sm:text-base font-bold text-white shadow-[0_18px_38px_-18px_rgba(15,23,42,0.65)] hover:bg-neutral-800 transition-all hover:scale-[1.02] active:scale-[0.98] w-full xs:w-auto"
+                >
+                  Upload Image to Edit <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1" />
+                </button>
+              </div>
+              <p className="mt-2.5 sm:mt-4 text-center text-xs font-semibold text-neutral-600">
+                No account required • 100% local processing • Works with all resolutions
+              </p>
             </div>
-            <p className="mt-4 text-center text-xs font-bold text-neutral-600">
-              No account required • 100% local processing • Works with all resolutions
-            </p>
           </section>
 
           {/* KINETIC CAPABILITIES TICKER (Two26 & Roveia Signature Banner) */}
