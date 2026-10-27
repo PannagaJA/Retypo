@@ -6,6 +6,7 @@ import { CanvasWorkspace } from './components/CanvasWorkspace';
 import { LayersPanel } from './components/LayersPanel';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { ExportModal } from './components/ExportModal';
+import { LandingPage } from './components/LandingPage';
 import { analyzeImageOCR, restoreBackground } from './services/api';
 import { Layers, Type, Maximize2, Eye, Sliders, Copy, Trash2, X, ScanText, Plus, Loader2 } from 'lucide-react';
 
@@ -513,67 +514,112 @@ export const App: React.FC = () => {
   };
 
   // Generate Sample High-Resolution Poster
-  const handleLoadSample = () => {
+  const handleLoadSample = (type: 'magazine' | 'coffee' | 'tech' = 'magazine') => {
     const canvas = document.createElement('canvas');
     canvas.width = 1600;
     canvas.height = 1000;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Background gradient - clean light theme
-    const grad = ctx.createLinearGradient(0, 0, 1600, 1000);
-    grad.addColorStop(0, '#ffffff');
-    grad.addColorStop(0.5, '#f8fafc');
-    grad.addColorStop(1, '#f1f5f9');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 1600, 1000);
+    let headline = 'RETYPO STUDIO';
+    let subline = 'HIGH-FIDELITY TYPOGRAPHY RECONSTRUCTION';
+    let description = 'Precision typography matching, seamless text removal & non-destructive 4K export.';
+    let tag = 'PRO EDITION 2026';
+    let primaryFont = 'bold 84px "Montserrat", sans-serif';
+    let textColor = '#0f172a';
+    let accentColor = '#ff6f42';
 
-    // Decorative grid
-    ctx.strokeStyle = 'rgba(15, 23, 42, 0.04)';
-    ctx.lineWidth = 1;
-    for (let x = 0; x < 1600; x += 40) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, 1000);
-      ctx.stroke();
-    }
-    for (let y = 0; y < 1000; y += 40) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(1600, y);
-      ctx.stroke();
-    }
+    if (type === 'coffee') {
+      headline = 'ROAST & CO.';
+      subline = 'ARTISAN SINGLE ORIGIN';
+      description = 'Freshly roasted in small batches with notes of dark chocolate and toasted hazelnut.';
+      tag = 'DIRECT TRADE 250G';
+      primaryFont = '900 84px "Space Grotesk", sans-serif';
+      textColor = '#1c1917';
+      accentColor = '#ea580c';
 
-    // Soft warm radial ambient glow
-    const radGrad = ctx.createRadialGradient(800, 450, 50, 800, 450, 400);
-    radGrad.addColorStop(0, 'rgba(15, 23, 42, 0.03)');
-    radGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = radGrad;
-    ctx.fillRect(0, 0, 1600, 1000);
+      const grad = ctx.createLinearGradient(0, 0, 1600, 1000);
+      grad.addColorStop(0, '#fffbf5');
+      grad.addColorStop(0.5, '#fef3e2');
+      grad.addColorStop(1, '#faebd7');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1600, 1000);
+
+      // Warm radial glow
+      const radGrad = ctx.createRadialGradient(800, 450, 50, 800, 450, 450);
+      radGrad.addColorStop(0, 'rgba(234, 88, 12, 0.08)');
+      radGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = radGrad;
+      ctx.fillRect(0, 0, 1600, 1000);
+    } else if (type === 'magazine') {
+      headline = 'VOGUE & ATELIER';
+      subline = 'THE AUTUMN EDITORIAL';
+      description = 'Contemporary architecture, quiet luxury, and the modern visual typography renaissance.';
+      tag = 'PARIS & MILAN • ISSUE 42';
+      primaryFont = 'bold 84px "Playfair Display", serif';
+      textColor = '#18181b';
+      accentColor = '#b45309';
+
+      const grad = ctx.createLinearGradient(0, 0, 1600, 1000);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.5, '#faf7f2');
+      grad.addColorStop(1, '#f4ece1');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1600, 1000);
+
+      // Subtle editorial borders
+      ctx.strokeStyle = 'rgba(24, 24, 27, 0.08)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(80, 80, 1440, 840);
+    } else {
+      // Tech theme
+      const grad = ctx.createLinearGradient(0, 0, 1600, 1000);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.5, '#f8fafc');
+      grad.addColorStop(1, '#f1f5f9');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1600, 1000);
+
+      // Decorative grid
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.04)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < 1600; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, 1000);
+        ctx.stroke();
+      }
+      for (let y = 0; y < 1000; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(1600, y);
+        ctx.stroke();
+      }
+    }
 
     // Flattened text inside image
     ctx.fillStyle = '#64748b';
     ctx.font = '600 24px "Inter", sans-serif';
-    ctx.fillText('HIGH-FIDELITY TYPOGRAPHY RECONSTRUCTION', 150, 260);
+    ctx.fillText(subline, 150, 260);
 
-    ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 84px "Montserrat", sans-serif';
-    ctx.fillText('RETYPO STUDIO', 150, 390);
+    ctx.fillStyle = textColor;
+    ctx.font = primaryFont;
+    ctx.fillText(headline, 150, 390);
 
     ctx.fillStyle = '#475569';
     ctx.font = '400 28px "Inter", sans-serif';
-    ctx.fillText('Precision typography matching, seamless text removal & non-destructive 4K export.', 150, 470);
+    ctx.fillText(description, 150, 470);
 
-    ctx.fillStyle = '#0284c7';
+    ctx.fillStyle = accentColor;
     ctx.font = '600 22px "Outfit", sans-serif';
-    ctx.fillText('EDITION 2026', 150, 560);
+    ctx.fillText(tag, 150, 560);
 
     const dataUrl = canvas.toDataURL('image/png');
 
     const meta: ImageMetadata = {
       width: 1600,
       height: 1000,
-      fileName: 'retypo_sample_poster.png',
+      fileName: `retypo_${type}_sample.png`,
       format: 'png',
       dataUrl,
     };
@@ -581,49 +627,49 @@ export const App: React.FC = () => {
     const sampleDetected: DetectedTextRegion[] = [
       {
         regionId: 'ocr-sample-1',
-        text: 'RETYPO STUDIO',
+        text: headline,
         polygon: [[148, 305], [960, 305], [960, 400], [148, 400]],
         bbox: [148, 305, 812, 95],
         angle: 0,
         estimatedFontSize: 84,
-        estimatedColor: '#0f172a',
-        confidence: 0.985,
+        estimatedColor: textColor,
+        confidence: 0.988,
         geometryConfidence: 1.0,
         isConverted: false,
       },
       {
         regionId: 'ocr-sample-2',
-        text: 'HIGH-FIDELITY TYPOGRAPHY RECONSTRUCTION',
+        text: subline,
         polygon: [[148, 235], [780, 235], [780, 268], [148, 268]],
         bbox: [148, 235, 632, 33],
         angle: 0,
         estimatedFontSize: 24,
         estimatedColor: '#64748b',
-        confidence: 0.972,
+        confidence: 0.975,
         geometryConfidence: 1.0,
         isConverted: false,
       },
       {
         regionId: 'ocr-sample-3',
-        text: 'Precision typography matching, seamless text removal & non-destructive 4K export.',
+        text: description,
         polygon: [[148, 442], [1160, 442], [1160, 480], [148, 480]],
         bbox: [148, 442, 1012, 38],
         angle: 0,
         estimatedFontSize: 28,
-        estimatedColor: '#94a3b8',
-        confidence: 0.968,
+        estimatedColor: '#475569',
+        confidence: 0.965,
         geometryConfidence: 1.0,
         isConverted: false,
       },
       {
         regionId: 'ocr-sample-4',
-        text: 'PRO EDITION 2026',
-        polygon: [[148, 538], [420, 538], [420, 570], [148, 570]],
-        bbox: [148, 538, 272, 32],
+        text: tag,
+        polygon: [[148, 538], [520, 538], [520, 570], [148, 570]],
+        bbox: [148, 538, 372, 32],
         angle: 0,
         estimatedFontSize: 22,
-        estimatedColor: '#38bdf8',
-        confidence: 0.991,
+        estimatedColor: accentColor,
+        confidence: 0.992,
         geometryConfidence: 1.0,
         isConverted: false,
       },
@@ -643,7 +689,7 @@ export const App: React.FC = () => {
       setDetectedRegions(sampleDetected);
       setIsDetecting(false);
       showToast(`Detected ${sampleDetected.length} text region(s). Click any green box to edit.`, 'success');
-    }, 1600);
+    }, 1200);
   };
 
   const handleAddText = () => {
@@ -778,6 +824,26 @@ export const App: React.FC = () => {
     ? inpaintPatches.some((p) => p.id === `patch-${selectedLayer.id}`)
     : false;
 
+  if (!image) {
+    return (
+      <div className="flex flex-col min-h-screen min-h-[100dvh] w-screen bg-[#f7f5f0] text-slate-900 relative overflow-y-auto">
+        <LandingPage
+          onSelectImage={handleImageSelected}
+          onLoadSample={handleLoadSample}
+        />
+
+        {/* Floating Status Toast */}
+        {toast && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-slate-200 shadow-xl text-xs font-medium text-slate-800 max-w-[90vw]">
+            <span className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-emerald-500' : toast.type === 'warn' ? 'bg-amber-500' : 'bg-blue-500'} shrink-0`} />
+            <span className="truncate">{toast.message}</span>
+            <button onClick={() => setToast(null)} className="ml-2 text-slate-400 hover:text-slate-700 shrink-0">✕</button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen h-[100dvh] w-screen overflow-hidden bg-slate-50 text-slate-900 relative">
       {/* Top Header */}
@@ -808,6 +874,13 @@ export const App: React.FC = () => {
         onChangeOcrLang={(l) => {
           setOcrLang(l);
           handleRunOCR(undefined, l);
+        }}
+        onHome={() => {
+          setImage(null);
+          setLayers([]);
+          setSelectedLayerId(null);
+          setInpaintPatches([]);
+          setDetectedRegions([]);
         }}
       />
 

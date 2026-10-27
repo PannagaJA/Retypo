@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     --bg-light: #f8fafc;
@@ -79,5 +81,12 @@
 
 .animate-scan-sweep {
   animation: scan-sweep 2.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* Hero brand gradient text */
+.hero-shimmer {
+  background: linear-gradient(135deg, #ff6f42 0%, #ee5122 50%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
