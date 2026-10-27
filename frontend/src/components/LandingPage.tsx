@@ -97,8 +97,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     const totalDistance = featuresPinnedRef.current.offsetHeight - window.innerHeight;
     if (totalDistance <= 0) return;
 
-    const stickyTop = 80;
-    const currentScrolled = stickyTop - rect.top;
+    const currentScrolled = -rect.top;
     const progress = Math.max(0, Math.min(1, currentScrolled / totalDistance));
 
     setMobileProgress(progress);
@@ -107,6 +106,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   }, []);
 
   useEffect(() => {
+    updateMobileFeatureScroll();
     window.addEventListener('scroll', updateMobileFeatureScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', updateMobileFeatureScroll);
@@ -715,10 +715,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <section
             id="features"
             ref={featuresPinnedRef}
-            className="relative sm:static h-[320vh] sm:h-auto py-8 sm:py-20 border-t border-neutral-200"
+            className="relative sm:static h-[320vh] sm:h-auto -mx-4 sm:mx-0 border-t border-neutral-200"
           >
-            <div className="sticky top-20 sm:static sm:h-auto overflow-hidden sm:overflow-visible pb-4">
-              <div className="scroll-reveal flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between mb-8 sm:mb-12">
+            <div className="sticky top-0 h-[100dvh] sm:h-auto flex flex-col justify-center sm:block overflow-hidden sm:overflow-visible pt-14 pb-6 sm:py-20">
+              <div className="scroll-reveal px-4 sm:px-0 flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between mb-4 sm:mb-12">
                 <div>
                   <h2 className="max-w-[24ch] text-2xl font-extrabold tracking-tight text-balance sm:text-5xl text-neutral-950">
                     One studio canvas.{' '}
@@ -732,7 +732,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
               {/* Cards Track: Scroll-driven horizontal sliding on mobile, 5-column bento on desktop */}
               <div
-                className="flex w-max sm:w-full sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4 overflow-visible will-change-transform"
+                className="flex w-max sm:w-full sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-4 overflow-visible will-change-transform"
                 style={
                   isMobile
                     ? {
@@ -744,7 +744,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               >
                 {/* Feature 1: Text Detection */}
                 <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] sm:w-auto sm:shrink flex flex-col justify-between ${
+                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
                     isMobile
                       ? activeFeatureIndex === 0
                         ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
@@ -752,7 +752,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
                   }`}
                 >
-                  <div className="relative h-60 xs:h-64 sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                  <div className="relative h-[68%] sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
                     <img
                       src="/features/text-detection.jpg"
                       alt="Smart Text Detection"
@@ -781,15 +781,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 sm:p-4.5 flex flex-col justify-between flex-1 bg-white">
-                    <h3 className="text-base font-extrabold tracking-tight text-neutral-950">Smart Text Detection</h3>
-                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Detects any text block, font angle, and position automatically.</p>
+                  <div className="h-[32%] sm:h-auto p-4 sm:p-4.5 flex flex-col justify-center sm:justify-between sm:flex-1 bg-white">
+                    <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-neutral-950">Smart Text Detection</h3>
+                    <p className="mt-1 text-xs sm:text-sm font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Detects any text block, font angle, and position automatically.</p>
                   </div>
                 </div>
 
                 {/* Feature 2: Clean Inpainting */}
                 <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] sm:w-auto sm:shrink flex flex-col justify-between ${
+                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
                     isMobile
                       ? activeFeatureIndex === 1
                         ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
@@ -797,7 +797,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
                   }`}
                 >
-                  <div className="relative h-60 xs:h-64 sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                  <div className="relative h-[68%] sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
                     <img
                       src="/features/background-inpaint.jpg"
                       alt="Background Inpainting"
@@ -826,15 +826,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 sm:p-4.5 flex flex-col justify-between flex-1 bg-white">
-                    <h3 className="text-base font-extrabold tracking-tight text-neutral-950">Background Inpainting</h3>
-                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Erases text seamlessly while perfectly restoring underlying texture.</p>
+                  <div className="h-[32%] sm:h-auto p-4 sm:p-4.5 flex flex-col justify-center sm:justify-between sm:flex-1 bg-white">
+                    <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-neutral-950">Background Inpainting</h3>
+                    <p className="mt-1 text-xs sm:text-sm font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Erases text seamlessly while perfectly restoring underlying texture.</p>
                   </div>
                 </div>
 
                 {/* Feature 3: Font Matcher */}
                 <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] sm:w-auto sm:shrink flex flex-col justify-between ${
+                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
                     isMobile
                       ? activeFeatureIndex === 2
                         ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
@@ -842,7 +842,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
                   }`}
                 >
-                  <div className="relative h-60 xs:h-64 sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                  <div className="relative h-[68%] sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
                     <img
                       src="/features/font-matcher.jpg"
                       alt="Font Reconstruction"
@@ -873,15 +873,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 sm:p-4.5 flex flex-col justify-between flex-1 bg-white">
-                    <h3 className="text-base font-extrabold tracking-tight text-neutral-950">Font Reconstruction</h3>
-                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Instantly matches serif, sans-serif, and weight to fonts.</p>
+                  <div className="h-[32%] sm:h-auto p-4 sm:p-4.5 flex flex-col justify-center sm:justify-between sm:flex-1 bg-white">
+                    <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-neutral-950">Font Reconstruction</h3>
+                    <p className="mt-1 text-xs sm:text-sm font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Instantly matches serif, sans-serif, and weight to fonts.</p>
                   </div>
                 </div>
 
                 {/* Feature 4: Vector Canvas */}
                 <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] sm:w-auto sm:shrink flex flex-col justify-between ${
+                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
                     isMobile
                       ? activeFeatureIndex === 3
                         ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
@@ -889,7 +889,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
                   }`}
                 >
-                  <div className="relative h-60 xs:h-64 sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                  <div className="relative h-[68%] sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
                     <img
                       src="/features/vector-typography.jpg"
                       alt="Vector Typography Layer"
@@ -918,15 +918,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 sm:p-4.5 flex flex-col justify-between flex-1 bg-white">
-                    <h3 className="text-base font-extrabold tracking-tight text-neutral-950">Vector Typography Layer</h3>
-                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Rotate, scale, recolor, and change text with total design freedom.</p>
+                  <div className="h-[32%] sm:h-auto p-4 sm:p-4.5 flex flex-col justify-center sm:justify-between sm:flex-1 bg-white">
+                    <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-neutral-950">Vector Typography Layer</h3>
+                    <p className="mt-1 text-xs sm:text-sm font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Rotate, scale, recolor, and change text with total design freedom.</p>
                   </div>
                 </div>
 
                 {/* Feature 5: Lossless Compositor */}
                 <div
-                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] sm:w-auto sm:shrink flex flex-col justify-between ${
+                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[88vw] max-w-[360px] h-[54vh] min-h-[460px] max-h-[580px] sm:w-auto sm:h-auto sm:min-h-0 sm:max-h-none sm:shrink flex flex-col justify-between ${
                     isMobile
                       ? activeFeatureIndex === 4
                         ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_20px_45px_-12px_rgba(255,111,66,0.25)] z-10'
@@ -934,7 +934,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
                   }`}
                 >
-                  <div className="relative h-60 xs:h-64 sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
+                  <div className="relative h-[68%] sm:h-48 overflow-hidden flex flex-col justify-between shrink-0">
                     <img
                       src="/features/lossless-export.jpg"
                       alt="Lossless Quality Export"
@@ -963,15 +963,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 sm:p-4.5 flex flex-col justify-between flex-1 bg-white">
-                    <h3 className="text-base font-extrabold tracking-tight text-neutral-950">Lossless Quality Export</h3>
-                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Exports at full native source resolution with untouched pixels.</p>
+                  <div className="h-[32%] sm:h-auto p-4 sm:p-4.5 flex flex-col justify-center sm:justify-between sm:flex-1 bg-white">
+                    <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-neutral-950">Lossless Quality Export</h3>
+                    <p className="mt-1 text-xs sm:text-sm font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Exports at full native source resolution with untouched pixels.</p>
                   </div>
                 </div>
               </div>
 
               {/* Mobile Scroll Progress Indicator (Only on mobile < sm) */}
-              <div className="flex sm:hidden items-center justify-between mt-4 px-2 text-xs text-neutral-500">
+              <div className="flex sm:hidden items-center justify-between mt-4 px-5 text-xs text-neutral-500">
                 <span className="font-bold text-[11px] text-neutral-600 flex items-center gap-1.5 font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#ff6f42]" />
                   0{activeFeatureIndex + 1} / 05 · {FEATURE_NAMES[activeFeatureIndex]}
