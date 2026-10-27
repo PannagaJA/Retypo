@@ -1007,7 +1007,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="scroll-reveal mx-auto max-w-4xl overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_-45px_rgba(15,23,42,0.35)] ring-1 ring-black/10 p-3 sm:p-4">
               <div
                 ref={sliderContainerRef}
-                className="relative aspect-[4/3] sm:aspect-[16/10] w-full overflow-hidden rounded-xl bg-neutral-900 cursor-ew-resize select-none touch-none shadow-inner"
+                className="relative aspect-[4/3] xs:aspect-[4/3.2] sm:aspect-[16/10] min-h-[340px] sm:min-h-0 w-full overflow-hidden rounded-xl bg-neutral-900 cursor-ew-resize select-none touch-none shadow-inner"
                 onMouseDown={handleMouseDown}
                 onTouchStart={handleTouchStart}
               >
@@ -1021,48 +1021,52 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/35" />
 
                   {/* Top-Right Badge */}
-                  <div className="absolute top-3.5 right-3.5 z-10 pointer-events-none">
-                    <span className="px-3 py-1.5 rounded-full bg-emerald-500/25 backdrop-blur-md text-[11px] font-mono font-bold tracking-wider uppercase text-emerald-300 border border-emerald-400/35 flex items-center gap-1.5 shadow-sm">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      Retypo Reconstructed
+                  <div className="absolute top-3 right-3 sm:top-3.5 sm:right-3.5 z-10 pointer-events-none">
+                    <span className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-emerald-500/25 backdrop-blur-md text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase text-emerald-300 border border-emerald-400/35 flex items-center gap-1.5 shadow-sm">
+                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="sm:hidden">Reconstructed</span>
+                      <span className="hidden sm:inline">Retypo Reconstructed</span>
                     </span>
                   </div>
 
                   {/* Reconstructed Vector Typography with Live Handles */}
-                  <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-4 sm:p-6 z-10 pointer-events-none">
-                    <div className="relative inline-block px-5 py-3.5 sm:px-8 sm:py-6 rounded-xl border-2 border-dashed border-[#ff6f42] bg-[#ff6f42]/15 backdrop-blur-[2px] shadow-2xl">
+                  <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-3 sm:p-6 z-10 pointer-events-none">
+                    <div className="relative inline-block px-3.5 py-3 sm:px-8 sm:py-6 rounded-xl border-2 border-dashed border-[#ff6f42] bg-[#ff6f42]/15 backdrop-blur-[2px] shadow-2xl max-w-[94%] sm:max-w-none">
                       {/* Corner vector transform handles */}
-                      <span className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
-                      <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
-                      <span className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
-                      <span className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
+                      <span className="absolute -top-1.5 -left-1.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
+                      <span className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
+                      <span className="absolute -bottom-1.5 -left-1.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
+                      <span className="absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
 
                       {/* Floating Font Inspector Badge */}
-                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-neutral-950/90 backdrop-blur-md text-[#ff6f42] border border-[#ff6f42]/40 text-[10px] font-mono font-bold whitespace-nowrap shadow-md flex items-center gap-1">
+                      <div className="absolute -top-6 sm:-top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 sm:px-2.5 rounded-full bg-neutral-950/90 backdrop-blur-md text-[#ff6f42] border border-[#ff6f42]/40 text-[9px] sm:text-[10px] font-mono font-bold whitespace-nowrap shadow-md flex items-center gap-1">
                         <Type className="w-3 h-3" />
-                        Playfair Display · 700 · 48px
+                        <span className="sm:hidden">Playfair Display · 700</span>
+                        <span className="hidden sm:inline">Playfair Display · 700 · 48px</span>
                       </div>
 
-                      <p className="text-[10px] sm:text-xs font-mono tracking-[0.25em] text-[#ffc1ad] uppercase font-bold mb-1 drop-shadow-sm">
+                      <p className="text-[9px] sm:text-xs font-mono tracking-[0.2em] sm:tracking-[0.25em] text-[#ffc1ad] uppercase font-bold mb-0.5 sm:mb-1 drop-shadow-sm">
                         Architectural Monograph • Vol. 08
                       </p>
-                      <h3 className="text-2xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-lg">
+                      <h3 className="text-xl xs:text-2xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-lg">
                         Timeless Elegance
                       </h3>
-                      <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-neutral-100 font-medium max-w-sm sm:max-w-md mx-auto drop-shadow-sm">
+                      <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs text-neutral-100 font-medium max-w-xs sm:max-w-md mx-auto drop-shadow-sm line-clamp-2 sm:line-clamp-none">
                         Travertine stone restored seamlessly. Text converted to clean vector nodes.
                       </p>
                     </div>
                   </div>
 
                   {/* Bottom Telemetry */}
-                  <div className="absolute bottom-3.5 left-3.5 right-3.5 flex justify-between items-center text-[10px] sm:text-[11px] font-mono font-semibold text-white/90 z-10 pointer-events-none">
-                    <span className="px-2.5 py-1 rounded-md bg-neutral-950/75 backdrop-blur-md border border-white/10 flex items-center gap-1.5">
+                  <div className="absolute bottom-3 left-3 right-3 sm:bottom-3.5 sm:left-3.5 sm:right-3.5 flex justify-between items-center text-[9px] sm:text-[11px] font-mono font-semibold text-white/90 z-10 pointer-events-none">
+                    <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md bg-neutral-950/75 backdrop-blur-md border border-white/10 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      Inpainting: Grain Intact
+                      <span className="sm:hidden">Inpainted</span>
+                      <span className="hidden sm:inline">Inpainting: Grain Intact</span>
                     </span>
-                    <span className="px-2.5 py-1 rounded-md bg-neutral-950/75 backdrop-blur-md border border-white/10 text-neutral-300">
-                      Editable Vector Nodes
+                    <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md bg-neutral-950/75 backdrop-blur-md border border-white/10 text-neutral-300">
+                      <span className="sm:hidden">Vector Nodes</span>
+                      <span className="hidden sm:inline">Editable Vector Nodes</span>
                     </span>
                   </div>
                 </div>
@@ -1080,38 +1084,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/45" />
 
                   {/* Top-Left Badge */}
-                  <div className="absolute top-3.5 left-3.5 z-10 pointer-events-none">
-                    <span className="px-3 py-1.5 rounded-full bg-amber-500/25 backdrop-blur-md text-[11px] font-mono font-bold tracking-wider uppercase text-amber-200 border border-amber-400/40 flex items-center gap-1.5 shadow-sm">
+                  <div className="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 z-10 pointer-events-none">
+                    <span className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-amber-500/25 backdrop-blur-md text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase text-amber-200 border border-amber-400/40 flex items-center gap-1.5 shadow-sm">
                       <Lock className="w-3 h-3 text-amber-300" />
-                      Original Flattened Raster
+                      <span className="sm:hidden">Original Raster</span>
+                      <span className="hidden sm:inline">Original Flattened Raster</span>
                     </span>
                   </div>
 
                   {/* Flattened Raster Text with Locked Indicator */}
-                  <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-4 sm:p-6 z-10 pointer-events-none">
-                    <div className="relative inline-block px-5 py-3.5 sm:px-8 sm:py-6 rounded-xl border border-dashed border-amber-400/35 bg-black/40 backdrop-blur-xs">
-                      {/* Floating Lock Badge */}
-                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-neutral-950/90 backdrop-blur-md text-amber-300 border border-amber-400/40 text-[10px] font-mono font-bold whitespace-nowrap shadow-md flex items-center gap-1">
-                        <Lock className="w-3 h-3" />
-                        Locked Pixel Matrix
-                      </div>
-
-                      <p className="text-[10px] sm:text-xs font-mono tracking-[0.25em] text-neutral-300 uppercase font-bold mb-1 opacity-80">
+                  <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-3 sm:p-6 z-10 pointer-events-none">
+                    <div className="relative inline-block px-3.5 py-3 sm:px-8 sm:py-6 rounded-xl border border-dashed border-amber-400/35 bg-black/40 backdrop-blur-xs max-w-[94%] sm:max-w-none">
+                      <p className="text-[9px] sm:text-xs font-mono tracking-[0.2em] sm:tracking-[0.25em] text-neutral-300 uppercase font-bold mb-0.5 sm:mb-1 opacity-80">
                         Architectural Monograph • Vol. 08
                       </p>
-                      <h3 className="text-2xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-neutral-200 drop-shadow-md">
+                      <h3 className="text-xl xs:text-2xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-neutral-200 drop-shadow-md">
                         Timeless Elegance
                       </h3>
-                      <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-neutral-300 font-medium max-w-sm sm:max-w-md mx-auto opacity-80">
+                      <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs text-neutral-300 font-medium max-w-xs sm:max-w-md mx-auto opacity-80 line-clamp-2 sm:line-clamp-none">
                         Static raster pixels baked into stone. Cannot edit words, font, or styling.
                       </p>
                     </div>
                   </div>
 
                   {/* Bottom Telemetry */}
-                  <div className="absolute bottom-3.5 left-3.5 z-10 pointer-events-none">
-                    <span className="px-2.5 py-1 rounded-md bg-neutral-950/75 backdrop-blur-md border border-white/10 text-[10px] sm:text-[11px] font-mono text-amber-200/90">
-                      Raster JPEG · No Layers
+                  <div className="absolute bottom-3 left-3 sm:bottom-3.5 sm:left-3.5 z-10 pointer-events-none">
+                    <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md bg-neutral-950/75 backdrop-blur-md border border-white/10 text-[9px] sm:text-[11px] font-mono text-amber-200/90">
+                      <span className="sm:hidden">Raster JPEG</span>
+                      <span className="hidden sm:inline">Raster JPEG · No Layers</span>
                     </span>
                   </div>
                 </div>
@@ -1121,8 +1121,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className="absolute inset-y-0 w-0.5 bg-white shadow-[0_0_12px_rgba(255,255,255,0.95)] pointer-events-none z-20"
                   style={{ left: `${sliderPosition}%` }}
                 >
-                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white text-neutral-950 shadow-2xl flex items-center justify-center font-bold text-xs ring-4 ring-black/20 hover:scale-110 transition-transform">
-                    <span className="text-[10px] tracking-tight font-black flex items-center">
+                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white text-neutral-950 shadow-2xl flex items-center justify-center font-bold text-xs ring-4 ring-black/20 hover:scale-110 transition-transform">
+                    <span className="text-[9px] sm:text-[10px] tracking-tight font-black flex items-center">
                       ◀▶
                     </span>
                   </div>
