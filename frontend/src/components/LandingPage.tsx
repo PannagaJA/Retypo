@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   UploadCloud,
-  Sparkles,
   Type,
   ScanText,
   ShieldCheck,
@@ -11,7 +10,9 @@ import {
   CheckCircle2,
   Lock,
   Layers,
-  Wand2,
+  Eraser,
+  LayoutTemplate,
+  Play,
   Download,
   Share2,
   FileCheck,
@@ -205,7 +206,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   onClick={() => onLoadSample('magazine')}
                   className="hidden sm:inline-flex items-center justify-center gap-1.5 h-9 rounded-full bg-white px-4 text-sm font-semibold text-neutral-900 shadow-none ring-1 ring-black/10 hover:bg-neutral-50 dark:bg-neutral-800 dark:text-white dark:ring-white/15 dark:hover:bg-neutral-700 transition-all"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-[#ff6f42]" />
+                  <Play className="w-3 h-3 text-[#ff6f42] fill-[#ff6f42]" />
                   Try Live Demo
                 </button>
 
@@ -243,7 +244,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-neutral-900 px-3.5 py-1 text-xs font-semibold ring-1 ring-black/8 dark:ring-white/15 shadow-xs mb-6 text-neutral-800 dark:text-neutral-200">
                 <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>PaddleOCR 2.8 + Lossless Vector Studio</span>
-                <span className="text-[#ff6f42] font-bold">✦ v2.4</span>
+                <span className="text-[#ff6f42] font-mono font-bold">v2.4</span>
               </div>
 
               {/* Main Headline */}
@@ -369,8 +370,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               {/* Satellite 2: Bottom-Left (rotate-3) */}
               <div className="absolute bottom-4 left-6 z-20 hidden w-56 rotate-3 rounded-xl bg-white p-4 shadow-[0_28px_60px_-30px_rgba(15,23,42,0.45)] ring-1 ring-black/10 lg:block dark:bg-neutral-900 dark:ring-white/15">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-[#fff1ec] dark:bg-[#ff6f42]/10 text-[#ff6f42] flex items-center justify-center">
-                    <Sparkles className="w-3.5 h-3.5" />
+                  <div className="w-6 h-6 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 flex items-center justify-center">
+                    <LayoutTemplate className="w-3.5 h-3.5 text-[#ff6f42]" />
                   </div>
                   <span className="text-xs font-bold text-neutral-950 dark:text-white">Sample Templates</span>
                 </div>
@@ -516,7 +517,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#f0fdf4] dark:bg-emerald-950/20 p-4 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="p-2 rounded-lg bg-white dark:bg-neutral-800 shadow-xs text-emerald-600">
-                      <Wand2 className="w-5 h-5" />
+                      <Eraser className="w-5 h-5" />
                     </span>
                     <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">
                       Multi-Tier
@@ -785,7 +786,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="flex w-52 shrink-0 flex-col items-center text-center">
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/15 p-4 flex flex-col justify-center items-center group hover:ring-black/20 transition">
                   <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center mb-2.5">
-                    <Wand2 className="w-6 h-6" />
+                    <Eraser className="w-6 h-6" />
                   </div>
                   <span className="text-xs font-bold text-neutral-950 dark:text-white">3. Inpaint Background</span>
                   <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Clean Texture Fill</span>
