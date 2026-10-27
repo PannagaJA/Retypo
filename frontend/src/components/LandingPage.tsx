@@ -38,6 +38,82 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const heroHeadingRef = useRef<HTMLDivElement>(null);
   const sliderContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const featuresPinnedRef = useRef<HTMLDivElement>(null);
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState<number>(0);
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    return typeof window !== 'undefined' ? window.innerWidth < 640 : false;
+  });
+  const [cardStride, setCardStride] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const w = window.innerWidth;
+      const cardW = Math.min(320, w * 0.82);
+      return cardW + 14;
+    }
+    return 334;
+  });
+  const [initialOffset, setInitialOffset] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const w = window.innerWidth;
+      const cardW = Math.min(320, w * 0.82);
+      return (w - cardW) / 2;
+    }
+    return 36;
+  });
+  const [mobileProgress, setMobileProgress] = useState<number>(0);
+
+  const FEATURE_NAMES = [
+    'Smart Text Detection',
+    'Background Inpainting',
+    'Font Reconstruction',
+    'Vector Typography Layer',
+    'Lossless Quality Export',
+  ];
+
+  // Recalibrate mobile layout metrics for centering card & peeking next card
+  useEffect(() => {
+    const updateMetrics = () => {
+      if (typeof window === 'undefined') return;
+      const w = window.innerWidth;
+      const mobile = w < 640;
+      setIsMobile(mobile);
+      if (mobile) {
+        const cardW = Math.min(320, w * 0.82);
+        const gap = 14;
+        setCardStride(cardW + gap);
+        setInitialOffset((w - cardW) / 2);
+      }
+    };
+    updateMetrics();
+    window.addEventListener('resize', updateMetrics);
+    return () => window.removeEventListener('resize', updateMetrics);
+  }, []);
+
+  // Update card position purely from vertical page scroll
+  const updateMobileFeatureScroll = useCallback(() => {
+    if (typeof window === 'undefined' || window.innerWidth >= 640) return;
+    if (!featuresPinnedRef.current) return;
+
+    const rect = featuresPinnedRef.current.getBoundingClientRect();
+    const totalDistance = featuresPinnedRef.current.offsetHeight - window.innerHeight;
+    if (totalDistance <= 0) return;
+
+    const stickyTop = 80;
+    const currentScrolled = stickyTop - rect.top;
+    const progress = Math.max(0, Math.min(1, currentScrolled / totalDistance));
+
+    setMobileProgress(progress);
+    const activeIdx = Math.min(4, Math.max(0, Math.round(progress * 4)));
+    setActiveFeatureIndex(activeIdx);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('scroll', updateMobileFeatureScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', updateMobileFeatureScroll);
+    };
+  }, [updateMobileFeatureScroll]);
+
+  const translateX = isMobile ? initialOffset - mobileProgress * 4 * cardStride : 0;
 
   // Enforce light theme only - keep document element clean of 'dark' class
   useEffect(() => {
@@ -76,6 +152,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         const max = e.limit || 1;
         setScrollY(current);
         setScrollProgress(Math.min(100, Math.max(0, (current / max) * 100)));
+        updateMobileFeatureScroll();
       };
 
       lenis.on('scroll', handleScroll);
@@ -634,161 +711,238 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          {/* SECTION 2: 5-COLUMN BENTO FEATURES (HeyRetro Layout + Scroll Reveal) */}
-          <section id="features" className="py-20 border-t border-neutral-200">
-            <div className="scroll-reveal flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between mb-12">
-              <div>
-                <h2 className="max-w-[24ch] text-3xl font-extrabold tracking-tight text-balance sm:text-5xl text-neutral-950">
-                  One studio canvas.{' '}
-                  <span className="text-neutral-500">Total typography control.</span>
-                </h2>
-              </div>
-              <p className="max-w-[44ch] text-sm font-medium text-neutral-700">
-                Everything you need to find, style, and edit flattened text in seconds.
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              {/* Feature 1: Text Detection */}
-              <div className="scroll-reveal group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition-all duration-300 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm">
-                <div className="relative aspect-[4/3] overflow-hidden bg-[#fff3ec] p-4 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="p-2 rounded-lg bg-white shadow-xs text-[#ff6f42]">
-                      <ScanText className="w-5 h-5" />
-                    </span>
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-[#ff6f42]/15 text-[#ff6f42]">
-                      Auto Scan
-                    </span>
-                  </div>
-                  <div className="rounded-xl bg-neutral-950 p-2.5 text-white shadow-xs border border-white/10">
-                    <div className="flex items-center justify-between pb-1.5 border-neutral-800 text-[10px] text-neutral-300 font-mono border-b">
-                      <span>DETECTED_TEXT</span>
-                      <span className="text-emerald-400 font-bold">99.8% match</span>
-                    </div>
-                    <div className="mt-2 py-1 px-2 rounded border border-dashed border-[#ff6f42] bg-[#ff6f42]/20 flex items-center justify-between">
-                      <span className="text-xs font-bold tracking-wider font-mono text-white">"EDITORIAL"</span>
-                      <span className="size-1.5 bg-[#ff6f42] rounded-full" />
-                    </div>
-                  </div>
+          {/* SECTION 2: 5-COLUMN BENTO FEATURES (Scroll-driven pinned cards on Mobile, Grid on Tablet/Desktop) */}
+          <section
+            id="features"
+            ref={featuresPinnedRef}
+            className="relative sm:static h-[320vh] sm:h-auto py-8 sm:py-20 border-t border-neutral-200"
+          >
+            <div className="sticky top-20 sm:static sm:h-auto overflow-hidden sm:overflow-visible pb-4">
+              <div className="scroll-reveal flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between mb-8 sm:mb-12">
+                <div>
+                  <h2 className="max-w-[24ch] text-2xl font-extrabold tracking-tight text-balance sm:text-5xl text-neutral-950">
+                    One studio canvas.{' '}
+                    <span className="text-neutral-500">Total typography control.</span>
+                  </h2>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-sm font-extrabold tracking-tight text-neutral-950">Smart Text Detection</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600">Detects any text block, font angle, and position automatically.</p>
-                </div>
+                <p className="max-w-[44ch] text-xs sm:text-sm font-medium text-neutral-700">
+                  Everything you need to find, style, and edit flattened text in seconds.
+                </p>
               </div>
 
-              {/* Feature 2: Clean Inpainting */}
-              <div className="scroll-reveal group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition-all duration-300 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm">
-                <div className="relative aspect-[4/3] overflow-hidden bg-[#f0fdf4] p-4 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="p-2 rounded-lg bg-white shadow-xs text-emerald-600">
-                      <Eraser className="w-5 h-5" />
-                    </span>
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                      Background Fill
-                    </span>
-                  </div>
-                  <div className="rounded-xl bg-white p-2.5 shadow-xs border border-black/5">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500">
-                      <span>CLEAN_TEXTURE</span>
-                      <span className="text-emerald-600 font-bold">Seamless</span>
-                    </div>
-                    <div className="mt-2 h-7 rounded-lg bg-gradient-to-r from-emerald-100 via-teal-100 to-emerald-200 flex items-center justify-center">
-                      <span className="text-[10px] font-bold text-emerald-800 font-mono">
-                        Texture Restored ✓
+              {/* Cards Track: Scroll-driven horizontal sliding on mobile, 5-column bento on desktop */}
+              <div
+                className="flex w-max sm:w-full sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4 overflow-visible will-change-transform"
+                style={
+                  isMobile
+                    ? {
+                        transform: `translate3d(${translateX}px, 0, 0)`,
+                        transition: 'transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                      }
+                    : undefined
+                }
+              >
+                {/* Feature 1: Text Detection */}
+                <div
+                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[82vw] max-w-[320px] sm:w-auto sm:shrink flex flex-col justify-between ${
+                    isMobile
+                      ? activeFeatureIndex === 0
+                        ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_18px_40px_-12px_rgba(255,111,66,0.22)] z-10'
+                        : 'scale-[0.93] opacity-65 ring-1 ring-black/10 shadow-xs'
+                      : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
+                  }`}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[#fff3ec] p-3.5 sm:p-4 flex flex-col justify-between shrink-0">
+                    <div className="flex items-center justify-between">
+                      <span className="p-2 rounded-lg bg-white shadow-xs text-[#ff6f42]">
+                        <ScanText className="w-5 h-5" />
+                      </span>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-[#ff6f42]/15 text-[#ff6f42]">
+                        Auto Scan
                       </span>
                     </div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-sm font-extrabold tracking-tight text-neutral-950">Background Inpainting</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600">Erases text seamlessly while perfectly restoring underlying texture.</p>
-                </div>
-              </div>
-
-              {/* Feature 3: Font Matcher */}
-              <div className="scroll-reveal group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition-all duration-300 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm">
-                <div className="relative aspect-[4/3] overflow-hidden bg-[#eff6ff] p-4 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="p-2 rounded-lg bg-white shadow-xs text-sky-600">
-                      <Type className="w-5 h-5" />
-                    </span>
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800">
-                      Font Matcher
-                    </span>
-                  </div>
-                  <div className="rounded-xl bg-white p-2.5 shadow-xs border border-black/5">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500">
-                      <span>MATCHED_STYLE</span>
-                      <span className="text-sky-600 font-bold">ACTIVE</span>
+                    <div className="rounded-xl bg-neutral-950 p-2.5 text-white shadow-xs border border-white/10">
+                      <div className="flex items-center justify-between pb-1.5 border-neutral-800 text-[10px] text-neutral-300 font-mono border-b">
+                        <span>DETECTED_TEXT</span>
+                        <span className="text-emerald-400 font-bold">99.8% match</span>
+                      </div>
+                      <div className="mt-2 py-1 px-2 rounded border border-dashed border-[#ff6f42] bg-[#ff6f42]/20 flex items-center justify-between">
+                        <span className="text-xs font-bold tracking-wider font-mono text-white">"EDITORIAL"</span>
+                        <span className="size-1.5 bg-[#ff6f42] rounded-full" />
+                      </div>
                     </div>
-                    <div className="mt-1 flex items-baseline justify-between">
-                      <span className="font-serif text-lg font-bold text-neutral-900">Playfair</span>
-                      <span className="text-[10px] font-mono bg-sky-50 text-sky-700 px-1.5 py-0.5 rounded font-semibold">
-                        Serif · 700
+                  </div>
+                  <div className="p-3.5 sm:p-4 flex flex-col justify-between flex-1 bg-white">
+                    <h3 className="text-sm font-extrabold tracking-tight text-neutral-950">Smart Text Detection</h3>
+                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Detects any text block, font angle, and position automatically.</p>
+                  </div>
+                </div>
+
+                {/* Feature 2: Clean Inpainting */}
+                <div
+                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[82vw] max-w-[320px] sm:w-auto sm:shrink flex flex-col justify-between ${
+                    isMobile
+                      ? activeFeatureIndex === 1
+                        ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_18px_40px_-12px_rgba(255,111,66,0.22)] z-10'
+                        : 'scale-[0.93] opacity-65 ring-1 ring-black/10 shadow-xs'
+                      : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
+                  }`}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[#f0fdf4] p-3.5 sm:p-4 flex flex-col justify-between shrink-0">
+                    <div className="flex items-center justify-between">
+                      <span className="p-2 rounded-lg bg-white shadow-xs text-emerald-600">
+                        <Eraser className="w-5 h-5" />
+                      </span>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                        Background Fill
                       </span>
                     </div>
+                    <div className="rounded-xl bg-white p-2.5 shadow-xs border border-black/5">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500">
+                        <span>CLEAN_TEXTURE</span>
+                        <span className="text-emerald-600 font-bold">Seamless</span>
+                      </div>
+                      <div className="mt-2 h-7 rounded-lg bg-gradient-to-r from-emerald-100 via-teal-100 to-emerald-200 flex items-center justify-center">
+                        <span className="text-[10px] font-bold text-emerald-800 font-mono">
+                          Texture Restored ✓
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3.5 sm:p-4 flex flex-col justify-between flex-1 bg-white">
+                    <h3 className="text-sm font-extrabold tracking-tight text-neutral-950">Background Inpainting</h3>
+                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Erases text seamlessly while perfectly restoring underlying texture.</p>
                   </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-sm font-extrabold tracking-tight text-neutral-950">Font Reconstruction</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600">Instantly matches serif, sans-serif, and weight to fonts.</p>
+
+                {/* Feature 3: Font Matcher */}
+                <div
+                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[82vw] max-w-[320px] sm:w-auto sm:shrink flex flex-col justify-between ${
+                    isMobile
+                      ? activeFeatureIndex === 2
+                        ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_18px_40px_-12px_rgba(255,111,66,0.22)] z-10'
+                        : 'scale-[0.93] opacity-65 ring-1 ring-black/10 shadow-xs'
+                      : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
+                  }`}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[#eff6ff] p-3.5 sm:p-4 flex flex-col justify-between shrink-0">
+                    <div className="flex items-center justify-between">
+                      <span className="p-2 rounded-lg bg-white shadow-xs text-sky-600">
+                        <Type className="w-5 h-5" />
+                      </span>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800">
+                        Font Matcher
+                      </span>
+                    </div>
+                    <div className="rounded-xl bg-white p-2.5 shadow-xs border border-black/5">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500">
+                        <span>MATCHED_STYLE</span>
+                        <span className="text-sky-600 font-bold">ACTIVE</span>
+                      </div>
+                      <div className="mt-1 flex items-baseline justify-between">
+                        <span className="font-serif text-lg font-bold text-neutral-900">Playfair</span>
+                        <span className="text-[10px] font-mono bg-sky-50 text-sky-700 px-1.5 py-0.5 rounded font-semibold">
+                          Serif · 700
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3.5 sm:p-4 flex flex-col justify-between flex-1 bg-white">
+                    <h3 className="text-sm font-extrabold tracking-tight text-neutral-950">Font Reconstruction</h3>
+                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Instantly matches serif, sans-serif, and weight to fonts.</p>
+                  </div>
+                </div>
+
+                {/* Feature 4: Vector Canvas */}
+                <div
+                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[82vw] max-w-[320px] sm:w-auto sm:shrink flex flex-col justify-between ${
+                    isMobile
+                      ? activeFeatureIndex === 3
+                        ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_18px_40px_-12px_rgba(255,111,66,0.22)] z-10'
+                        : 'scale-[0.93] opacity-65 ring-1 ring-black/10 shadow-xs'
+                      : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
+                  }`}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[#faf5ff] p-3.5 sm:p-4 flex flex-col justify-between shrink-0">
+                    <div className="flex items-center justify-between">
+                      <span className="p-2 rounded-lg bg-white shadow-xs text-indigo-600">
+                        <Layers className="w-5 h-5" />
+                      </span>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
+                        Full Controls
+                      </span>
+                    </div>
+                    <div className="rounded-xl bg-white p-2.5 shadow-xs border border-black/5">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500">
+                        <span>TEXT_LAYER</span>
+                        <span className="text-indigo-600 font-bold">VECTOR</span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-[10px] font-semibold text-neutral-800">
+                        <span className="px-1.5 py-0.5 rounded bg-neutral-100">Size: 48px</span>
+                        <span className="px-1.5 py-0.5 rounded bg-neutral-100">Track: -0.02</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3.5 sm:p-4 flex flex-col justify-between flex-1 bg-white">
+                    <h3 className="text-sm font-extrabold tracking-tight text-neutral-950">Vector Typography Layer</h3>
+                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Rotate, scale, recolor, and change text with total design freedom.</p>
+                  </div>
+                </div>
+
+                {/* Feature 5: Lossless Compositor */}
+                <div
+                  className={`group overflow-hidden rounded-2xl bg-white transition-all duration-300 ease-out shrink-0 w-[82vw] max-w-[320px] sm:w-auto sm:shrink flex flex-col justify-between ${
+                    isMobile
+                      ? activeFeatureIndex === 4
+                        ? 'scale-100 opacity-100 ring-2 ring-[#ff6f42]/40 shadow-[0_18px_40px_-12px_rgba(255,111,66,0.22)] z-10'
+                        : 'scale-[0.93] opacity-65 ring-1 ring-black/10 shadow-xs'
+                      : 'ring-1 ring-black/10 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm'
+                  }`}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[#fefce8] p-3.5 sm:p-4 flex flex-col justify-between shrink-0">
+                    <div className="flex items-center justify-between">
+                      <span className="p-2 rounded-lg bg-white shadow-xs text-amber-600">
+                        <ShieldCheck className="w-5 h-5" />
+                      </span>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900">
+                        Full Quality
+                      </span>
+                    </div>
+                    <div className="rounded-xl bg-white p-2.5 shadow-xs border border-black/5">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500">
+                        <span>EXPORT_QUALITY</span>
+                        <span className="text-amber-600 font-bold">ORIGINAL</span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-[10px] font-mono font-bold text-neutral-800">
+                        <span>High-Res</span>
+                        <span className="text-emerald-600">PNG, JPG, WebP</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3.5 sm:p-4 flex flex-col justify-between flex-1 bg-white">
+                    <h3 className="text-sm font-extrabold tracking-tight text-neutral-950">Lossless Quality Export</h3>
+                    <p className="mt-1 text-xs font-medium text-neutral-600 line-clamp-2 sm:line-clamp-none">Exports at full native source resolution with untouched pixels.</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Feature 4: Vector Canvas */}
-              <div className="scroll-reveal group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition-all duration-300 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm">
-                <div className="relative aspect-[4/3] overflow-hidden bg-[#faf5ff] p-4 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="p-2 rounded-lg bg-white shadow-xs text-indigo-600">
-                      <Layers className="w-5 h-5" />
-                    </span>
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
-                      Full Controls
-                    </span>
-                  </div>
-                  <div className="rounded-xl bg-white p-2.5 shadow-xs border border-black/5">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500">
-                      <span>TEXT_LAYER</span>
-                      <span className="text-indigo-600 font-bold">VECTOR</span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between text-[10px] font-semibold text-neutral-800">
-                      <span className="px-1.5 py-0.5 rounded bg-neutral-100">Size: 48px</span>
-                      <span className="px-1.5 py-0.5 rounded bg-neutral-100">Track: -0.02</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-sm font-extrabold tracking-tight text-neutral-950">Vector Typography Layer</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600">Rotate, scale, recolor, and change text with total design freedom.</p>
-                </div>
-              </div>
-
-              {/* Feature 5: Lossless Compositor */}
-              <div className="scroll-reveal group overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 transition-all duration-300 hover:ring-black/20 hover:shadow-lg hover:-translate-y-1 shadow-sm">
-                <div className="relative aspect-[4/3] overflow-hidden bg-[#fefce8] p-4 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="p-2 rounded-lg bg-white shadow-xs text-amber-600">
-                      <ShieldCheck className="w-5 h-5" />
-                    </span>
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900">
-                      Full Quality
-                    </span>
-                  </div>
-                  <div className="rounded-xl bg-white p-2.5 shadow-xs border border-black/5">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500">
-                      <span>EXPORT_QUALITY</span>
-                      <span className="text-amber-600 font-bold">ORIGINAL</span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between text-[10px] font-mono font-bold text-neutral-800">
-                      <span>High-Res</span>
-                      <span className="text-emerald-600">PNG, JPG, WebP</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-sm font-extrabold tracking-tight text-neutral-950">Lossless Quality Export</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-600">Exports at full native source resolution with untouched pixels.</p>
+              {/* Mobile Scroll Progress Indicator (Only on mobile < sm) */}
+              <div className="flex sm:hidden items-center justify-between mt-4 px-2 text-xs text-neutral-500">
+                <span className="font-bold text-[11px] text-neutral-600 flex items-center gap-1.5 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#ff6f42]" />
+                  0{activeFeatureIndex + 1} / 05 · {FEATURE_NAMES[activeFeatureIndex]}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        activeFeatureIndex === i
+                          ? 'w-7 bg-[#ff6f42]'
+                          : 'w-2 bg-neutral-300'
+                      }`}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
@@ -986,6 +1140,49 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <p className="mt-1 max-w-[22ch] text-xs/5 font-medium text-neutral-600">
                   Type new copy, resize typography, and export in full high resolution.
                 </p>
+              </div>
+            </div>
+
+            {/* Mobile / Tablet Workflow Layout (< lg) */}
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:hidden">
+              <div className="scroll-reveal rounded-xl bg-white ring-1 ring-black/10 p-4 flex items-center gap-3.5 shadow-xs">
+                <div className="w-11 h-11 rounded-xl bg-[#fff1ec] text-[#ff6f42] flex items-center justify-center shrink-0">
+                  <UploadCloud className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-neutral-950 block">1. Ingest Image</span>
+                  <span className="text-[11px] text-neutral-500 font-medium block truncate">Drop any PNG, JPG, or WebP</span>
+                </div>
+              </div>
+
+              <div className="scroll-reveal rounded-xl bg-white ring-1 ring-black/10 p-4 flex items-center gap-3.5 shadow-xs">
+                <div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <ScanText className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-neutral-950 block">2. Detect Text</span>
+                  <span className="text-[11px] text-neutral-500 font-medium block truncate">Auto map angles and sizes</span>
+                </div>
+              </div>
+
+              <div className="scroll-reveal rounded-xl bg-white ring-1 ring-black/10 p-4 flex items-center gap-3.5 shadow-xs">
+                <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Eraser className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-neutral-950 block">3. Fill Background</span>
+                  <span className="text-[11px] text-neutral-500 font-medium block truncate">Seamless texture restoration</span>
+                </div>
+              </div>
+
+              <div className="scroll-reveal rounded-xl bg-white ring-1 ring-black/10 p-4 flex items-center gap-3.5 shadow-xs">
+                <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <Download className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-neutral-950 block">4. Export Lossless</span>
+                  <span className="text-[11px] text-neutral-500 font-medium block truncate">Original high-res pixels</span>
+                </div>
               </div>
             </div>
           </section>
