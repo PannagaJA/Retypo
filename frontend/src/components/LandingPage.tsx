@@ -445,15 +445,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 {/* Centerpiece Studio Dropzone Card - Properly Enlarged */}
                 <div className="relative z-10 mx-auto w-full max-w-[500px] rounded-2xl bg-white shadow-[0_30px_70px_-28px_rgba(15,23,42,0.35)] sm:shadow-[0_44px_90px_-36px_rgba(15,23,42,0.4)] ring-1 ring-black/10 p-4 xs:p-5 sm:p-6">
                   {/* Mock Card Header */}
-                  <div className="flex items-center justify-between pb-3 sm:pb-3.5 border-b border-neutral-100">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                      <span className="text-xs font-bold tracking-tight text-neutral-900">Studio Canvas Workspace</span>
-                      <span className="text-[11px] text-neutral-500 font-mono font-medium">1920×1080</span>
+                  <div className="flex items-center justify-between gap-2 pb-3 sm:pb-3.5 border-b border-neutral-100">
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="text-xs font-bold tracking-tight text-neutral-900 truncate">
+                        Studio Canvas<span className="hidden sm:inline"> Workspace</span>
+                      </span>
+                      <span className="hidden sm:inline text-[11px] text-neutral-400 font-mono font-medium shrink-0">
+                        1920×1080
+                      </span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                        <ScanText className="w-3 h-3 text-emerald-600" /> Auto Text Detection Ready
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 sm:px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 shrink-0 whitespace-nowrap">
+                        <ScanText className="w-3 h-3 text-emerald-600 shrink-0" />
+                        <span className="hidden xs:inline">Auto Text Detection Ready</span>
+                        <span className="xs:hidden">Auto Detect Ready</span>
                       </span>
                     </div>
                   </div>
@@ -473,25 +479,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       }
                     }}
                     onClick={() => fileInputRef.current?.click()}
-                    className={`relative mt-3.5 sm:mt-4 overflow-hidden rounded-xl border-2 border-dashed p-5 xs:p-6 sm:p-7 text-center transition-all cursor-pointer group ${
+                    className={`relative mt-3.5 sm:mt-4 overflow-hidden rounded-xl border-2 border-dashed py-8 xs:py-10 sm:py-11 px-5 xs:px-6 sm:px-7 min-h-[230px] xs:min-h-[260px] sm:min-h-[280px] flex flex-col items-center justify-center text-center transition-all cursor-pointer group ${
                       isDraggingOver
                         ? 'border-[#ff6f42] bg-[#fff6f2] scale-[1.02]'
                         : 'border-neutral-300 bg-[#fdfbf9] hover:border-[#ff6f42] hover:bg-neutral-50'
                     }`}
                   >
                     {/* Upload Icon Container */}
-                    <div className="mx-auto w-12 h-12 xs:w-14 xs:h-14 rounded-2xl bg-white shadow-md ring-1 ring-black/10 flex items-center justify-center text-[#ff6f42] mb-2.5 sm:mb-3 transition-transform duration-200 group-hover:scale-110">
-                      <UploadCloud className="w-6 h-6 xs:w-7 xs:h-7" />
+                    <div className="mx-auto w-14 h-14 xs:w-16 xs:h-16 rounded-2xl bg-white shadow-md ring-1 ring-black/10 flex items-center justify-center text-[#ff6f42] mb-3 sm:mb-3.5 transition-transform duration-200 group-hover:scale-110">
+                      <UploadCloud className="w-7 h-7 xs:w-8 xs:h-8" />
                     </div>
 
                     <p className="text-sm xs:text-base sm:text-base font-extrabold tracking-tight text-neutral-950">
                       Drag & Drop your image here
                     </p>
-                    <p className="mt-1 text-xs font-semibold text-neutral-600">
+                    <p className="mt-1.5 text-xs font-semibold text-neutral-600">
                       Supports PNG, JPG, JPEG, WebP • Auto detects text & background
                     </p>
 
-                    <div className="mt-3.5 sm:mt-4 flex items-center justify-center gap-2">
+                    <div className="mt-4 sm:mt-4.5 flex items-center justify-center gap-2">
                       <span className="rounded-md bg-white px-2.5 py-1 text-xs font-bold text-neutral-800 shadow-xs ring-1 ring-black/10">
                         PNG
                       </span>
