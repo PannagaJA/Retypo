@@ -1051,15 +1051,15 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           (navigator as any).maxTouchPoints > 0);
 
       const controlOptions = {
-        borderColor: '#3b82f6',
-        borderScaleFactor: isMobile ? 2.5 : 1.5,
-        cornerColor: '#3b82f6',
+        borderColor: '#ff6f42',
+        borderScaleFactor: isMobile ? 1.5 : 1,
+        cornerColor: '#ff6f42',
         cornerStrokeColor: '#ffffff',
         cornerStyle: 'circle' as const,
-        cornerSize: isMobile ? 18 : 10,
-        touchCornerSize: 36,
+        cornerSize: isMobile ? 8 : 6,
+        touchCornerSize: 24,
         transparentCorners: false,
-        padding: 6,
+        padding: isMobile ? 10 : 8,
         hasControls: true,
         hasBorders: true,
       };
@@ -1150,6 +1150,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         tb.initDimensions();
         tb.setCoords();
       }
+
+      // Hide middle-top and middle-bottom control handles on textboxes to keep text unobstructed
+      tb.setControlVisible('mt', false);
+      tb.setControlVisible('mb', false);
 
       if (selectedLayerId === layer.id && !layer.isLocked && tb) {
         if (canvas.getActiveObject() !== tb) {
