@@ -10,6 +10,7 @@ import { DiscardModal } from './components/DiscardModal';
 import { LandingPage } from './components/LandingPage';
 import { analyzeImageOCR, restoreBackground } from './services/api';
 import { Layers, Type, Maximize2, Sliders, Copy, Trash2, X, Plus } from 'lucide-react';
+import { createInstantInpaintPatch } from './utils/inpaint';
 
 export const App: React.FC = () => {
   const [image, setImage] = useState<ImageMetadata | null>(null);
@@ -73,6 +74,21 @@ export const App: React.FC = () => {
   inpaintPatchesRef.current = inpaintPatches;
   const detectedRegionsRef = useRef(detectedRegions);
   detectedRegionsRef.current = detectedRegions;
+
+  // Cached HTMLImageElement for instant 0ms background inpainting
+  const loadedImageElRef = useRef<HTMLImageElement | null>(null);
+  useEffect(() => {
+    if (!image?.dataUrl) {
+      loadedImageElRef.current = null;
+      return;
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      loadedImageElRef.current = img;
+    };
+    img.src = image.dataUrl;
+  }, [image?.dataUrl]);
 
   // Prevent accidental page refresh / navigation when editing
   useEffect(() => {
@@ -269,6 +285,20 @@ export const App: React.FC = () => {
       prev.map((r) => (r.regionId === region.regionId ? { ...r, isConverted: true } : r))
     );
 
+    // Instant optimistic inpainting (0ms delay): immediately conceals the underlying raster text
+    // in the exact same render tick that the editable TextLayer appears, eliminating double-text ghosting.
+    if (loadedImageElRef.current) {
+      const instantPatch = createInstantInpaintPatch(
+        loadedImageElRef.current,
+        region.polygon,
+        newId,
+        4
+      );
+      if (instantPatch) {
+        setInpaintPatches((prev) => [...prev, instantPatch]);
+      }
+    }
+
     setLayers((prev) => [...prev, newLayer]);
     setSelectedLayerId(newId);
 
@@ -350,6 +380,19 @@ export const App: React.FC = () => {
       })
     );
 
+    // Instant optimistic inpainting for individual words
+    if (loadedImageElRef.current) {
+      const instantPatch = createInstantInpaintPatch(
+        loadedImageElRef.current,
+        word.polygon,
+        newId,
+        4
+      );
+      if (instantPatch) {
+        setInpaintPatches((prev) => [...prev, instantPatch]);
+      }
+    }
+
     setLayers((prev) => [...prev, newLayer]);
     setSelectedLayerId(newId);
 
@@ -427,6 +470,25 @@ export const App: React.FC = () => {
     setDetectedRegions((prev) =>
       prev.map((r) => (regionIds.has(r.regionId) ? { ...r, isConverted: true } : r))
     );
+
+    // Instant optimistic inpainting for blocks
+    if (loadedImageElRef.current) {
+      const blockPolygon: [number, number][] = [
+        [minX, minY],
+        [maxX, minY],
+        [maxX, maxY],
+        [minX, maxY],
+      ];
+      const instantPatch = createInstantInpaintPatch(
+        loadedImageElRef.current,
+        blockPolygon,
+        newId,
+        4
+      );
+      if (instantPatch) {
+        setInpaintPatches((prev) => [...prev, instantPatch]);
+      }
+    }
 
     setLayers((prev) => [...prev, newLayer]);
     setSelectedLayerId(newId);
