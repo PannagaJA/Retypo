@@ -1,8 +1,12 @@
-# Retypo — AI Image Text Editor & Typography Reconstruction Engine
-
 <div align="center">
 
-<img src="frontend/public/retypo-logo.svg" alt="Retypo Logo" width="64" height="64" />
+<img src="frontend/public/retypo-logo.png" alt="Retypo Logo" width="580" />
+
+# Retypo
+
+**AI Image Text Editor & Typography Reconstruction Engine**
+
+_Detect, erase, edit, and reconstruct text inside raster images in place while preserving typography and backgrounds._
 
 <br/>
 
@@ -15,7 +19,7 @@
 [![Render Free Tier](https://img.shields.io/badge/Render-Free%20Tier%20(512MB)-46E3B7?style=flat-square&logo=render&logoColor=black)](https://render.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-**Detect, erase, edit, and reconstruct text inside any image in place while preserving original typography and backgrounds.**
+<br/>
 
 [Live Demo](https://retypo-image.vercel.app) • [Architecture Guide](RENDER_DEPLOYMENT.md) • [Backend API](https://retypo-backend.onrender.com/docs)
 
@@ -72,7 +76,8 @@ flowchart TD
 ## Key Features
 
 ### 1. High-Accuracy OCR & Icon Rejection
-- Mobile-optimized deep learning inference (`PP-OCRv6_small_det` + `PP-OCRv6_small_rec`).
+- **Dual-Engine Architecture**: Production Google Cloud Vision API (`DOCUMENT_TEXT_DETECTION`) for word-level bounding polygons with zero-retry SHA-256 deduplication, paired with local `PP-OCRv6_small_det` + `PP-OCRv6_small_rec` mobile engine.
+- **Hero Amount & Transaction Recovery**: High-contrast candidate clustering algorithm identifies and recovers isolated hero amounts and numerical figures in open background gaps.
 - **Icon & Noise Filter**: Prevents SVG icons (magnifying lenses, avatars, chevrons, close buttons) and image textures from being erroneously recognized as text.
 - Standardized text normalization cleans ligatures, currencies (`$`, `€`, `£`, `₹`), and punctuation.
 
@@ -144,7 +149,8 @@ retypo/
 │   │   │   ├── typography.py   # Font candidate and matching schemas
 │   │   │   └── export.py       # Compositor export schemas
 │   │   └── services/
-│   │       ├── ocr_service.py          # PaddleOCR mobile engine & icon filtering
+│   │       ├── ocr_service.py          # PaddleOCR mobile engine & hero amount recovery
+│   │       ├── google_vision_service.py # Google Cloud Vision API integration
 │   │       ├── inpaint_service.py      # Multi-tier background inpainting engine
 │   │       ├── typography_service.py   # Serif, stroke weight, & font catalog matcher
 │   │       ├── geometry_service.py     # Polygon geometry, angles, & color estimation
@@ -154,7 +160,7 @@ retypo/
 │   ├── assets/
 │   │   └── fonts/              # Bundled TrueType fallback fonts (Inter)
 │   ├── benchmarks/             # 7-category validation & RAM leak pipeline
-│   └── tests/                  # Pytest automated test suite (25/25 passing)
+│   └── tests/                  # Pytest automated test suite (35/35 passing)
 │
 └── frontend/                   # React + TypeScript Frontend
     ├── package.json            # Node.js dependencies (React, Fabric.js, Lucide, Tailwind)
@@ -163,19 +169,21 @@ retypo/
     ├── index.html              # HTML shell loading Google Web Fonts
     ├── vercel.json             # Vercel SPA routing and proxy rewrites
     │
-    ├── public/                 # Static branding assets and logos
+    ├── public/                 # Static branding assets (retypo-logo.png, only R App icon.png)
     └── src/
         ├── App.tsx             # Main editor workbench & keyboard shortcuts
         ├── components/         # Modular React UI components
-        │   ├── Canvas.tsx          # Fabric.js interactive workspace
+        │   ├── Header.tsx          # Studio navigation, zoom, and OCR triggers
+        │   ├── LandingPage.tsx     # Hero landing page & interactive showcases
+        │   ├── CanvasWorkspace.tsx # Fabric.js interactive workspace & bounding boxes
         │   ├── PropertiesPanel.tsx # Typography, color, shadow, & candidate selector
-        │   ├── Toolbar.tsx         # Inpaint, OCR, Add Text, Export, & Undo controls
         │   ├── LayersPanel.tsx     # Reorderable layer list & visibility toggles
-        │   └── Toast.tsx           # Accessible notification toasts
+        │   ├── ExportModal.tsx     # Lossless PNG, JPEG, and WebP export dialog
+        │   └── ScrollStack.tsx     # Smooth feature card scrolling showcase
         ├── services/           # API integration client
         │   └── api.ts              # Multipart HTTP client with automatic base URL detection
         ├── types/              # TypeScript interface definitions
-        └── tests/              # Vitest automated test suite (25/25 passing)
+        └── tests/              # Vitest automated test suite (34/34 passing)
 ```
 
 ---
@@ -263,10 +271,10 @@ Retypo includes a ready-to-use `render.yaml` Blueprint.
 ## Automated Test Suites
 
 ```bash
-# Run Backend Pytest Suite (25 Tests)
+# Run Backend Pytest Suite (35 Tests)
 PYTHONPATH=backend pytest backend/tests
 
-# Run Frontend Vitest Suite (25 Tests)
+# Run Frontend Vitest Suite (34 Tests)
 npm --prefix frontend test
 
 # Run End-to-End Performance & RAM Leak Benchmark (7 Image Categories)
