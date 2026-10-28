@@ -13,7 +13,8 @@ import {
   Eraser,
   LayoutTemplate,
   Download,
-  Lock
+  Lock,
+  ExternalLink
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -365,6 +366,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className="hover:text-[#ff6f42] transition-colors"
                 >
                   FAQ
+                </a>
+                <a
+                  href="https://pannagaja.vercel.app/"
+                  target="_blank"
+                  rel="noopener"
+                  title="Pannaga J A — Portfolio"
+                  className="hover:text-[#ff6f42] transition-colors flex items-center gap-1 text-neutral-800"
+                >
+                  <span>Portfolio</span>
+                  <ExternalLink className="w-3 h-3 text-[#ff6f42]" />
                 </a>
               </nav>
 
@@ -1332,7 +1343,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 text-xs font-medium">
+              <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 text-xs font-medium">
                 <div>
                   <p className="font-extrabold text-neutral-950 mb-3">Product</p>
                   <ul className="space-y-2 text-neutral-700">
@@ -1352,7 +1363,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </ul>
                 </div>
                 <div>
-                  <p className="font-extrabold text-neutral-950 mb-3">Legal & Safety</p>
+                  <p className="font-extrabold text-neutral-950 mb-3">Developer</p>
+                  <ul className="space-y-2 text-neutral-700 font-semibold">
+                    <li>
+                      <a
+                        href="https://pannagaja.vercel.app/"
+                        target="_blank"
+                        rel="noopener"
+                        title="Pannaga J A — Software & AI Engineer Portfolio"
+                        className="inline-flex items-center gap-1.5 text-neutral-950 hover:text-[#ff6f42] font-bold transition-colors"
+                      >
+                        <span>Pannaga J A Portfolio</span>
+                        <ExternalLink className="w-3.5 h-3.5 text-[#ff6f42]" />
+                      </a>
+                    </li>
+                    <li><span>Full-Stack &amp; AI Systems</span></li>
+                    <li><span>Computer Vision &amp; WebGL</span></li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-extrabold text-neutral-950 mb-3">Legal &amp; Safety</p>
                   <ul className="space-y-2 text-neutral-700 font-semibold">
                     <li><span>100% Non-Destructive</span></li>
                     <li><span>Zero Data Tracking</span></li>
@@ -1365,17 +1395,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             <div className="mt-12 pt-6 border-t border-neutral-200 flex flex-col sm:flex-row items-center justify-between text-xs font-semibold text-neutral-600 gap-4">
               <p>© 2026 Retypo. All rights reserved.</p>
-              <p className="flex items-center gap-1.5">
-                <span>Designed & built by</span>
+              <div className="flex items-center gap-2">
+                <span className="text-neutral-600">Designed &amp; built by</span>
                 <a
                   href="https://pannagaja.vercel.app/"
                   target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-bold text-neutral-900 hover:text-[#ff6f42] underline decoration-neutral-300 hover:decoration-[#ff6f42] underline-offset-4 transition-colors"
+                  rel="noopener"
+                  title="Visit Pannaga J A's Portfolio"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#e8e4dc] hover:border-[#ff6f42]/40 text-neutral-900 hover:text-[#ff6f42] font-bold shadow-2xs transition-all hover:scale-[1.03]"
                 >
-                  Pannaga J A
+                  <span className="w-2 h-2 rounded-full bg-[#ff6f42]" />
+                  <span>Pannaga J A</span>
+                  <ExternalLink className="w-3 h-3 text-neutral-400" />
                 </a>
-              </p>
+              </div>
             </div>
           </div>
         </footer>
