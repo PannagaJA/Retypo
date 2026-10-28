@@ -61,6 +61,7 @@ from app.services.geometry_service import (
     estimate_text_color,
     estimate_text_weight,
     estimate_text_blur,
+    refine_polygon_to_text,
 )
 
 class OCRService:
@@ -133,10 +134,19 @@ class OCRService:
             except Exception:
                 return None
 
-    def _extract_ocr_items(self, ocr_out: Any, scale: float = 1.0) -> List[Tuple[List[List[float]], str, float]]:
+    def _extract_ocr_items(
+        self,
+        ocr_out: Any,
+        scale: float = 1.0,
+        scale_x: Optional[float] = None,
+        scale_y: Optional[float] = None
+    ) -> List[Tuple[List[List[float]], str, float]]:
         items: List[Tuple[List[List[float]], str, float]] = []
         if not ocr_out or len(ocr_out) == 0:
             return items
+
+        sx = scale_x if scale_x is not None else scale
+        sy = scale_y if scale_y is not None else scale
 
         first = ocr_out[0]
 
@@ -152,7 +162,7 @@ class OCRService:
                     continue
                 p = polys[i]
                 poly_list = p.tolist() if hasattr(p, "tolist") else list(p)
-                clean_poly = [[round(float(pt[0]) / scale, 1), round(float(pt[1]) / scale, 1)] for pt in poly_list]
+                clean_poly = [[round(float(pt[0]) / sx, 1), round(float(pt[1]) / sy, 1)] for pt in poly_list]
                 items.append((clean_poly, text, score))
 
         # Format 2: Standard/Legacy PaddleOCR List Output: [[poly, (text, score)], ...]
@@ -166,7 +176,7 @@ class OCRService:
                         score = float(text_info[1])
                         if not text:
                             continue
-                        clean_poly = [[round(float(pt[0]) / scale, 1), round(float(pt[1]) / scale, 1)] for pt in poly_raw]
+                        clean_poly = [[round(float(pt[0]) / sx, 1), round(float(pt[1]) / sy, 1)] for pt in poly_raw]
                         items.append((clean_poly, text, score))
 
         return items
@@ -275,8 +285,8 @@ class OCRService:
         if any(ch in clean_text for ch in ['@', '#', '$', '€', '£', '¥', '/', '\\']):
             return polygon, text
 
-        # Currency amounts or signed numerical values
-        if re.search(r'^[+\-–]?\s*[₹$€£¥]', clean_text) or re.search(r'^[+\-–]\s*\d', clean_text):
+        # Currency amounts, numbers, or numerical figures (never trim glyphs from numbers or monetary amounts)
+        if re.search(r'\d', clean_text) or any(c in clean_text for c in ['₹', '$', '€', '£', '¥', '%']):
             return polygon, text
 
         # Account numbers, transaction IDs, UTRs, pure IDs
@@ -522,6 +532,10 @@ class OCRService:
             return text
         if len(amount) < 2:
             return text
+        # Exclude long continuous digit sequences without formatting (account numbers, UPI IDs, phone numbers)
+        raw_digits = re.sub(r'[,\.]', '', amount)
+        if len(raw_digits) > 8 and not ('.' in amount or ',' in amount):
+            return text
 
         # Document currency context: check if other amounts in this image use ₹
         has_rupee_context = all_raw_texts and any('₹' in t for t in all_raw_texts)
@@ -567,7 +581,9 @@ class OCRService:
                         has_currency_glyph = True
                         break
 
-            if has_currency_glyph or has_rupee_context:
+            # Strictly require an actual currency glyph to be present in the crop!
+            # Never hallucinate or prepend a currency symbol to a number that has no currency glyph in its visual crop.
+            if has_currency_glyph:
                 currency_sym = '₹'
                 target = f"{sign}{amount}" if sign else amount
                 replacement = f"{detected_sign}{currency_sym}{amount}"
@@ -600,6 +616,8 @@ class OCRService:
 
             is_low_mem = os.getenv("RENDER") is not None or os.getenv("LOW_MEMORY_MODE", "true").lower() == "true"
             scale = 1.0
+            scale_x = 1.0
+            scale_y = 1.0
 
             if is_low_mem:
                 # On 512MB RAM and 0.1 CPU, cap maximum resolution to 1024px to guarantee fast sub-5s DBNet inference
@@ -607,6 +625,8 @@ class OCRService:
                     scale = 1024.0 / float(max(w, h))
                     scaled_w = int(round(w * scale))
                     scaled_h = int(round(h * scale))
+                    scale_x = float(scaled_w) / float(w)
+                    scale_y = float(scaled_h) / float(h)
                     scaled_img = image.resize((scaled_w, scaled_h), Image.Resampling.BILINEAR)
                     img_np = np.array(scaled_img.convert("RGB"))
                 else:
@@ -621,6 +641,8 @@ class OCRService:
                 if scale > 1.0:
                     new_w = int(round(w * scale))
                     new_h = int(round(h * scale))
+                    scale_x = float(new_w) / float(w)
+                    scale_y = float(new_h) / float(h)
                     scaled_img = image.resize((new_w, new_h), Image.Resampling.LANCZOS)
                     img_np = np.array(scaled_img.convert("RGB"))
                 else:
@@ -640,7 +662,7 @@ class OCRService:
                 finally:
                     clear_system_memory_caches()
 
-            extracted_items = self._extract_ocr_items(raw_ocr_out, scale=scale)
+            extracted_items = self._extract_ocr_items(raw_ocr_out, scale=scale, scale_x=scale_x, scale_y=scale_y)
         all_raw_texts = [item[1] for item in extracted_items]
 
         regions: List[DetectedTextRegion] = []
@@ -648,6 +670,7 @@ class OCRService:
         for clean_polygon, raw_text, score in extracted_items:
             try:
                 angle = calculate_polygon_angle(clean_polygon)
+                clean_polygon = refine_polygon_to_text(image, clean_polygon, angle)
                 bbox = calculate_bounding_box(clean_polygon, image=image)
 
                 # Extract initial crop
@@ -661,11 +684,15 @@ class OCRService:
                     crop_img = image.crop((crop_x1, crop_y1, crop_x2, crop_y2))
                     crop_bgr = cv2.cvtColor(np.array(crop_img.convert("RGB")), cv2.COLOR_RGB2BGR)
 
-                # 1. Separate text labels from adjacent component icons (e.g. Account with wallet, Filter with sliders)
-                trimmed_polygon, trimmed_text = self._separate_adjacent_icons(crop_bgr, clean_polygon, raw_text)
+                # 1. Apply universal text normalization and recover currency symbols if dropped
+                normalized_text = self._normalize_detected_text(raw_text, all_raw_texts)
+                normalized_text = self._recover_currency_symbols(crop_bgr, normalized_text, all_raw_texts)
+
+                # 2. Separate text labels from adjacent component icons (e.g. Account with wallet, Filter with sliders)
+                trimmed_polygon, trimmed_text = self._separate_adjacent_icons(crop_bgr, clean_polygon, normalized_text)
                 if trimmed_polygon != clean_polygon:
                     clean_polygon = trimmed_polygon
-                    raw_text = trimmed_text
+                    normalized_text = trimmed_text
                     bbox = calculate_bounding_box(clean_polygon, image=image)
                     crop_x1 = max(0, int(np.floor(bbox[0])))
                     crop_y1 = max(0, int(np.floor(bbox[1])))
@@ -675,14 +702,9 @@ class OCRService:
                         crop_img = image.crop((crop_x1, crop_y1, crop_x2, crop_y2))
                         crop_bgr = cv2.cvtColor(np.array(crop_img.convert("RGB")), cv2.COLOR_RGB2BGR)
 
-                # 2. Filter out UI icons, non-text symbols, and graphic glyphs
-                if self._is_icon_or_noise(raw_text, bbox, round(score, 3), crop_bgr=crop_bgr, image_dims=(w, h)):
+                # 3. Filter out UI icons, non-text symbols, and graphic glyphs
+                if self._is_icon_or_noise(normalized_text, bbox, round(score, 3), crop_bgr=crop_bgr, image_dims=(w, h)):
                     continue
-
-                # 3. Apply universal text normalization and recover currency symbols if dropped
-                normalized_text = self._normalize_detected_text(raw_text, all_raw_texts)
-                normalized_text = self._recover_currency_symbols(crop_bgr, normalized_text, all_raw_texts)
-
                 # 4. Accurate font size, color, weight estimation
                 font_size = calculate_font_size(clean_polygon, image=image, text=normalized_text)
                 geom_conf = calculate_geometry_confidence(clean_polygon)

@@ -7,6 +7,7 @@ from app.services.geometry_service import (
     calculate_geometry_confidence,
     estimate_text_color,
     estimate_text_weight,
+    refine_polygon_to_text,
 )
 
 def test_calculate_polygon_angle():
@@ -58,3 +59,21 @@ def test_estimate_text_weight():
     draw_bold = ImageDraw.Draw(img_bold)
     draw_bold.line([(10, 15), (90, 15)], fill=(0, 0, 0), width=6)
     assert estimate_text_weight(img_bold, quad, 20.0) in ["600", "700"]
+
+def test_refine_polygon_to_text():
+    # Draw dark background with white text block at [50, 40, 150, 70]
+    img = Image.new("RGB", (200, 120), color=(20, 20, 20))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle([50, 40, 150, 70], fill=(255, 255, 255))
+
+    # Oversized polygon with vertical offset and top padding
+    sloppy_poly = [[40.0, 25.0], [160.0, 25.0], [160.0, 85.0], [40.0, 85.0]]
+    refined = refine_polygon_to_text(img, sloppy_poly, angle=0.0)
+
+    # Refined poly should tightly enclose [50, 40, 150, 70] with ~2px margin
+    min_x, min_y = refined[0][0], refined[0][1]
+    max_x, max_y = refined[2][0], refined[2][1]
+    assert 47.0 <= min_x <= 50.0
+    assert 150.0 <= max_x <= 153.0
+    assert 37.0 <= min_y <= 40.0
+    assert 70.0 <= max_y <= 73.0

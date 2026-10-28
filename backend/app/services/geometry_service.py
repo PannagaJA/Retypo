@@ -167,6 +167,95 @@ def calculate_bounding_box(
 
     return (round(min_x, 1), round(min_y, 1), round(max_x - min_x, 1), round(max_y - min_y, 1))
 
+def refine_polygon_to_text(
+    image: Optional[Image.Image],
+    polygon: List[List[float]],
+    angle: float = 0.0
+) -> List[List[float]]:
+    """
+    Refines OCR detection polygon to tightly and accurately enclose the actual foreground
+    text glyph ink on the native image. Corrects vertical drift, removes excess padding,
+    and extends boundaries to fully encompass descenders (p, y, g, j, q) and ascenders
+    without clipping or unnecessary surrounding space.
+    """
+    if image is None or len(polygon) < 4 or abs(angle) > 8.0:
+        return polygon
+
+    try:
+        xs = [p[0] for p in polygon]
+        ys = [p[1] for p in polygon]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        w = max_x - min_x
+        h = max_y - min_y
+        if w < 10 or h < 6:
+            return polygon
+
+        # Pad vertically by 35% of detected height to capture any clipped descenders / ascenders
+        pad_y = max(4, int(h * 0.35))
+        pad_x = max(2, int(w * 0.02))
+
+        crop_x1 = max(0, int(min_x) - pad_x)
+        crop_y1 = max(0, int(min_y) - pad_y)
+        crop_x2 = min(image.width, int(max_x) + pad_x)
+        crop_y2 = min(image.height, int(max_y) + pad_y)
+
+        if crop_x2 <= crop_x1 + 4 or crop_y2 <= crop_y1 + 4:
+            return polygon
+
+        crop = np.array(image.crop((crop_x1, crop_y1, crop_x2, crop_y2)).convert("RGB"))
+        gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY)
+        border = np.concatenate([gray[0, :], gray[-1, :], gray[:, 0], gray[:, -1]])
+        bg = float(np.median(border))
+        diff = np.abs(gray.astype(np.float32) - bg)
+        max_d = float(np.max(diff))
+        if max_d < 18.0:
+            return polygon
+
+        _, mask = cv2.threshold(diff.astype(np.uint8), max(15, int(0.35 * max_d)), 255, cv2.THRESH_BINARY)
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
+
+        valid_comps = []
+        crop_h = crop_y2 - crop_y1
+        for i in range(1, num_labels):
+            gx, gy, gw, gh, garea = stats[i]
+            # Ignore outer container borders or tiny noise
+            if gh >= 4 and garea >= 6 and gw < 0.95 * crop.shape[1] and gh < 0.95 * crop_h:
+                orig_rel_y1 = min_y - crop_y1
+                orig_rel_y2 = max_y - crop_y1
+                # Must overlap original vertical core
+                if max(gy, orig_rel_y1) < min(gy + gh, orig_rel_y2):
+                    valid_comps.append((gx, gy, gw, gh, garea))
+
+        if not valid_comps:
+            return polygon
+
+        min_comp_x = min(c[0] for c in valid_comps)
+        max_comp_x = max(c[0] + c[2] for c in valid_comps)
+        min_comp_y = min(c[1] for c in valid_comps)
+        max_comp_y = max(c[1] + c[3] for c in valid_comps)
+
+        # 2px clean margin around text ink
+        tight_x1 = max(0.0, crop_x1 + min_comp_x - 2.0)
+        tight_x2 = min(float(image.width), crop_x1 + max_comp_x + 2.0)
+        tight_y1 = max(0.0, crop_y1 + min_comp_y - 2.0)
+        tight_y2 = min(float(image.height), crop_y1 + max_comp_y + 2.0)
+
+        new_h = tight_y2 - tight_y1
+        new_w = tight_x2 - tight_x1
+        # Refined box must stay within plausible envelope of detected text
+        if new_h < 0.45 * h or new_h > 1.60 * h or new_w < 0.60 * w:
+            return polygon
+
+        return [
+            [round(tight_x1, 1), round(tight_y1, 1)],
+            [round(tight_x2, 1), round(tight_y1, 1)],
+            [round(tight_x2, 1), round(tight_y2, 1)],
+            [round(tight_x1, 1), round(tight_y2, 1)],
+        ]
+    except Exception:
+        return polygon
+
 def estimate_text_blur(
     image: Optional[Image.Image],
     polygon: List[List[float]]

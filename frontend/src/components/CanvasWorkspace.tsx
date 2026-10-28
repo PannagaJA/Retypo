@@ -98,7 +98,47 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   const isInternalZoomUpdate = useRef<boolean>(false);
   const isPanningRef = useRef<boolean>(false);
   const lastPanPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [hoveredRegion, setHoveredRegion] = useState<{ text: string; confidence: number; x: number; y: number } | null>(null);
+  const [hoveredRegion, setHoveredRegion] = useState<{
+    text: string;
+    confidence: number;
+    screenX: number;
+    screenY: number;
+    placement: 'top' | 'bottom';
+  } | null>(null);
+
+  const computeRegionScreenPlacement = (region: DetectedTextRegion) => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas || !containerRef.current) return null;
+    const rect = canvas.upperCanvasEl.getBoundingClientRect();
+    const vpt = canvas.viewportTransform || [1, 0, 0, 1, 0, 0];
+
+    const xs = region.polygon.map((p) => p[0]);
+    const ys = region.polygon.map((p) => p[1]);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    const centerX = (minX + maxX) / 2;
+    const screenCenterX = rect.left + centerX * vpt[0] + vpt[4];
+    const screenTopY = rect.top + minY * vpt[3] + vpt[5];
+    const screenBottomY = rect.top + maxY * vpt[3] + vpt[5];
+
+    // Tooltip requires ~52px height + clearance.
+    // If there is enough room above the region within the viewport and container, place on top.
+    // Otherwise place below the region so text is never obscured.
+    const hasRoomAbove = screenTopY - rect.top > 65 && screenTopY > 70;
+    const placement: 'top' | 'bottom' = hasRoomAbove ? 'top' : 'bottom';
+    const screenY = hasRoomAbove ? screenTopY - 10 : screenBottomY + 10;
+
+    // Clamp horizontally so tooltip stays comfortably inside the canvas / screen
+    const halfWidth = 140;
+    const minScreenX = Math.max(rect.left + halfWidth + 8, halfWidth + 8);
+    const maxScreenX = Math.min(rect.right - halfWidth - 8, window.innerWidth - halfWidth - 8);
+    const screenX = Math.max(minScreenX, Math.min(maxScreenX, screenCenterX));
+
+    return { screenX, screenY, placement };
+  };
 
   const propsRef = useRef({
     image,
@@ -375,11 +415,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       if (opt.target && (opt.target as any).regionData) {
         targetRegion = (opt.target as any).regionData;
       } else if (curRegions && curRegions.length > 0) {
-        targetRegion = curRegions.find(
-          (r) =>
-            !r.isConverted &&
-            (isPointInPolygon(scenePt, r.polygon) || isPointInBBox(scenePt, r.bbox, 12))
-        );
+        targetRegion =
+          curRegions.find((r) => !r.isConverted && isPointInPolygon(scenePt, r.polygon)) ||
+          curRegions.find((r) => !r.isConverted && isPointInBBox(scenePt, r.bbox, 3));
       }
 
       if (targetRegion) {
@@ -641,10 +679,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         stroke: isHov
           ? (isVisible ? '#34d399' : '#10b981')
           : (isVisible ? '#10b981' : 'transparent'),
-        strokeWidth: isHov
-          ? (isVisible ? 3 : 1.5)
-          : (isVisible ? 2 : 0),
-        strokeDashArray: isHov ? [3, 2] : (isVisible ? [4, 3] : undefined),
+        strokeWidth: isVisible || isHov ? 2 : 0,
+        strokeUniform: true,
+        strokeDashArray: isVisible || isHov ? [4, 3] : undefined,
         selectable: false,
         evented: true,
         hoverCursor: 'pointer',
@@ -652,24 +689,24 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       (poly as any).regionData = region;
 
-      poly.on('mouseover', (opt) => {
+      poly.on('mouseover', () => {
         const isOverlayOn = propsRef.current.showDetectionOverlay;
         poly.set({
           fill: isOverlayOn ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)',
           stroke: isOverlayOn ? '#34d399' : '#10b981',
-          strokeWidth: isOverlayOn ? 3 : 1.5,
-          strokeDashArray: isOverlayOn ? [4, 3] : [3, 2],
+          strokeWidth: 2,
+          strokeUniform: true,
+          strokeDashArray: [4, 3],
         });
         canvas.requestRenderAll();
         propsRef.current.onHoverRegion?.(region.regionId);
 
-        const mouseEvt = opt.e as MouseEvent;
-        if (mouseEvt) {
+        const placement = computeRegionScreenPlacement(region);
+        if (placement) {
           setHoveredRegion({
             text: region.text,
             confidence: region.confidence,
-            x: mouseEvt.clientX,
-            y: mouseEvt.clientY,
+            ...placement,
           });
         }
       });
@@ -680,6 +717,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           fill: isOverlayOn ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)',
           stroke: isOverlayOn ? '#10b981' : 'transparent',
           strokeWidth: isOverlayOn ? 2 : 0,
+          strokeUniform: true,
           strokeDashArray: isOverlayOn ? [4, 3] : undefined,
         });
         canvas.requestRenderAll();
@@ -717,20 +755,39 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         poly.set({
           fill: isHov ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.15)',
           stroke: isHov ? '#34d399' : '#10b981',
-          strokeWidth: isHov ? 3 : 2,
+          strokeWidth: 2,
+          strokeUniform: true,
           strokeDashArray: [4, 3],
         });
       } else {
         poly.set({
           fill: isHov ? 'rgba(16, 185, 129, 0.25)' : 'rgba(0, 0, 0, 0.001)',
           stroke: isHov ? '#10b981' : 'transparent',
-          strokeWidth: isHov ? 1.5 : 0,
+          strokeWidth: isHov ? 2 : 0,
+          strokeUniform: true,
           strokeDashArray: isHov ? [3, 2] : undefined,
         });
       }
     });
+
+    if (hoveredRegionId) {
+      const reg = detectedRegions.find((r) => r.regionId === hoveredRegionId);
+      if (reg) {
+        const placement = computeRegionScreenPlacement(reg);
+        if (placement) {
+          setHoveredRegion({
+            text: reg.text,
+            confidence: reg.confidence,
+            ...placement,
+          });
+        }
+      }
+    } else {
+      setHoveredRegion(null);
+    }
+
     canvas.requestRenderAll();
-  }, [hoveredRegionId, showDetectionOverlay]);
+  }, [hoveredRegionId, showDetectionOverlay, detectedRegions]);
 
   // 5. Synchronize Text Layers with Fabric Textbox Objects
   useEffect(() => {
@@ -960,8 +1017,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       {/* Hover Tooltip for Detected Text Region */}
       {hoveredRegion && (
         <div
-          className="fixed z-40 pointer-events-none -translate-x-1/2 -translate-y-full mb-3 px-2.5 py-1.5 rounded-md bg-white/95 border border-slate-200 shadow-xl backdrop-blur-sm text-xs select-none flex flex-col gap-0.5"
-          style={{ left: hoveredRegion.x, top: hoveredRegion.y - 12 }}
+          className={`fixed z-40 pointer-events-none -translate-x-1/2 px-2.5 py-1.5 rounded-md bg-white/95 border border-slate-200 shadow-xl backdrop-blur-sm text-xs select-none flex flex-col gap-0.5 transition-transform duration-75 ${
+            hoveredRegion.placement === 'top' ? '-translate-y-full' : 'translate-y-0'
+          }`}
+          style={{ left: hoveredRegion.screenX, top: hoveredRegion.screenY }}
         >
           <div className="flex items-center gap-2">
             <span className="text-slate-900 font-semibold max-w-[220px] truncate">{hoveredRegion.text}</span>
