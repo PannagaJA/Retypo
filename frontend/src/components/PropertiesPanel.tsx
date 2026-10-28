@@ -249,21 +249,21 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   if (!layer) {
     return (
-      <aside className="w-full lg:w-80 bg-white border-l-0 lg:border-l border-slate-200 flex flex-col p-6 items-center justify-center text-center select-none text-slate-500 relative h-full">
+      <aside className="w-full lg:w-80 bg-[#fdfbf9] border-l-0 lg:border-l border-[#e8e4dc] flex flex-col p-6 items-center justify-center text-center select-none text-neutral-500 relative h-full">
         {onClose && (
           <button
             onClick={onClose}
-            className="lg:hidden absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="lg:hidden absolute top-4 right-4 p-1.5 rounded-full text-neutral-400 hover:text-neutral-700 hover:bg-white/80 transition-colors"
             title="Close"
           >
             <X className="w-4 h-4" />
           </button>
         )}
-        <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 text-slate-600 border border-slate-200 shadow-2xs">
+        <div className="w-12 h-12 rounded-full bg-[#ffefe8] flex items-center justify-center mb-3 text-[#ff6f42] border border-[#ff6f42]/20 shadow-xs">
           <Type className="w-6 h-6" />
         </div>
-        <h3 className="text-sm font-semibold text-slate-800">No Layer Selected</h3>
-        <p className="text-xs text-slate-500 mt-1 max-w-[200px]">
+        <h3 className="text-sm font-bold text-neutral-900">No Layer Selected</h3>
+        <p className="text-xs text-neutral-600 mt-1 max-w-[200px]">
           Click on any text on the canvas or add a new text layer to inspect and customize typography.
         </p>
       </aside>
@@ -273,30 +273,30 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
 
   return (
-    <aside className="w-full lg:w-80 bg-white border-l-0 lg:border-l border-slate-200 flex flex-col h-full overflow-y-auto select-none text-slate-800">
+    <aside className="w-full lg:w-80 bg-[#fdfbf9] border-l-0 lg:border-l border-[#e8e4dc] flex flex-col h-full overflow-y-auto select-none text-neutral-800">
       {/* Panel Header */}
-      <div className="p-3 sm:p-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50 shrink-0">
+      <div className="p-3 sm:p-3.5 border-b border-[#e8e4dc] flex items-center justify-between bg-[#fbf9f5] shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center shrink-0 border border-slate-200">
+          <div className="w-7 h-7 rounded-lg bg-[#ffefe8] text-[#ff6f42] flex items-center justify-center shrink-0 border border-[#ff6f42]/20">
             <Type className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">Typography</h2>
-            <p className="text-[10px] text-slate-500 font-mono leading-none mt-0.5">Inspector</p>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-900">Typography</h2>
+            <p className="text-[10px] text-neutral-500 font-mono leading-none mt-0.5">Inspector</p>
           </div>
           {layer.origin === 'ocr_detected' && (
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-mono font-semibold ml-1">
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#ffefe8] text-[#ff6f42] border border-[#ff6f42]/20 font-mono font-bold ml-1">
               Detected
             </span>
           )}
         </div>
 
         {/* Quick Toolbar */}
-        <div className="flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-full p-1 shadow-xs">
+        <div className="flex items-center gap-1 bg-white border border-[#e8e4dc] rounded-full p-1 shadow-2xs">
           <button
             onClick={() => onChange({ isLocked: !layer.isLocked })}
             className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
-              layer.isLocked ? 'text-amber-700 bg-amber-100' : 'text-slate-500 hover:text-slate-900 hover:bg-white'
+              layer.isLocked ? 'text-amber-700 bg-amber-100' : 'text-neutral-500 hover:text-[#ff6f42] hover:bg-[#ffefe8]'
             }`}
             title={layer.isLocked ? 'Unlock layer' : 'Lock layer'}
           >
@@ -305,7 +305,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <button
             onClick={() => onChange({ isVisible: !layer.isVisible })}
             className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
-              !layer.isVisible ? 'text-red-700 bg-red-100' : 'text-slate-500 hover:text-slate-900 hover:bg-white'
+              !layer.isVisible ? 'text-rose-700 bg-rose-100' : 'text-neutral-500 hover:text-[#ff6f42] hover:bg-[#ffefe8]'
             }`}
             title={layer.isVisible ? 'Hide layer' : 'Show layer'}
           >
@@ -313,14 +313,14 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           </button>
           <button
             onClick={() => onDuplicate(layer.id)}
-            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-white transition-colors"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-neutral-500 hover:text-[#ff6f42] hover:bg-[#ffefe8] transition-colors"
             title="Duplicate layer (Ctrl/Cmd + D)"
           >
             <Copy className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => onDelete(layer.id)}
-            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
             title="Delete layer (Delete/Backspace)"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -328,7 +328,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              className="lg:hidden w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-white transition-colors ml-0.5"
+              className="lg:hidden w-7 h-7 rounded-full flex items-center justify-center text-neutral-500 hover:text-neutral-900 hover:bg-[#ffefe8] transition-colors ml-0.5"
               title="Close"
             >
               <X className="w-3.5 h-3.5" />
@@ -341,67 +341,67 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
         {/* Text Content */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-slate-600">Content</label>
+          <label className="text-xs font-semibold text-neutral-700">Content</label>
           <textarea
             value={layer.text}
             onChange={(e) => onChange({ text: e.target.value })}
             rows={3}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition-colors"
+            className="w-full bg-[#fbf9f5] border border-[#e8e4dc] rounded-lg px-3 py-2 text-xs font-mono text-neutral-900 focus:outline-none focus:border-[#ff6f42] focus:bg-white transition-colors"
           />
         </div>
 
         {/* Font Family & Weight */}
-        <div className="space-y-3 pt-2 border-t border-slate-200">
+        <div className="space-y-3 pt-2 border-t border-[#e8e4dc]">
           {/* Searchable Font Family Picker */}
           <div className="space-y-1.5" ref={fontPickerRef}>
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-slate-600">Font Family</label>
-              <span className="text-[10px] text-slate-400 font-medium">{filteredFonts.length} fonts</span>
+              <label className="text-xs font-semibold text-neutral-700">Font Family</label>
+              <span className="text-[10px] text-neutral-400 font-medium">{filteredFonts.length} fonts</span>
             </div>
 
             {/* Font Picker Trigger Button */}
             <button
               type="button"
               onClick={() => setIsFontPickerOpen((prev) => !prev)}
-              className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-xs flex items-center justify-between transition-all text-left ${
+              className={`w-full bg-[#fbf9f5] border rounded-lg px-3 py-2 text-xs flex items-center justify-between transition-all text-left ${
                 isFontPickerOpen
-                  ? 'border-slate-900 ring-2 ring-slate-900/10 bg-white'
-                  : 'border-slate-200 hover:border-slate-300 hover:bg-white'
+                  ? 'border-[#ff6f42] ring-2 ring-[#ff6f42]/15 bg-white'
+                  : 'border-[#e8e4dc] hover:border-[#ff6f42]/40 hover:bg-white'
               }`}
             >
               <span
-                className="text-xs font-semibold text-slate-900 truncate"
+                className="text-xs font-semibold text-neutral-900 truncate"
                 style={{ fontFamily: layer.fontFamily }}
               >
                 {layer.fontFamily}
               </span>
               <ChevronDown
-                className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-150 ${
-                  isFontPickerOpen ? 'rotate-180 text-slate-900' : ''
+                className={`w-3.5 h-3.5 text-neutral-400 shrink-0 transition-transform duration-150 ${
+                  isFontPickerOpen ? 'rotate-180 text-[#ff6f42]' : ''
                 }`}
               />
             </button>
 
             {/* Searchable Dropdown Popover */}
             {isFontPickerOpen && (
-              <div className="mt-1.5 border border-slate-200 rounded-xl bg-white shadow-xl overflow-hidden animate-in fade-in-50 duration-150">
+              <div className="mt-1.5 border border-[#e8e4dc] rounded-xl bg-white shadow-xl overflow-hidden animate-in fade-in-50 duration-150">
                 {/* Search Bar */}
-                <div className="p-2 border-b border-slate-100 bg-slate-50/70 space-y-1.5">
+                <div className="p-2 border-b border-[#e8e4dc] bg-[#fbf9f5] space-y-1.5">
                   <div className="relative flex items-center">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
+                    <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 pointer-events-none" />
                     <input
                       type="text"
                       value={fontSearch}
                       onChange={(e) => setFontSearch(e.target.value)}
                       placeholder="Search fonts (e.g. Roboto, Inter, Arial)..."
-                      className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-7 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800"
+                      className="w-full bg-white border border-[#e8e4dc] rounded-lg pl-8 pr-7 py-1.5 text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-[#ff6f42]"
                       autoFocus
                     />
                     {fontSearch && (
                       <button
                         type="button"
                         onClick={() => setFontSearch('')}
-                        className="absolute right-2 p-0.5 text-slate-400 hover:text-slate-600 rounded-full"
+                        className="absolute right-2 p-0.5 text-neutral-400 hover:text-neutral-600 rounded-full"
                         title="Clear search"
                       >
                         <X className="w-3 h-3" />
@@ -424,8 +424,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         onClick={() => setFontCategory(tab.id as any)}
                         className={`px-2 py-0.5 rounded-full whitespace-nowrap transition-colors font-medium ${
                           fontCategory === tab.id
-                            ? 'bg-slate-900 text-white shadow-2xs'
-                            : 'bg-slate-200/80 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                            ? 'bg-[#ff6f42] text-white shadow-2xs font-semibold'
+                            : 'bg-[#ede9df] text-neutral-700 hover:bg-[#e2ddd1]'
                         }`}
                       >
                         {tab.label}
@@ -435,17 +435,17 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 </div>
 
                 {/* Font Items List */}
-                <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 overscroll-contain">
+                <div className="max-h-56 overflow-y-auto divide-y divide-[#e8e4dc]/60 overscroll-contain">
                   {filteredFonts.length === 0 ? (
                     <div className="p-4 text-center">
-                      <p className="text-xs text-slate-500">No matching fonts found</p>
+                      <p className="text-xs text-neutral-500">No matching fonts found</p>
                       <button
                         type="button"
                         onClick={() => {
                           setFontSearch('');
                           setFontCategory('all');
                         }}
-                        className="mt-1 text-[11px] text-blue-600 hover:underline font-medium"
+                        className="mt-1 text-[11px] text-[#ff6f42] hover:underline font-semibold"
                       >
                         Reset filters
                       </button>
@@ -461,23 +461,23 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                             onChange({ fontFamily: font.name });
                             setIsFontPickerOpen(false);
                           }}
-                          className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-slate-50 transition-colors ${
-                            isSelected ? 'bg-slate-100/70' : ''
+                          className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-[#ffefe8]/40 transition-colors ${
+                            isSelected ? 'bg-[#ffefe8]/70 text-[#ff6f42]' : ''
                           }`}
                         >
                           <div className="min-w-0 flex-1 pr-2">
                             <div className="flex items-center justify-between">
                               <span
-                                className="text-xs font-semibold text-slate-900 truncate"
+                                className={`text-xs font-semibold truncate ${isSelected ? 'text-[#ff6f42]' : 'text-neutral-900'}`}
                                 style={{ fontFamily: font.name }}
                               >
                                 {font.name}
                               </span>
-                              {isSelected && <Check className="w-3.5 h-3.5 text-slate-900 shrink-0 ml-2" />}
+                              {isSelected && <Check className="w-3.5 h-3.5 text-[#ff6f42] shrink-0 ml-2" />}
                             </div>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <span
-                                className="text-[10px] text-slate-400 truncate"
+                                className="text-[10px] text-neutral-400 truncate"
                                 style={{ fontFamily: font.name }}
                               >
                                 {font.category === 'mono'
@@ -498,12 +498,12 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <div className="grid grid-cols-2 gap-3">
             {/* Weight */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-600">Weight</label>
+              <label className="text-xs font-semibold text-neutral-700">Weight</label>
               <div className="relative">
                 <select
                   value={String(layer.fontWeight)}
                   onChange={(e) => onChange({ fontWeight: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 appearance-none focus:outline-none focus:border-slate-900 focus:bg-white cursor-pointer"
+                  className="w-full bg-[#fbf9f5] border border-[#e8e4dc] rounded-lg px-3 py-1.5 text-xs text-neutral-900 appearance-none focus:outline-none focus:border-[#ff6f42] focus:bg-white cursor-pointer"
                 >
                   {FONT_WEIGHTS.map((w) => (
                     <option key={w.value} value={w.value}>
@@ -511,21 +511,21 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
+                <ChevronDown className="w-3.5 h-3.5 text-neutral-400 absolute right-3 top-2.5 pointer-events-none" />
               </div>
             </div>
 
             {/* Style (Italic) */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-600">Style</label>
+              <label className="text-xs font-semibold text-neutral-700">Style</label>
               <button
                 onClick={() =>
                   onChange({ fontStyle: layer.fontStyle === 'italic' ? 'normal' : 'italic' })
                 }
-                className={`w-full py-1.5 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 border transition-colors ${
+                className={`w-full py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all ${
                   layer.fontStyle === 'italic'
-                    ? 'bg-slate-900 border-slate-900 text-white'
-                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                    ? 'bg-[#ff6f42] border-[#ff6f42] text-white shadow-xs'
+                    : 'bg-[#fbf9f5] border-[#e8e4dc] text-neutral-700 hover:bg-[#ffefe8] hover:text-[#ff6f42]'
                 }`}
               >
                 <Italic className="w-3.5 h-3.5" />
@@ -536,14 +536,14 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </div>
 
         {/* Font Size & Alignment */}
-        <div className="space-y-3 pt-2 border-t border-slate-200">
+        <div className="space-y-3 pt-2 border-t border-[#e8e4dc]">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-slate-600">Font Size</label>
+            <label className="text-xs font-semibold text-neutral-700">Font Size</label>
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => onChange({ fontSize: Math.max(6, Math.round(layer.fontSize - 1)) })}
-                className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors shadow-2xs active:scale-95"
+                className="w-6 h-6 rounded bg-[#ede9df] hover:bg-[#e2ddd1] text-neutral-800 flex items-center justify-center transition-colors shadow-2xs active:scale-95"
                 title="Decrease font size (-1px)"
               >
                 <Minus className="w-3 h-3" />
@@ -555,14 +555,14 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   max="250"
                   value={Math.round(layer.fontSize)}
                   onChange={(e) => onChange({ fontSize: Math.max(6, Number(e.target.value) || 6) })}
-                  className="w-14 px-1 py-0.5 text-center font-mono text-xs font-semibold bg-slate-50 border border-slate-200 rounded text-slate-900 focus:outline-none focus:border-slate-800"
+                  className="w-14 px-1 py-0.5 text-center font-mono text-xs font-semibold bg-[#fbf9f5] border border-[#e8e4dc] rounded text-neutral-900 focus:outline-none focus:border-[#ff6f42]"
                 />
-                <span className="text-[10px] text-slate-400 font-mono absolute right-1 pointer-events-none">px</span>
+                <span className="text-[10px] text-neutral-400 font-mono absolute right-1 pointer-events-none">px</span>
               </div>
               <button
                 type="button"
                 onClick={() => onChange({ fontSize: Math.min(250, Math.round(layer.fontSize + 1)) })}
-                className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors shadow-2xs active:scale-95"
+                className="w-6 h-6 rounded bg-[#ede9df] hover:bg-[#e2ddd1] text-neutral-800 flex items-center justify-center transition-colors shadow-2xs active:scale-95"
                 title="Increase font size (+1px)"
               >
                 <Plus className="w-3 h-3" />
@@ -577,10 +577,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 key={size}
                 type="button"
                 onClick={() => onChange({ fontSize: size })}
-                className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors ${
+                className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors font-medium ${
                   Math.round(layer.fontSize) === size
-                    ? 'bg-slate-900 text-white font-semibold shadow-2xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                    ? 'bg-[#ff6f42] text-white font-semibold shadow-2xs'
+                    : 'bg-[#ede9df] text-neutral-700 hover:bg-[#e2ddd1] hover:text-neutral-950'
                 }`}
               >
                 {size}
@@ -594,13 +594,13 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             max="180"
             value={layer.fontSize}
             onChange={(e) => onChange({ fontSize: Number(e.target.value) })}
-            className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
+            className="w-full accent-[#ff6f42] cursor-pointer h-1.5 bg-[#e8e4dc] rounded-lg"
           />
 
           {/* Text Alignment */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-600">Text Align</label>
-            <div className="grid grid-cols-4 gap-1 bg-slate-100 p-1 border border-slate-200 rounded-lg">
+            <label className="text-xs font-semibold text-neutral-700">Text Align</label>
+            <div className="grid grid-cols-4 gap-1 bg-[#ede9df] p-1 border border-[#e8e4dc] rounded-lg">
               {(['left', 'center', 'right', 'justify'] as const).map((align) => {
                 const Icon =
                   align === 'left'
@@ -614,10 +614,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   <button
                     key={align}
                     onClick={() => onChange({ textAlign: align })}
-                    className={`p-1.5 flex justify-center rounded-md transition-colors ${
+                    className={`p-1.5 flex justify-center rounded-md transition-all ${
                       layer.textAlign === align
-                        ? 'bg-slate-900 text-white shadow-xs'
-                        : 'text-slate-500 hover:text-slate-900 hover:bg-white'
+                        ? 'bg-white text-[#ff6f42] shadow-xs'
+                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/60'
                     }`}
                     title={`Align ${align}`}
                   >
@@ -630,28 +630,28 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </div>
 
         {/* Colors & Fill */}
-        <div className="space-y-3 pt-2 border-t border-slate-200">
-          <h3 className="text-xs font-semibold tracking-wider uppercase text-slate-500 flex items-center gap-1.5">
-            <Sliders className="w-3.5 h-3.5 text-slate-700" />
+        <div className="space-y-3 pt-2 border-t border-[#e8e4dc]">
+          <h3 className="text-xs font-semibold tracking-wider uppercase text-neutral-500 flex items-center gap-1.5">
+            <Sliders className="w-3.5 h-3.5 text-[#ff6f42]" />
             Appearance
           </h3>
 
           <div className="grid grid-cols-2 gap-3">
             {/* Fill Color */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-600">Text Color</label>
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1.5">
+              <label className="text-xs font-semibold text-neutral-700">Text Color</label>
+              <div className="flex items-center gap-2 bg-[#fbf9f5] border border-[#e8e4dc] rounded-lg p-1.5">
                 <input
                   type="color"
-                  value={layer.fill.startsWith('#') ? layer.fill : '#0f172a'}
+                  value={layer.fill.startsWith('#') ? layer.fill : '#0a0a0a'}
                   onChange={(e) => onChange({ fill: e.target.value })}
-                  className="w-6 h-6 rounded border border-slate-200 cursor-pointer bg-transparent"
+                  className="w-6 h-6 rounded border border-[#e8e4dc] cursor-pointer bg-transparent"
                 />
                 <input
                   type="text"
                   value={layer.fill}
                   onChange={(e) => onChange({ fill: e.target.value })}
-                  className="w-full bg-transparent text-xs font-mono text-slate-900 focus:outline-none"
+                  className="w-full bg-transparent text-xs font-mono text-neutral-900 focus:outline-none"
                 />
               </div>
             </div>
@@ -659,8 +659,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             {/* Opacity */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs">
-                <label className="font-medium text-slate-600">Opacity</label>
-                <span className="font-mono text-slate-800">{Math.round(layer.opacity * 100)}%</span>
+                <label className="font-semibold text-neutral-700">Opacity</label>
+                <span className="font-mono text-neutral-800 font-medium">{Math.round(layer.opacity * 100)}%</span>
               </div>
               <input
                 type="range"
@@ -669,15 +669,15 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.05"
                 value={layer.opacity}
                 onChange={(e) => onChange({ opacity: Number(e.target.value) })}
-                className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg mt-3"
+                className="w-full accent-[#ff6f42] cursor-pointer h-1.5 bg-[#e8e4dc] rounded-lg mt-3"
               />
             </div>
 
             {/* Edge Softness / Natural Blur */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs">
-                <label className="font-medium text-slate-600">Edge Softness</label>
-                <span className="font-mono text-slate-800">{(layer.blur ?? 0.6).toFixed(1)}px</span>
+                <label className="font-semibold text-neutral-700">Edge Softness</label>
+                <span className="font-mono text-neutral-800 font-medium">{(layer.blur ?? 0.6).toFixed(1)}px</span>
               </div>
               <input
                 type="range"
@@ -686,7 +686,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.1"
                 value={layer.blur ?? 0.6}
                 onChange={(e) => onChange({ blur: Number(e.target.value) })}
-                className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg mt-3"
+                className="w-full accent-[#ff6f42] cursor-pointer h-1.5 bg-[#e8e4dc] rounded-lg mt-3"
               />
             </div>
           </div>
@@ -694,18 +694,18 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {/* Stroke */}
           <div className="space-y-2">
             <div className="flex justify-between items-center text-xs">
-              <label className="font-medium text-slate-600">Stroke Outline</label>
-              <span className="font-mono text-slate-800">{layer.strokeWidth || 0} px</span>
+              <label className="font-semibold text-neutral-700">Stroke Outline</label>
+              <span className="font-mono text-neutral-800 font-medium">{layer.strokeWidth || 0} px</span>
             </div>
             <div className="grid grid-cols-3 gap-2 items-center">
-              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg p-1">
+              <div className="flex items-center gap-1.5 bg-[#fbf9f5] border border-[#e8e4dc] rounded-lg p-1">
                 <input
                   type="color"
                   value={layer.stroke || '#000000'}
                   onChange={(e) => onChange({ stroke: e.target.value })}
-                  className="w-5 h-5 rounded border border-slate-200 cursor-pointer bg-transparent"
+                  className="w-5 h-5 rounded border border-[#e8e4dc] cursor-pointer bg-transparent"
                 />
-                <span className="text-[10px] font-mono text-slate-500">Color</span>
+                <span className="text-[10px] font-mono text-neutral-500">Color</span>
               </div>
               <div className="col-span-2">
                 <input
@@ -714,7 +714,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   max="20"
                   value={layer.strokeWidth || 0}
                   onChange={(e) => onChange({ strokeWidth: Number(e.target.value) })}
-                  className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
+                  className="w-full accent-[#ff6f42] cursor-pointer h-1.5 bg-[#e8e4dc] rounded-lg"
                 />
               </div>
             </div>
@@ -724,14 +724,14 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <div className="grid grid-cols-2 gap-2.5">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-medium text-slate-600">Tracking</label>
-                <span className="text-[10px] font-mono text-slate-700 font-semibold">{layer.letterSpacing || 0}px</span>
+                <label className="text-[11px] font-semibold text-neutral-700">Tracking</label>
+                <span className="text-[10px] font-mono text-neutral-800 font-bold">{layer.letterSpacing || 0}px</span>
               </div>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => onChange({ letterSpacing: Math.round(((layer.letterSpacing || 0) - 0.5) * 10) / 10 })}
-                  className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 active:scale-95 transition-colors"
+                  className="w-6 h-6 rounded bg-[#ede9df] hover:bg-[#e2ddd1] text-neutral-800 flex items-center justify-center shrink-0 active:scale-95 transition-colors"
                   title="Decrease tracking (-0.5px)"
                 >
                   <Minus className="w-2.5 h-2.5" />
@@ -743,12 +743,12 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   max="50"
                   value={layer.letterSpacing || 0}
                   onChange={(e) => onChange({ letterSpacing: Number(e.target.value) })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded px-1 py-0.5 text-xs font-mono text-center text-slate-900 focus:outline-none focus:border-slate-800"
+                  className="w-full bg-[#fbf9f5] border border-[#e8e4dc] rounded px-1 py-0.5 text-xs font-mono text-center text-neutral-900 focus:outline-none focus:border-[#ff6f42]"
                 />
                 <button
                   type="button"
                   onClick={() => onChange({ letterSpacing: Math.round(((layer.letterSpacing || 0) + 0.5) * 10) / 10 })}
-                  className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 active:scale-95 transition-colors"
+                  className="w-6 h-6 rounded bg-[#ede9df] hover:bg-[#e2ddd1] text-neutral-800 flex items-center justify-center shrink-0 active:scale-95 transition-colors"
                   title="Increase tracking (+0.5px)"
                 >
                   <Plus className="w-2.5 h-2.5" />
@@ -761,20 +761,20 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.5"
                 value={layer.letterSpacing || 0}
                 onChange={(e) => onChange({ letterSpacing: Number(e.target.value) })}
-                className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
+                className="w-full accent-[#ff6f42] cursor-pointer h-1.5 bg-[#e8e4dc] rounded-lg"
               />
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-medium text-slate-600">Line Height</label>
-                <span className="text-[10px] font-mono text-slate-700 font-semibold">{layer.lineHeight || 1.2}</span>
+                <label className="text-[11px] font-semibold text-neutral-700">Line Height</label>
+                <span className="text-[10px] font-mono text-neutral-800 font-bold">{layer.lineHeight || 1.2}</span>
               </div>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => onChange({ lineHeight: Math.max(0.5, Math.round(((layer.lineHeight || 1.2) - 0.1) * 10) / 10) })}
-                  className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 active:scale-95 transition-colors"
+                  className="w-6 h-6 rounded bg-[#ede9df] hover:bg-[#e2ddd1] text-neutral-800 flex items-center justify-center shrink-0 active:scale-95 transition-colors"
                   title="Decrease line height (-0.1)"
                 >
                   <Minus className="w-2.5 h-2.5" />
@@ -786,12 +786,12 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   max="3.0"
                   value={layer.lineHeight || 1.2}
                   onChange={(e) => onChange({ lineHeight: Number(e.target.value) })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded px-1 py-0.5 text-xs font-mono text-center text-slate-900 focus:outline-none focus:border-slate-800"
+                  className="w-full bg-[#fbf9f5] border border-[#e8e4dc] rounded px-1 py-0.5 text-xs font-mono text-center text-neutral-900 focus:outline-none focus:border-[#ff6f42]"
                 />
                 <button
                   type="button"
                   onClick={() => onChange({ lineHeight: Math.min(3.0, Math.round(((layer.lineHeight || 1.2) + 0.1) * 10) / 10) })}
-                  className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 active:scale-95 transition-colors"
+                  className="w-6 h-6 rounded bg-[#ede9df] hover:bg-[#e2ddd1] text-neutral-800 flex items-center justify-center shrink-0 active:scale-95 transition-colors"
                   title="Increase line height (+0.1)"
                 >
                   <Plus className="w-2.5 h-2.5" />
@@ -804,16 +804,16 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.05"
                 value={layer.lineHeight || 1.2}
                 onChange={(e) => onChange({ lineHeight: Number(e.target.value) })}
-                className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
+                className="w-full accent-[#ff6f42] cursor-pointer h-1.5 bg-[#e8e4dc] rounded-lg"
               />
             </div>
           </div>
         </div>
 
         {/* Shadow */}
-        <div className="space-y-3 pt-2 border-t border-slate-200">
+        <div className="space-y-3 pt-2 border-t border-[#e8e4dc]">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-slate-600">Drop Shadow</label>
+            <label className="text-xs font-semibold text-neutral-700">Drop Shadow</label>
             <input
               type="checkbox"
               checked={Boolean(layer.shadow && layer.shadow.blur > 0)}
@@ -824,15 +824,15 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   onChange({ shadow: { color: 'transparent', blur: 0, offsetX: 0, offsetY: 0 } });
                 }
               }}
-              className="accent-slate-900 rounded cursor-pointer"
+              className="accent-[#ff6f42] rounded cursor-pointer"
             />
           </div>
 
           {layer.shadow && layer.shadow.blur > 0 && (
-            <div className="space-y-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+            <div className="space-y-2 bg-[#fbf9f5] p-2.5 rounded-lg border border-[#e8e4dc]">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-600">Blur</span>
-                <span className="font-mono text-slate-800">{layer.shadow.blur}px</span>
+                <span className="text-neutral-600 font-medium">Blur</span>
+                <span className="font-mono text-neutral-800 font-bold">{layer.shadow.blur}px</span>
               </div>
               <input
                 type="range"
@@ -844,28 +844,28 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     shadow: { ...layer.shadow!, blur: Number(e.target.value) },
                   })
                 }
-                className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
+                className="w-full accent-[#ff6f42] cursor-pointer h-1.5 bg-[#e8e4dc] rounded-lg"
               />
             </div>
           )}
         </div>
 
         {/* Layer Depth Ordering */}
-        <div className="space-y-2 pt-2 border-t border-slate-200">
-          <label className="text-xs font-medium text-slate-600 flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-slate-700" />
+        <div className="space-y-2 pt-2 border-t border-[#e8e4dc]">
+          <label className="text-xs font-semibold text-neutral-700 flex items-center gap-1.5">
+            <Layers className="w-3.5 h-3.5 text-[#ff6f42]" />
             Layer Stacking
           </label>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => onBringForward(layer.id)}
-              className="py-1 px-2.5 text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-700 transition-colors font-medium"
+              className="py-1.5 px-3 text-xs bg-white hover:bg-[#ffefe8] hover:text-[#ff6f42] border border-[#e8e4dc] rounded-lg text-neutral-800 transition-colors font-semibold shadow-2xs"
             >
               Bring Forward
             </button>
             <button
               onClick={() => onSendBackward(layer.id)}
-              className="py-1 px-2.5 text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-700 transition-colors font-medium"
+              className="py-1.5 px-3 text-xs bg-white hover:bg-[#ffefe8] hover:text-[#ff6f42] border border-[#e8e4dc] rounded-lg text-neutral-800 transition-colors font-semibold shadow-2xs"
             >
               Send Backward
             </button>

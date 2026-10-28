@@ -696,11 +696,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         const points = region.polygon.map((p) => ({ x: p[0], y: p[1] }));
         const poly = new fabric.Polygon(points, {
           fill: isHov
-            ? (isVisible ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)')
-            : (isVisible ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)'),
+            ? (isVisible ? 'rgba(255, 111, 66, 0.38)' : 'rgba(255, 111, 66, 0.22)')
+            : (isVisible ? 'rgba(255, 111, 66, 0.14)' : 'rgba(0, 0, 0, 0.001)'),
           stroke: isHov
-            ? (isVisible ? '#34d399' : '#10b981')
-            : (isVisible ? '#10b981' : 'transparent'),
+            ? (isVisible ? '#ff5400' : '#ff6f42')
+            : (isVisible ? '#ff6f42' : 'transparent'),
           strokeWidth: isVisible || isHov ? 2 : 0,
           strokeUniform: true,
           strokeDashArray: isVisible || isHov ? [4, 3] : undefined,
@@ -718,8 +718,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         poly.on('mouseover', () => {
           const isOverlayOn = propsRef.current.showDetectionOverlay;
           poly.set({
-            fill: isOverlayOn ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)',
-            stroke: isOverlayOn ? '#34d399' : '#10b981',
+            fill: isOverlayOn ? 'rgba(255, 111, 66, 0.38)' : 'rgba(255, 111, 66, 0.22)',
+            stroke: isOverlayOn ? '#ff5400' : '#ff6f42',
             strokeWidth: 2,
             strokeUniform: true,
             strokeDashArray: [4, 3],
@@ -740,8 +740,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         poly.on('mouseout', () => {
           const isOverlayOn = propsRef.current.showDetectionOverlay;
           poly.set({
-            fill: isOverlayOn ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)',
-            stroke: isOverlayOn ? '#10b981' : 'transparent',
+            fill: isOverlayOn ? 'rgba(255, 111, 66, 0.14)' : 'rgba(0, 0, 0, 0.001)',
+            stroke: isOverlayOn ? '#ff6f42' : 'transparent',
             strokeWidth: isOverlayOn ? 2 : 0,
             strokeUniform: true,
             strokeDashArray: isOverlayOn ? [4, 3] : undefined,
@@ -781,11 +781,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           const points = w.polygon.map((p) => ({ x: p[0], y: p[1] }));
           const poly = new fabric.Polygon(points, {
             fill: isHov
-              ? (isVisible ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)')
-              : (isVisible ? 'rgba(16, 185, 129, 0.18)' : 'rgba(0, 0, 0, 0.001)'),
+              ? (isVisible ? 'rgba(255, 111, 66, 0.38)' : 'rgba(255, 111, 66, 0.22)')
+              : (isVisible ? 'rgba(255, 111, 66, 0.16)' : 'rgba(0, 0, 0, 0.001)'),
             stroke: isHov
-              ? (isVisible ? '#34d399' : '#10b981')
-              : (isVisible ? '#10b981' : 'transparent'),
+              ? (isVisible ? '#ff5400' : '#ff6f42')
+              : (isVisible ? '#ff6f42' : 'transparent'),
             strokeWidth: isVisible || isHov ? 2 : 0,
             strokeUniform: true,
             strokeDashArray: isVisible || isHov ? [3, 2] : undefined,
@@ -804,8 +804,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           poly.on('mouseover', () => {
             const isOverlayOn = propsRef.current.showDetectionOverlay;
             poly.set({
-              fill: isOverlayOn ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)',
-              stroke: isOverlayOn ? '#34d399' : '#10b981',
+              fill: isOverlayOn ? 'rgba(255, 111, 66, 0.38)' : 'rgba(255, 111, 66, 0.22)',
+              stroke: isOverlayOn ? '#ff5400' : '#ff6f42',
               strokeWidth: 2,
               strokeUniform: true,
               strokeDashArray: [3, 2],
@@ -826,8 +826,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           poly.on('mouseout', () => {
             const isOverlayOn = propsRef.current.showDetectionOverlay;
             poly.set({
-              fill: isOverlayOn ? 'rgba(16, 185, 129, 0.18)' : 'rgba(0, 0, 0, 0.001)',
-              stroke: isOverlayOn ? '#10b981' : 'transparent',
+              fill: isOverlayOn ? 'rgba(255, 111, 66, 0.16)' : 'rgba(0, 0, 0, 0.001)',
+              stroke: isOverlayOn ? '#ff6f42' : 'transparent',
               strokeWidth: isOverlayOn ? 2 : 0,
               strokeUniform: true,
               strokeDashArray: isOverlayOn ? [3, 2] : undefined,
@@ -887,11 +887,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         const points = blockPoly.map((p) => ({ x: p[0], y: p[1] }));
         const poly = new fabric.Polygon(points, {
           fill: isHov
-            ? (isVisible ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)')
-            : (isVisible ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)'),
+            ? (isVisible ? 'rgba(255, 111, 66, 0.38)' : 'rgba(255, 111, 66, 0.22)')
+            : (isVisible ? 'rgba(255, 111, 66, 0.14)' : 'rgba(0, 0, 0, 0.001)'),
           stroke: isHov
-            ? (isVisible ? '#34d399' : '#10b981')
-            : (isVisible ? '#10b981' : 'transparent'),
+            ? (isVisible ? '#ff5400' : '#ff6f42')
+            : (isVisible ? '#ff6f42' : 'transparent'),
           strokeWidth: isVisible || isHov ? 2 : 0,
           strokeUniform: true,
           strokeDashArray: isVisible || isHov ? [5, 4] : undefined,
@@ -912,8 +912,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         poly.on('mouseover', () => {
           const isOverlayOn = propsRef.current.showDetectionOverlay;
           poly.set({
-            fill: isOverlayOn ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)',
-            stroke: isOverlayOn ? '#34d399' : '#10b981',
+            fill: isOverlayOn ? 'rgba(255, 111, 66, 0.38)' : 'rgba(255, 111, 66, 0.22)',
+            stroke: isOverlayOn ? '#ff5400' : '#ff6f42',
             strokeWidth: 2,
             strokeUniform: true,
             strokeDashArray: [5, 4],
@@ -934,8 +934,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         poly.on('mouseout', () => {
           const isOverlayOn = propsRef.current.showDetectionOverlay;
           poly.set({
-            fill: isOverlayOn ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)',
-            stroke: isOverlayOn ? '#10b981' : 'transparent',
+            fill: isOverlayOn ? 'rgba(255, 111, 66, 0.14)' : 'rgba(0, 0, 0, 0.001)',
+            stroke: isOverlayOn ? '#ff6f42' : 'transparent',
             strokeWidth: isOverlayOn ? 2 : 0,
             strokeUniform: true,
             strokeDashArray: isOverlayOn ? [5, 4] : undefined,
@@ -977,16 +977,16 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       const isHov = id === hoveredRegionId;
       if (isVisible) {
         poly.set({
-          fill: isHov ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.15)',
-          stroke: isHov ? '#34d399' : '#10b981',
+          fill: isHov ? 'rgba(255, 111, 66, 0.38)' : 'rgba(255, 111, 66, 0.14)',
+          stroke: isHov ? '#ff5400' : '#ff6f42',
           strokeWidth: 2,
           strokeUniform: true,
           strokeDashArray: (poly as any).level === 'block' ? [5, 4] : [4, 3],
         });
       } else {
         poly.set({
-          fill: isHov ? 'rgba(16, 185, 129, 0.25)' : 'rgba(0, 0, 0, 0.001)',
-          stroke: isHov ? '#10b981' : 'transparent',
+          fill: isHov ? 'rgba(255, 111, 66, 0.22)' : 'rgba(0, 0, 0, 0.001)',
+          stroke: isHov ? '#ff6f42' : 'transparent',
           strokeWidth: isHov ? 2 : 0,
           strokeUniform: true,
           strokeDashArray: isHov ? [3, 2] : undefined,
@@ -1212,7 +1212,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           propsRef.current.onSelectLayer(null);
         }
       }}
-      className={`relative flex-1 h-full w-full overflow-hidden bg-slate-100 touch-none ${
+      className={`relative flex-1 h-full w-full overflow-hidden bg-[#f7f5f0] touch-none ${
         isSpacePressed ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
       }`}
     >
@@ -1220,15 +1220,15 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       {/* Floating Multi-Level Selection Bar (Line, Word, Block) */}
       {showDetectionOverlay && image && detectedRegions.length > 0 && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/95 backdrop-blur-md px-2 py-1 rounded-full border border-slate-200/90 shadow-md text-xs select-none animate-in fade-in duration-150">
-          <span className="text-slate-500 font-medium px-1.5 text-[11px]">Select:</span>
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/95 backdrop-blur-md px-2 py-1 rounded-full border border-[#e8e4dc] shadow-sm text-xs select-none animate-in fade-in duration-150">
+          <span className="text-neutral-500 font-medium px-1.5 text-[11px]">Select:</span>
           <button
             type="button"
             onClick={() => handleSelectionLevelChange('line')}
-            className={`px-2.5 py-0.5 rounded-full transition-all text-xs font-semibold ${
+            className={`px-3 py-1 rounded-full transition-all text-xs font-semibold ${
               selectionLevel === 'line'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-[#ff6f42] text-white shadow-xs'
+                : 'text-neutral-600 hover:text-neutral-900 hover:bg-[#f7f5f0]'
             }`}
             title="Line selection: selects full text lines and fields (Default)"
           >
@@ -1237,10 +1237,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           <button
             type="button"
             onClick={() => handleSelectionLevelChange('word')}
-            className={`px-2.5 py-0.5 rounded-full transition-all text-xs font-semibold ${
+            className={`px-3 py-1 rounded-full transition-all text-xs font-semibold ${
               selectionLevel === 'word'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-[#ff6f42] text-white shadow-xs'
+                : 'text-neutral-600 hover:text-neutral-900 hover:bg-[#f7f5f0]'
             }`}
             title="Word selection: selects individual words for fine editing"
           >
@@ -1249,10 +1249,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           <button
             type="button"
             onClick={() => handleSelectionLevelChange('block')}
-            className={`px-2.5 py-0.5 rounded-full transition-all text-xs font-semibold ${
+            className={`px-3 py-1 rounded-full transition-all text-xs font-semibold ${
               selectionLevel === 'block'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-[#ff6f42] text-white shadow-xs'
+                : 'text-neutral-600 hover:text-neutral-900 hover:bg-[#f7f5f0]'
             }`}
             title="Block selection: selects full wrapped sentences or paragraphs"
           >
@@ -1263,8 +1263,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       {/* Scanning Document Animation (from LottieFiles scanning-document) */}
       {isDetecting && image && (
-        <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-slate-900/10 backdrop-blur-[2px] transition-all duration-200">
-          <div className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-6 sm:p-7 shadow-2xl flex flex-col items-center justify-center max-w-xs text-center animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-black/10 backdrop-blur-[2px] transition-all duration-200">
+          <div className="bg-white/95 backdrop-blur-md border border-[#e8e4dc] rounded-3xl p-6 sm:p-7 shadow-2xl flex flex-col items-center justify-center max-w-xs text-center animate-in fade-in zoom-in-95 duration-200">
             <div className="w-32 h-32 sm:w-36 sm:h-36 relative flex items-center justify-center mb-2">
               <img
                 src="/scanning-document.gif"
@@ -1272,10 +1272,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
                 className="w-full h-full object-contain pointer-events-none select-none"
               />
             </div>
-            <h3 className="text-sm font-semibold text-slate-800 tracking-tight">
+            <h3 className="text-sm font-semibold text-neutral-900 tracking-tight">
               Scanning Document...
             </h3>
-            <p className="text-[11px] text-slate-500 mt-1 max-w-[210px] leading-relaxed">
+            <p className="text-[11px] text-neutral-600 mt-1 max-w-[210px] leading-relaxed">
               Detecting text regions and matching typography
             </p>
           </div>
@@ -1285,18 +1285,18 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       {/* Hover Tooltip for Detected Text Region */}
       {hoveredRegion && (
         <div
-          className={`fixed z-40 pointer-events-none -translate-x-1/2 px-2.5 py-1.5 rounded-md bg-white/95 border border-slate-200 shadow-xl backdrop-blur-sm text-xs select-none flex flex-col gap-0.5 transition-transform duration-75 ${
+          className={`fixed z-40 pointer-events-none -translate-x-1/2 px-2.5 py-1.5 rounded-xl bg-white/95 border border-[#e8e4dc] shadow-xl backdrop-blur-sm text-xs select-none flex flex-col gap-0.5 transition-transform duration-75 ${
             hoveredRegion.placement === 'top' ? '-translate-y-full' : 'translate-y-0'
           }`}
           style={{ left: hoveredRegion.screenX, top: hoveredRegion.screenY }}
         >
           <div className="flex items-center gap-2">
-            <span className="text-slate-900 font-semibold max-w-[220px] truncate">{hoveredRegion.text}</span>
-            <span className="text-[10px] font-mono px-1 rounded bg-slate-100 text-slate-700 border border-slate-200">
+            <span className="text-neutral-900 font-semibold max-w-[220px] truncate">{hoveredRegion.text}</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-[#ffefe8] text-[#ff6f42] border border-[#ff6f42]/20 font-bold">
               {Math.round(hoveredRegion.confidence * 100)}%
             </span>
           </div>
-          <span className="text-[10px] text-slate-500 font-medium">Click to edit on canvas</span>
+          <span className="text-[10px] text-[#ff6f42] font-semibold">Click to edit on canvas</span>
         </div>
       )}
 
@@ -1304,7 +1304,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       {image && isComparing && compareMode === 'split' && (
         <div className="absolute inset-0 pointer-events-none select-none">
           <div
-            className="absolute top-0 bottom-0 border-r-2 border-slate-900 z-30 shadow-lg flex items-center justify-center pointer-events-auto cursor-ew-resize"
+            className="absolute top-0 bottom-0 border-r-2 border-[#ff6f42] z-30 shadow-lg flex items-center justify-center pointer-events-auto cursor-ew-resize"
             style={{ left: `${splitPosition}%` }}
             onTouchStart={(e) => {
               const startX = e.touches[0].clientX;
@@ -1341,14 +1341,14 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
               window.addEventListener('mouseup', handleMouseUp);
             }}
           >
-            <div className="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-[11px] sm:text-[10px] shadow-md">
+            <div className="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-[#ff6f42] text-white flex items-center justify-center font-bold text-[11px] sm:text-[10px] shadow-md">
               ⇄
             </div>
           </div>
-          <div className="absolute top-3 left-4 px-2.5 py-1 rounded-full bg-white/90 text-slate-800 text-[10px] font-mono border border-slate-200 shadow-xs">
+          <div className="absolute top-3 left-4 px-2.5 py-1 rounded-full bg-white/95 text-neutral-800 text-[10px] font-mono border border-[#e8e4dc] shadow-xs">
             ORIGINAL
           </div>
-          <div className="absolute top-3 right-4 px-2.5 py-1 rounded-full bg-white/90 text-slate-800 text-[10px] font-mono border border-slate-200 shadow-xs">
+          <div className="absolute top-3 right-4 px-2.5 py-1 rounded-full bg-white/95 text-neutral-800 text-[10px] font-mono border border-[#e8e4dc] shadow-xs">
             EDITED
           </div>
         </div>
@@ -1360,23 +1360,23 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           <div
             className={`w-full max-w-lg p-6 sm:p-10 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center ${
               isDraggingOver
-                ? 'border-slate-800 bg-slate-200/50 scale-[1.02]'
-                : 'border-slate-300 bg-white shadow-sm hover:border-slate-400'
+                ? 'border-[#ff6f42] bg-[#ffefe8]/40 scale-[1.02]'
+                : 'border-[#e8e4dc] bg-white shadow-sm hover:border-[#ff6f42]/40'
             }`}
           >
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-100 text-slate-800 border border-slate-200 flex items-center justify-center mb-4 shadow-xs">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#ffefe8] text-[#ff6f42] border border-[#ff6f42]/20 flex items-center justify-center mb-4 shadow-xs">
               <UploadCloud className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>
 
-            <h2 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
+            <h2 className="text-base sm:text-lg font-bold text-neutral-950 tracking-tight">
               Drag & Drop your Image here
             </h2>
-            <p className="text-xs text-slate-500 mt-1 max-w-sm px-2">
+            <p className="text-xs text-neutral-600 mt-1 max-w-sm px-2">
               Supports PNG, JPG, JPEG, and WebP. Automatically detects text regions and styles.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 mt-6 w-full sm:w-auto">
-              <label className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-sm cursor-pointer transition-all active:scale-95">
+              <label className="w-full sm:w-auto justify-center flex items-center gap-2 px-5 py-2.5 text-xs font-semibold rounded-full bg-[#ff6f42] hover:bg-[#ee6037] text-white shadow-md shadow-[#ff6f42]/20 cursor-pointer transition-all active:scale-95">
                 <UploadCloud className="w-4 h-4" />
                 Browse File
                 <input
@@ -1398,37 +1398,37 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       {/* Floating Canvas Hint */}
       {image && (
-        <div className="hidden sm:flex absolute bottom-3 left-3 sm:left-4 items-center gap-1.5 sm:gap-2 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur border border-slate-200 text-[10px] sm:text-[11px] text-slate-600 pointer-events-none select-none shadow-xs z-10">
-          <HelpCircle className="w-3 h-3 text-slate-500 shrink-0" />
+        <div className="hidden sm:flex absolute bottom-3 left-3 sm:left-4 items-center gap-1.5 sm:gap-2 px-3 py-1 rounded-full bg-white/95 backdrop-blur border border-[#e8e4dc] text-[10px] sm:text-[11px] text-neutral-700 pointer-events-none select-none shadow-xs z-10">
+          <HelpCircle className="w-3.5 h-3.5 text-[#ff6f42] shrink-0" />
           <span>Hold Space + Drag to Pan • Mouse Wheel to Zoom</span>
         </div>
       )}
 
       {/* Floating Canvas Zoom Controls */}
       {image && (
-        <div className="absolute bottom-20 sm:bottom-3 right-3 flex items-center bg-white/95 backdrop-blur-md rounded-full p-1 border border-slate-200 shadow-md gap-1 z-20">
+        <div className="absolute bottom-20 sm:bottom-3 right-3 flex items-center bg-white/95 backdrop-blur-md rounded-full p-1 border border-[#e8e4dc] shadow-md gap-1 z-20">
           <button
             onClick={() => onZoomChange(Math.max(0.1, _zoom * 0.85))}
-            className="w-7 h-7 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-neutral-600 hover:text-[#ff6f42] hover:bg-[#ffefe8] rounded-full transition-colors"
             title="Zoom out"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => onZoomChange(1.0)}
-            className="px-1.5 text-[11px] font-mono text-slate-700 hover:text-slate-900"
+            className="px-2 text-[11px] font-mono font-semibold text-neutral-800 hover:text-[#ff6f42]"
             title="Reset zoom"
           >
             {Math.round(_zoom * 100)}%
           </button>
           <button
             onClick={() => onZoomChange(Math.min(5.0, _zoom * 1.15))}
-            className="w-7 h-7 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-neutral-600 hover:text-[#ff6f42] hover:bg-[#ffefe8] rounded-full transition-colors"
             title="Zoom in"
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
-          <div className="h-3.5 w-px bg-slate-200 my-auto mx-0.5" />
+          <div className="h-3.5 w-px bg-[#e8e4dc] my-auto mx-0.5" />
           <button
             onClick={() => {
               const canvas = fabricCanvasRef.current;
@@ -1443,7 +1443,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
               isInternalZoomUpdate.current = true;
               onZoomChange(fitScale);
             }}
-            className="w-7 h-7 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-neutral-600 hover:text-[#ff6f42] hover:bg-[#ffefe8] rounded-full transition-colors"
             title="Fit to screen"
           >
             <Maximize2 className="w-3 h-3" />

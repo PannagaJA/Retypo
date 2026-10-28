@@ -1091,7 +1091,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen h-[100dvh] w-screen overflow-hidden bg-slate-50 text-slate-900 relative">
+    <div className="flex flex-col h-screen h-[100dvh] w-screen overflow-hidden bg-[#f7f5f0] text-neutral-950 relative">
       {/* Top Header */}
       <Header
         canUndo={canUndo}
@@ -1170,12 +1170,12 @@ export const App: React.FC = () => {
             lg:static lg:block lg:w-72 lg:h-full lg:z-auto
             ${
               mobileTab === 'layers'
-                ? 'fixed inset-x-0 bottom-0 z-40 h-[58vh] max-h-[58dvh] bg-white rounded-t-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.12)] border-t border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200'
+                ? 'fixed inset-x-0 bottom-0 z-40 h-[58vh] max-h-[58dvh] bg-[#fdfbf9] rounded-t-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.12)] border-t border-[#e8e4dc] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200'
                 : 'hidden lg:flex'
             }
           `}
         >
-          <div className="lg:hidden w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2.5 shrink-0" />
+          <div className="lg:hidden w-12 h-1.5 bg-[#dcd7ce] rounded-full mx-auto my-2.5 shrink-0" />
           <LayersPanel
             image={image}
             patches={inpaintPatches}
@@ -1253,7 +1253,7 @@ export const App: React.FC = () => {
               mobileTab === 'properties'
                 ? `fixed inset-x-0 bottom-0 z-40 ${
                     isStyleExpanded ? 'h-[75vh] max-h-[75dvh]' : 'h-[38vh] max-h-[38dvh] sm:h-[42vh] sm:max-h-[42dvh]'
-                  } bg-white rounded-t-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.15)] border-t border-slate-200 flex flex-col overflow-hidden transition-[height] duration-200 ease-out`
+                  } bg-[#fdfbf9] rounded-t-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.15)] border-t border-[#e8e4dc] flex flex-col overflow-hidden transition-[height] duration-200 ease-out`
                 : 'hidden lg:flex'
             }
           `}
@@ -1261,10 +1261,10 @@ export const App: React.FC = () => {
           {/* Mobile Drag / Expand Handle */}
           <div
             onClick={() => setIsStyleExpanded((v) => !v)}
-            className="lg:hidden w-full flex items-center justify-center py-2 cursor-pointer hover:bg-slate-50 active:bg-slate-100 transition-colors shrink-0 group select-none"
+            className="lg:hidden w-full flex items-center justify-center py-2 cursor-pointer hover:bg-[#ffefe8]/40 active:bg-[#ffefe8] transition-colors shrink-0 group select-none"
             title={isStyleExpanded ? 'Tap to collapse' : 'Tap to expand'}
           >
-            <div className="w-10 h-1.5 bg-slate-300 group-hover:bg-slate-400 rounded-full transition-colors" />
+            <div className="w-10 h-1.5 bg-[#dcd7ce] group-hover:bg-[#ff6f42] rounded-full transition-colors" />
           </div>
           <PropertiesPanel
             layer={selectedLayer}
@@ -1298,7 +1298,7 @@ export const App: React.FC = () => {
             className={`lg:hidden fixed inset-0 z-30 transition-opacity ${
               mobileTab === 'properties'
                 ? 'bg-transparent pointer-events-none'
-                : 'bg-slate-900/40 backdrop-blur-xs'
+                : 'bg-black/25 backdrop-blur-xs'
             }`}
             onClick={() => setMobileTab('canvas')}
           />
@@ -1306,7 +1306,7 @@ export const App: React.FC = () => {
 
         {/* Mobile Quick Action Pill Card */}
         {image && mobileTab === 'canvas' && !selectedLayer && (
-          <div className="lg:hidden absolute top-3 inset-x-3 sm:max-w-md sm:mx-auto z-20 bg-white/95 border border-slate-200 shadow-xl backdrop-blur-xl rounded-2xl p-2.5 flex items-center justify-around gap-2 animate-in slide-in-from-top duration-150">
+          <div className="lg:hidden absolute top-3 inset-x-3 sm:max-w-md sm:mx-auto z-20 bg-white/95 border border-[#e8e4dc] shadow-xl backdrop-blur-xl rounded-2xl p-2.5 flex items-center justify-around gap-2 animate-in slide-in-from-top duration-150">
             {/* Auto OCR */}
             <button
               onClick={() => handleRunOCR()}
@@ -1315,10 +1315,10 @@ export const App: React.FC = () => {
                 isDetecting ? 'opacity-50 pointer-events-none cursor-not-allowed' : 'active:scale-95'
               }`}
             >
-              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 shadow-xs">
-                {isDetecting ? <Loader2 className="w-4 h-4 animate-spin text-slate-600" /> : <ScanText className="w-4 h-4 text-slate-700" />}
+              <div className="w-10 h-10 rounded-full bg-[#ffefe8] border border-[#ff6f42]/20 flex items-center justify-center text-[#ff6f42] shadow-xs">
+                {isDetecting ? <Loader2 className="w-4 h-4 animate-spin text-[#ff6f42]" /> : <ScanText className="w-4 h-4 text-[#ff6f42]" />}
               </div>
-              <span className="text-[10px] font-medium text-slate-700">{isDetecting ? 'Detecting...' : 'Detect Text'}</span>
+              <span className="text-[10px] font-semibold text-neutral-700">{isDetecting ? 'Detecting...' : 'Detect Text'}</span>
             </button>
 
             {/* Add Text */}
@@ -1326,10 +1326,10 @@ export const App: React.FC = () => {
               onClick={handleAddText}
               className="flex flex-col items-center gap-1 text-center active:scale-95 transition-transform"
             >
-              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 shadow-xs">
-                <Type className="w-4 h-4 text-slate-700" />
+              <div className="w-10 h-10 rounded-full bg-[#ffefe8] border border-[#ff6f42]/20 flex items-center justify-center text-[#ff6f42] shadow-xs">
+                <Type className="w-4 h-4 text-[#ff6f42]" />
               </div>
-              <span className="text-[10px] font-medium text-slate-700">Add Text</span>
+              <span className="text-[10px] font-semibold text-neutral-700">Add Text</span>
             </button>
 
             {/* Compare */}
@@ -1340,13 +1340,13 @@ export const App: React.FC = () => {
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center shadow-xs transition-all ${
                   isComparing
-                    ? 'bg-amber-100 border border-amber-300 text-amber-900'
-                    : 'bg-slate-100 border border-slate-200 text-slate-700'
+                    ? 'bg-[#ffefe8] border border-[#ff6f42]/40 text-[#ff6f42]'
+                    : 'bg-[#ede9df] border border-[#e8e4dc] text-neutral-700'
                 }`}
               >
                 <Eye className="w-4 h-4" />
               </div>
-              <span className="text-[10px] font-medium text-slate-700">
+              <span className="text-[10px] font-semibold text-neutral-700">
                 {isComparing ? 'Original' : 'Compare'}
               </span>
             </button>
@@ -1355,20 +1355,20 @@ export const App: React.FC = () => {
 
         {/* Mobile Floating Layer Card */}
         {selectedLayer && mobileTab === 'canvas' && (
-          <div className="lg:hidden absolute bottom-20 left-3 right-3 sm:max-w-md sm:mx-auto z-30 rounded-2xl bg-white border border-slate-200 shadow-xl p-3 flex items-center justify-between animate-in slide-in-from-bottom duration-150">
+          <div className="lg:hidden absolute bottom-20 left-3 right-3 sm:max-w-md sm:mx-auto z-30 rounded-2xl bg-white border border-[#e8e4dc] shadow-xl p-3 flex items-center justify-between animate-in slide-in-from-bottom duration-150">
             <div
               onClick={() => setMobileTab('properties')}
               className="flex items-center gap-2.5 min-w-0 flex-1 mr-2 cursor-pointer active:opacity-80"
               title="Tap to edit typography & styling"
             >
-              <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-xs font-bold">
+              <div className="w-9 h-9 rounded-xl bg-[#ff6f42] text-white flex items-center justify-center shrink-0 shadow-xs font-bold">
                 <Type className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate max-w-[140px] sm:max-w-[200px]">
+                <p className="text-xs font-bold text-neutral-900 truncate max-w-[140px] sm:max-w-[200px]">
                   {selectedLayer.text || 'Empty Text'}
                 </p>
-                <p className="text-[10px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
+                <p className="text-[10px] text-neutral-500 font-mono flex items-center gap-1.5 mt-0.5">
                   <span>{selectedLayer.fontFamily}</span>
                   <span>•</span>
                   <span>{Math.round(selectedLayer.fontSize)}px</span>
@@ -1385,28 +1385,28 @@ export const App: React.FC = () => {
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={() => setMobileTab('properties')}
-                className="px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-colors flex items-center gap-1 shadow-xs active:scale-95"
+                className="px-3.5 py-1.5 text-xs font-semibold rounded-full bg-[#ff6f42] text-white hover:bg-[#ee6037] transition-colors flex items-center gap-1 shadow-xs active:scale-95"
               >
                 <Sliders className="w-3 h-3" />
                 <span>Style</span>
               </button>
               <button
                 onClick={() => handleDuplicateLayer(selectedLayer.id)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-700 hover:text-[#ff6f42] bg-white hover:bg-[#ffefe8] border border-[#e8e4dc] transition-colors"
                 title="Duplicate"
               >
                 <Copy className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => handleDeleteLayer(selectedLayer.id)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
                 title="Delete"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setSelectedLayerId(null)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-500 hover:text-neutral-900 bg-white hover:bg-[#ede9df] border border-[#e8e4dc]"
                 title="Deselect"
               >
                 <X className="w-3.5 h-3.5" />
@@ -1418,14 +1418,14 @@ export const App: React.FC = () => {
 
       {/* Floating Modern Pill Dock */}
       {image && (
-        <nav className="lg:hidden fixed bottom-4 inset-x-0 mx-auto w-fit z-40 bg-white/95 border border-slate-200 shadow-xl shadow-slate-300/40 backdrop-blur-2xl rounded-full p-1.5 flex items-center gap-1 select-none">
+        <nav className="lg:hidden fixed bottom-4 inset-x-0 mx-auto w-fit z-40 bg-white/95 border border-[#e8e4dc] shadow-xl shadow-neutral-300/40 backdrop-blur-2xl rounded-full p-1.5 flex items-center gap-1 select-none">
           {/* Canvas Tab */}
           <button
             onClick={() => setMobileTab('canvas')}
             className={`flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-xs transition-all ${
               mobileTab === 'canvas'
-                ? 'bg-slate-900 text-white font-semibold shadow-xs scale-100'
-                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-[#ff6f42] text-white font-semibold shadow-xs scale-100'
+                : 'text-neutral-600 hover:text-neutral-900 hover:bg-[#ffefe8]'
             }`}
           >
             <Maximize2 className="w-3.5 h-3.5" />
@@ -1437,8 +1437,8 @@ export const App: React.FC = () => {
             onClick={() => setMobileTab(mobileTab === 'layers' ? 'canvas' : 'layers')}
             className={`relative flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-xs transition-all ${
               mobileTab === 'layers'
-                ? 'bg-slate-900 text-white font-semibold shadow-xs scale-100'
-                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-[#ff6f42] text-white font-semibold shadow-xs scale-100'
+                : 'text-neutral-600 hover:text-neutral-900 hover:bg-[#ffefe8]'
             }`}
           >
             <div className="relative">
@@ -1446,7 +1446,7 @@ export const App: React.FC = () => {
               {(layers.length > 0 || detectedRegions.length > 0) && (
                 <span
                   className={`absolute -top-1 -right-2 px-1 text-[8px] font-mono rounded-full font-bold leading-none py-0.5 min-w-[12px] text-center ${
-                    mobileTab === 'layers' ? 'bg-white text-slate-900' : 'bg-slate-900 text-white'
+                    mobileTab === 'layers' ? 'bg-white text-[#ff6f42]' : 'bg-[#ff6f42] text-white'
                   }`}
                 >
                   {layers.length + detectedRegions.filter((r) => !r.isConverted).length}
@@ -1461,14 +1461,14 @@ export const App: React.FC = () => {
             onClick={() => setMobileTab(mobileTab === 'properties' ? 'canvas' : 'properties')}
             className={`relative flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-xs transition-all ${
               mobileTab === 'properties'
-                ? 'bg-slate-900 text-white font-semibold shadow-xs scale-100'
-                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-[#ff6f42] text-white font-semibold shadow-xs scale-100'
+                : 'text-neutral-600 hover:text-neutral-900 hover:bg-[#ffefe8]'
             }`}
           >
             <div className="relative">
               <Sliders className="w-3.5 h-3.5" />
               {selectedLayer && (
-                <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-[#ff6f42] animate-pulse" />
               )}
             </div>
             {mobileTab === 'properties' && <span>Style</span>}
@@ -1478,7 +1478,7 @@ export const App: React.FC = () => {
           <button
             onClick={handleAddText}
             disabled={!image}
-            className="w-8 h-8 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xs active:scale-95 transition-all flex items-center justify-center disabled:opacity-40 disabled:pointer-events-none ml-1"
+            className="w-8 h-8 rounded-full bg-[#ff6f42] hover:bg-[#ee6037] text-white shadow-xs active:scale-95 transition-all flex items-center justify-center disabled:opacity-40 disabled:pointer-events-none ml-1"
             title="Add Text Layer"
           >
             <Plus className="w-4 h-4" />
@@ -1488,10 +1488,10 @@ export const App: React.FC = () => {
 
       {/* Floating Status Toast */}
       {toast && (
-        <div className="fixed bottom-16 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-slate-200 shadow-xl text-xs font-medium text-slate-800 max-w-[90vw]">
-          <span className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-emerald-500' : toast.type === 'warn' ? 'bg-amber-500' : 'bg-blue-500'} shrink-0`} />
+        <div className="fixed bottom-16 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-[#e8e4dc] shadow-xl text-xs font-semibold text-neutral-800 max-w-[90vw]">
+          <span className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-[#ff6f42]' : toast.type === 'warn' ? 'bg-amber-500' : 'bg-blue-500'} shrink-0`} />
           <span className="truncate">{toast.message}</span>
-          <button onClick={() => setToast(null)} className="ml-2 text-slate-400 hover:text-slate-700 shrink-0">✕</button>
+          <button onClick={() => setToast(null)} className="ml-2 text-neutral-400 hover:text-neutral-700 shrink-0">✕</button>
         </div>
       )}
 

@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="h-14 sm:h-16 bg-white/95 backdrop-blur-xl border-b border-slate-200 px-2 sm:px-4 md:px-6 flex items-center justify-between z-20 shrink-0 select-none gap-2 shadow-xs w-full max-w-full overflow-hidden">
+    <header className="h-14 sm:h-16 bg-[#f7f5f0]/95 backdrop-blur-xl border-b border-[#e8e4dc] px-2 sm:px-4 md:px-6 flex items-center justify-between z-20 shrink-0 select-none gap-2 shadow-xs w-full max-w-full overflow-hidden text-neutral-900">
       {/* Hidden File Input */}
       <input
         ref={fileInputRef}
@@ -90,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
         {onHome && (
           <button
             onClick={onHome}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 transition-colors text-xs font-semibold"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#ffefe8] text-neutral-700 hover:text-[#ff6f42] border border-[#e8e4dc] transition-all text-xs font-semibold shadow-2xs active:scale-95"
             title="Return to Landing Page"
           >
             ← Home
@@ -105,7 +105,7 @@ export const Header: React.FC<HeaderProps> = ({
             alt="Retypo"
             className="h-7 sm:h-8 w-auto object-contain"
           />
-          <span className="hidden md:inline-flex px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[9px] font-mono uppercase tracking-wider font-semibold leading-none">
+          <span className="hidden md:inline-flex px-2 py-0.5 rounded-full bg-[#ffefe8] text-[#ff6f42] border border-[#ff6f42]/20 text-[9px] font-mono uppercase tracking-wider font-bold leading-none">
             Studio
           </span>
         </div>
@@ -115,12 +115,12 @@ export const Header: React.FC<HeaderProps> = ({
       {hasImage && (
         <div className="hidden lg:flex items-center gap-2">
           {/* History Segmented Capsule */}
-          <div className="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200 shadow-xs">
+          <div className="flex items-center bg-white rounded-full p-1 border border-[#e8e4dc] shadow-2xs">
             <button
               onClick={onUndo}
               disabled={!canUndo}
               className={`w-7 h-7 flex items-center justify-center rounded-full transition-all ${
-                canUndo ? 'text-slate-700 hover:text-slate-900 hover:bg-white' : 'text-slate-300 cursor-not-allowed'
+                canUndo ? 'text-neutral-700 hover:text-[#ff6f42] hover:bg-[#ffefe8]' : 'text-neutral-300 cursor-not-allowed'
               }`}
               title="Undo (Ctrl/Cmd + Z)"
             >
@@ -130,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onRedo}
               disabled={!canRedo}
               className={`w-7 h-7 flex items-center justify-center rounded-full transition-all ${
-                canRedo ? 'text-slate-700 hover:text-slate-900 hover:bg-white' : 'text-slate-300 cursor-not-allowed'
+                canRedo ? 'text-neutral-700 hover:text-[#ff6f42] hover:bg-[#ffefe8]' : 'text-neutral-300 cursor-not-allowed'
               }`}
               title="Redo (Ctrl/Cmd + Shift + Z)"
             >
@@ -138,51 +138,51 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
 
-          <div className="h-4 w-px bg-slate-200" />
+          <div className="h-4 w-px bg-[#e8e4dc]" />
 
           {/* Zoom Segmented Capsule */}
-          <div className="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200 shadow-xs">
+          <div className="flex items-center bg-white rounded-full p-1 border border-[#e8e4dc] shadow-2xs">
             <button
               onClick={onZoomOut}
-              className="w-7 h-7 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-white rounded-full transition-colors"
+              className="w-7 h-7 flex items-center justify-center text-neutral-600 hover:text-[#ff6f42] hover:bg-[#ffefe8] rounded-full transition-colors"
               title="Zoom out (-)"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={onZoomReset}
-              className="px-2 text-xs font-mono font-semibold text-slate-800 hover:text-slate-900 transition-colors"
+              className="px-2 text-xs font-mono font-semibold text-neutral-800 hover:text-[#ff6f42] transition-colors"
               title="Click to reset zoom to 100%"
             >
               {Math.round(zoom * 100)}%
             </button>
             <button
               onClick={onZoomIn}
-              className="w-7 h-7 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-white rounded-full transition-colors"
+              className="w-7 h-7 flex items-center justify-center text-neutral-600 hover:text-[#ff6f42] hover:bg-[#ffefe8] rounded-full transition-colors"
               title="Zoom in (+)"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
-            <div className="h-3.5 w-px bg-slate-200 my-auto mx-0.5" />
+            <div className="h-3.5 w-px bg-[#e8e4dc] my-auto mx-0.5" />
             <button
               onClick={onZoomFit}
-              className="w-7 h-7 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-white rounded-full transition-colors"
+              className="w-7 h-7 flex items-center justify-center text-neutral-600 hover:text-[#ff6f42] hover:bg-[#ffefe8] rounded-full transition-colors"
               title="Fit to view"
             >
               <Maximize2 className="w-3 h-3" />
             </button>
           </div>
 
-          <div className="h-4 w-px bg-slate-200" />
+          <div className="h-4 w-px bg-[#e8e4dc]" />
 
           {/* Compare Controls Capsule */}
-          <div className="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200 gap-1 shadow-xs">
+          <div className="flex items-center bg-white rounded-full p-1 border border-[#e8e4dc] gap-1 shadow-2xs">
             <button
               onClick={onToggleCompare}
-              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full transition-all ${
                 isComparing
-                  ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+                  ? 'bg-[#ffefe8] text-[#ff6f42] border border-[#ff6f42]/30 shadow-xs'
+                  : 'text-neutral-700 hover:text-[#ff6f42] hover:bg-[#ffefe8]/60'
               }`}
               title="Compare against original unedited image"
             >
@@ -194,8 +194,8 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => onChangeCompareMode(compareMode === 'split' ? 'toggle' : 'split')}
               className={`w-7 h-7 flex items-center justify-center rounded-full transition-colors ${
                 compareMode === 'split'
-                  ? 'bg-slate-900 text-white'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-white'
+                  ? 'bg-[#ff6f42] text-white shadow-xs'
+                  : 'text-neutral-600 hover:text-[#ff6f42] hover:bg-[#ffefe8]/60'
               }`}
               title={`Switch compare mode (${compareMode === 'split' ? 'Split View' : 'Toggle'})`}
             >
@@ -211,7 +211,7 @@ export const Header: React.FC<HeaderProps> = ({
           /* Initial Screen: Prominent Upload Image button */
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 text-xs font-semibold rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full bg-[#ff6f42] hover:bg-[#ee6037] text-white shadow-md shadow-[#ff6f42]/20 transition-all active:scale-95"
             title="Upload image (PNG, JPG, WebP)"
           >
             <Upload className="w-3.5 h-3.5 text-white" />
@@ -223,10 +223,10 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Upload / Replace Button */}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-8 h-8 sm:w-auto sm:px-2.5 sm:py-1.5 flex items-center justify-center gap-1.5 text-xs font-semibold rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 shadow-xs transition-all active:scale-95 shrink-0"
+              className="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 flex items-center justify-center gap-1.5 text-xs font-semibold rounded-full bg-white hover:bg-[#ffefe8] text-neutral-800 hover:text-[#ff6f42] border border-[#e8e4dc] shadow-2xs transition-all active:scale-95 shrink-0"
               title="Upload another image"
             >
-              <Upload className="w-3.5 h-3.5 text-slate-600" />
+              <Upload className="w-3.5 h-3.5 text-neutral-600" />
               <span className="hidden md:inline whitespace-nowrap">Upload</span>
             </button>
 
@@ -234,21 +234,21 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onRunOCR}
               disabled={isDetecting}
-              className={`w-8 h-8 sm:w-auto sm:px-2.5 sm:py-1.5 flex items-center justify-center gap-1.5 text-xs font-semibold rounded-full border transition-all shrink-0 shadow-xs ${
+              className={`w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 flex items-center justify-center gap-1.5 text-xs font-semibold rounded-full border transition-all shrink-0 shadow-2xs ${
                 isDetecting
-                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed pointer-events-none'
-                  : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50 active:scale-95'
+                  ? 'bg-[#f7f5f0] text-neutral-400 border-[#e8e4dc] cursor-not-allowed pointer-events-none'
+                  : 'bg-white text-neutral-800 border-[#e8e4dc] hover:bg-[#ffefe8] hover:border-[#ff6f42]/30 hover:text-[#ff6f42] active:scale-95'
               }`}
               title={isDetecting ? 'Detection in progress...' : 'Detect text regions'}
             >
               {isDetecting ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#ff6f42]" />
                   <span className="hidden md:inline">Detecting...</span>
                 </>
               ) : (
                 <>
-                  <ScanText className="w-3.5 h-3.5 text-slate-700" />
+                  <ScanText className="w-3.5 h-3.5 text-[#ff6f42]" />
                   <span className="hidden md:inline">Detect Text</span>
                 </>
               )}
@@ -258,10 +258,10 @@ export const Header: React.FC<HeaderProps> = ({
             {detectedCount > 0 && (
               <button
                 onClick={onToggleDetectionOverlay}
-                className={`w-8 h-8 flex items-center justify-center text-xs rounded-full border transition-all shrink-0 shadow-xs ${
+                className={`w-8 h-8 flex items-center justify-center text-xs rounded-full border transition-all shrink-0 shadow-2xs ${
                   showDetectionOverlay
-                    ? 'bg-slate-900 text-white border-slate-900'
-                    : 'bg-white text-slate-500 border-slate-200 hover:text-slate-900'
+                    ? 'bg-[#ff6f42] text-white border-[#ff6f42] shadow-xs'
+                    : 'bg-white text-neutral-600 border-[#e8e4dc] hover:text-[#ff6f42] hover:bg-[#ffefe8]'
                 }`}
                 title={showDetectionOverlay ? 'Hide detected text boxes' : 'Show detected text boxes'}
               >
@@ -270,12 +270,12 @@ export const Header: React.FC<HeaderProps> = ({
             )}
 
             {/* Mobile-only Undo & Redo Capsule (< lg) */}
-            <div className="flex lg:hidden items-center bg-slate-100 rounded-full p-0.5 border border-slate-200 shrink-0 shadow-xs">
+            <div className="flex lg:hidden items-center bg-white rounded-full p-0.5 border border-[#e8e4dc] shrink-0 shadow-2xs">
               <button
                 onClick={onUndo}
                 disabled={!canUndo}
                 className={`w-7 h-7 flex items-center justify-center rounded-full transition-colors ${
-                  canUndo ? 'text-slate-700 hover:text-slate-900 hover:bg-white active:scale-90' : 'text-slate-300 cursor-not-allowed'
+                  canUndo ? 'text-neutral-700 hover:text-[#ff6f42] hover:bg-[#ffefe8] active:scale-90' : 'text-neutral-300 cursor-not-allowed'
                 }`}
                 title="Undo (Ctrl/Cmd + Z)"
               >
@@ -285,7 +285,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onRedo}
                 disabled={!canRedo}
                 className={`w-7 h-7 flex items-center justify-center rounded-full transition-colors ${
-                  canRedo ? 'text-slate-700 hover:text-slate-900 hover:bg-white active:scale-90' : 'text-slate-300 cursor-not-allowed'
+                  canRedo ? 'text-neutral-700 hover:text-[#ff6f42] hover:bg-[#ffefe8] active:scale-90' : 'text-neutral-300 cursor-not-allowed'
                 }`}
                 title="Redo (Ctrl/Cmd + Shift + Z)"
               >
@@ -293,10 +293,10 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </div>
 
-            {/* High-Contrast Export Button */}
+            {/* High-Contrast Export Button matching Landing Page Orange */}
             <button
               onClick={onOpenExport}
-              className="flex items-center justify-center gap-1 px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold rounded-full bg-slate-900 text-white hover:bg-slate-800 shadow-sm transition-all active:scale-95 shrink-0"
+              className="flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-1.5 text-xs font-semibold rounded-full bg-[#ff6f42] text-white hover:bg-[#ee6037] shadow-md shadow-[#ff6f42]/20 transition-all active:scale-95 shrink-0"
               title="Export image at full native resolution"
             >
               <Download className="w-3.5 h-3.5" />
