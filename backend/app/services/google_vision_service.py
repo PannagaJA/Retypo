@@ -37,11 +37,20 @@ class GoogleVisionService:
         return bool(cls.get_api_key())
 
     @classmethod
-    def parse_vision_response(cls, response_json: Dict[str, Any]) -> List[Tuple[List[List[float]], str, float]]:
+    @classmethod
+    def parse_vision_response(
+        cls,
+        response_json: Dict[str, Any],
+        image_width: Optional[int] = None,
+        image_height: Optional[int] = None
+    ) -> List[Tuple[List[List[float]], str, float]]:
         """
-        Parses Google Vision fullTextAnnotation into structured lines with accurate polygon boxes
-        using spatial reading-order line clustering. Prevents grouping distant buttons or columns into huge boxes.
-        Falls back to textAnnotations if fullTextAnnotation is not populated.
+        Parses Google Cloud Vision API response.
+        Extracts word-level bounding polygons directly from
+        fullTextAnnotation.pages[].blocks[].paragraphs[].words[].boundingBox.
+        Preserves each word's exact text, quadrilateral vertices (including rotation),
+        and confidence score without substituting sentence-level boxes or calculating word widths.
+        Falls back to textAnnotations[1:] if fullTextAnnotation is not populated.
         """
         items: List[Tuple[List[List[float]], str, float]] = []
         responses = response_json.get("responses", [])
@@ -52,135 +61,111 @@ class GoogleVisionService:
         full_text_annotation = first_resp.get("fullTextAnnotation")
 
         if full_text_annotation:
-            extracted_words: List[Dict[str, Any]] = []
             for page in full_text_annotation.get("pages", []):
+                page_w = float(page.get("width") or image_width or 1)
+                page_h = float(page.get("height") or image_height or 1)
+
                 for block in page.get("blocks", []):
                     for para in block.get("paragraphs", []):
                         for word in para.get("words", []):
                             word_text = "".join([s.get("text", "") for s in word.get("symbols", [])]).strip()
                             if not word_text:
                                 continue
-                            vertices = word.get("boundingPoly", {}).get("vertices", [])
-                            if len(vertices) < 4:
-                                continue
-                            xs = [float(v.get("x", 0)) for v in vertices if "x" in v]
-                            ys = [float(v.get("y", 0)) for v in vertices if "y" in v]
-                            if not xs or not ys:
-                                continue
-                            wx1, wx2 = min(xs), max(xs)
-                            wy1, wy2 = min(ys), max(ys)
-                            conf = float(word.get("confidence", 0.98))
-                            extracted_words.append({
-                                "text": word_text,
-                                "x1": wx1,
-                                "y1": wy1,
-                                "x2": wx2,
-                                "y2": wy2,
-                                "conf": conf,
-                                "vertices": vertices,
-                            })
 
-            # Spatial reading-order line clustering:
-            # Group words that share vertical baseline overlap and are horizontally adjacent
-            extracted_words.sort(key=lambda w: (w["y1"], w["x1"]))
-            lines: List[Dict[str, Any]] = []
+                            box = word.get("boundingBox") or word.get("boundingPoly") or {}
+                            vertices = box.get("vertices", [])
+                            norm_vertices = box.get("normalizedVertices", [])
 
-            for w in extracted_words:
-                wx1, wy1, wx2, wy2 = w["x1"], w["y1"], w["x2"], w["y2"]
-                wh = max(1.0, wy2 - wy1)
-                placed = False
+                            poly: Optional[List[List[float]]] = None
 
-                for line in lines:
-                    ly1, ly2 = line["y1"], line["y2"]
-                    lh = max(1.0, ly2 - ly1)
-                    # Vertical baseline overlap test
-                    overlap = max(0.0, min(wy2, ly2) - max(wy1, ly1))
-                    if overlap >= 0.50 * min(wh, lh):
-                        # Horizontal proximity test: ensure words are not across distant columns
-                        last_w = line["words"][-1]
-                        gap = wx1 - last_w["x2"]
-                        if 0 <= gap <= 3.2 * max(wh, lh):
-                            line["words"].append(w)
-                            line["y1"] = min(line["y1"], wy1)
-                            line["y2"] = max(line["y2"], wy2)
-                            line["x2"] = max(line["x2"], wx2)
-                            line["vertices"].extend(w["vertices"])
-                            placed = True
-                            break
+                            if vertices and len(vertices) >= 4:
+                                # In proto3 JSON, missing x or y implies coordinate 0
+                                poly = [[float(v.get("x", 0)), float(v.get("y", 0))] for v in vertices[:4]]
+                            elif norm_vertices and len(norm_vertices) >= 4:
+                                poly = [
+                                    [round(float(v.get("x", 0)) * page_w, 1), round(float(v.get("y", 0)) * page_h, 1)]
+                                    for v in norm_vertices[:4]
+                                ]
 
-                if not placed:
-                    lines.append({
-                        "words": [w],
-                        "x1": wx1,
-                        "y1": wy1,
-                        "x2": wx2,
-                        "y2": wy2,
-                        "vertices": list(w["vertices"]),
-                    })
+                            # Check symbol bounds to ensure glyphs (e.g. final 't' in 'account') are never clipped
+                            symbols = word.get("symbols", [])
+                            if symbols and poly is not None:
+                                sym_xs: List[float] = []
+                                sym_ys: List[float] = []
+                                for s in symbols:
+                                    s_box = s.get("boundingBox") or s.get("boundingPoly") or {}
+                                    s_verts = s_box.get("vertices", [])
+                                    s_norm = s_box.get("normalizedVertices", [])
+                                    if s_verts and len(s_verts) >= 4:
+                                        for sv in s_verts:
+                                            sym_xs.append(float(sv.get("x", 0)))
+                                            sym_ys.append(float(sv.get("y", 0)))
+                                    elif s_norm and len(s_norm) >= 4:
+                                        for sv in s_norm:
+                                            sym_xs.append(float(sv.get("x", 0)) * page_w)
+                                            sym_ys.append(float(sv.get("y", 0)) * page_h)
 
-            for line in lines:
-                line_text = " ".join([w["text"] for w in line["words"]]).strip()
-                if line_text and line["vertices"]:
-                    poly = cls._compute_bounding_polygon(line["vertices"])
-                    if poly:
-                        avg_conf = float(np.mean([w["conf"] for w in line["words"]]))
-                        items.append((poly, line_text, round(avg_conf, 3)))
+                                if sym_xs and sym_ys:
+                                    s_min_x, s_max_x = min(sym_xs), max(sym_xs)
+                                    s_min_y, s_max_y = min(sym_ys), max(sym_ys)
+
+                                    p_xs = [pt[0] for pt in poly]
+                                    p_ys = [pt[1] for pt in poly]
+                                    # If symbol boundaries extend beyond word box, expand to enclose all glyphs
+                                    if s_min_x < min(p_xs) or s_max_x > max(p_xs) or s_min_y < min(p_ys) or s_max_y > max(p_ys):
+                                        new_min_x = min(min(p_xs), s_min_x)
+                                        new_max_x = max(max(p_xs), s_max_x)
+                                        new_min_y = min(min(p_ys), s_min_y)
+                                        new_max_y = max(max(p_ys), s_max_y)
+                                        poly = [
+                                            [new_min_x, new_min_y],
+                                            [new_max_x, new_min_y],
+                                            [new_max_x, new_max_y],
+                                            [new_min_x, new_max_y]
+                                        ]
+
+                            if poly and len(poly) == 4:
+                                conf = float(word.get("confidence", 0.98))
+                                items.append((poly, word_text, round(conf, 3)))
 
         # Fallback to textAnnotations if fullTextAnnotation didn't yield items
         if not items and "textAnnotations" in first_resp:
             text_annotations = first_resp.get("textAnnotations", [])
+            eff_w = float(image_width or 1)
+            eff_h = float(image_height or 1)
             for ann in text_annotations[1:]:
                 text = ann.get("description", "").strip()
-                vertices = ann.get("boundingPoly", {}).get("vertices", [])
-                if not text or len(vertices) < 4:
+                box = ann.get("boundingPoly") or ann.get("boundingBox") or {}
+                vertices = box.get("vertices", [])
+                norm_vertices = box.get("normalizedVertices", [])
+                if not text:
                     continue
-                poly = [[float(v.get("x", 0)), float(v.get("y", 0))] for v in vertices]
-                confidence = float(ann.get("confidence", 0.95))
-                items.append((poly, text, confidence))
+                poly = None
+                if vertices and len(vertices) >= 4:
+                    poly = [[float(v.get("x", 0)), float(v.get("y", 0))] for v in vertices[:4]]
+                elif norm_vertices and len(norm_vertices) >= 4:
+                    poly = [[round(float(v.get("x", 0)) * eff_w, 1), round(float(v.get("y", 0)) * eff_h, 1)] for v in norm_vertices[:4]]
+
+                if poly and len(poly) == 4:
+                    conf = float(ann.get("confidence", 0.95))
+                    items.append((poly, text, conf))
 
         return items
-
-    @staticmethod
-    def _compute_bounding_polygon(vertices: List[Dict[str, Any]]) -> Optional[List[List[float]]]:
-        xs = [float(v.get("x", 0)) for v in vertices if "x" in v]
-        ys = [float(v.get("y", 0)) for v in vertices if "y" in v]
-        if not xs or not ys:
-            return None
-
-        min_x, max_x = min(xs), max(xs)
-        min_y, max_y = min(ys), max(ys)
-        if max_x <= min_x or max_y <= min_y:
-            return None
-
-        return [
-            [round(min_x, 1), round(min_y, 1)],
-            [round(max_x, 1), round(min_y, 1)],
-            [round(max_x, 1), round(max_y, 1)],
-            [round(min_x, 1), round(max_y, 1)]
-        ]
 
     @classmethod
     def analyze_image_sync(cls, image: Image.Image) -> Optional[List[Tuple[List[List[float]], str, float]]]:
         """
         Synchronous call to Google Cloud Vision API with strict ZERO-RETRY policy (max_retries=0)
-        and SHA-256 deduplication. Drops out instantly on any error without quota burning.
+        and SHA-256 deduplication. Preserves native image resolution for 1:1 coordinate accuracy.
         """
         api_key = cls.get_api_key()
         if not api_key:
             return None
 
-        # 1. Compress image to JPEG bytes
+        # 1. Compress image to JPEG bytes at full native resolution
         buffer = io.BytesIO()
         w, h = image.width, image.height
-        if max(w, h) > 1600:
-            scale = 1600.0 / float(max(w, h))
-            scaled_img = image.resize((int(round(w * scale)), int(round(h * scale))), Image.Resampling.BILINEAR)
-            scaled_img.convert("RGB").save(buffer, format="JPEG", quality=88)
-            img_scale = scale
-        else:
-            image.convert("RGB").save(buffer, format="JPEG", quality=90)
-            img_scale = 1.0
-
+        image.convert("RGB").save(buffer, format="JPEG", quality=95)
         image_bytes = buffer.getvalue()
 
         # 2. SHA-256 Deduplication check (prevents double API calls if triggered in rapid succession)
@@ -214,17 +199,12 @@ class GoogleVisionService:
                 return None
 
             data = resp.json()
-            raw_items = cls.parse_vision_response(data)
+            items = cls.parse_vision_response(data, image_width=w, image_height=h)
 
-            # Rescale coordinates back to full resolution if image was downscaled
-            if img_scale != 1.0:
-                inv_scale = 1.0 / img_scale
-                items = []
-                for poly, text, conf in raw_items:
-                    rescaled_poly = [[round(pt[0] * inv_scale, 1), round(pt[1] * inv_scale, 1)] for pt in poly]
-                    items.append((rescaled_poly, text, conf))
-            else:
-                items = raw_items
+            # Debug log affected words
+            for poly, text, conf in items:
+                if text.lower() in {"account", "payment", "transferred", "pm"}:
+                    print(f"[GoogleVision Debug] Word=\"{text}\", poly={poly}, conf={conf}")
 
             # Store in short-lived dedup cache
             cls._dedup_cache[img_hash] = (now, items)
@@ -237,3 +217,4 @@ class GoogleVisionService:
         except Exception as e:
             print(f"[GoogleVision] Unexpected error: {e}")
             return None
+

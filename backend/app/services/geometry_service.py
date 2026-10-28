@@ -212,7 +212,7 @@ def refine_polygon_to_text(
         if max_d < 18.0:
             return polygon
 
-        _, mask = cv2.threshold(diff.astype(np.uint8), max(15, int(0.35 * max_d)), 255, cv2.THRESH_BINARY)
+        _, mask = cv2.threshold(diff.astype(np.uint8), max(12, int(0.20 * max_d)), 255, cv2.THRESH_BINARY)
         num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
 
         valid_comps = []
@@ -240,6 +240,13 @@ def refine_polygon_to_text(
         tight_x2 = min(float(image.width), crop_x1 + max_comp_x + 2.0)
         tight_y1 = max(0.0, crop_y1 + min_comp_y - 2.0)
         tight_y2 = min(float(image.height), crop_y1 + max_comp_y + 2.0)
+
+        # Ensure small antialiased trailing/leading glyph edges (e.g. 't' in 'account', 'm' in 'pm')
+        # are never accidentally shaved off by component thresholding
+        if 0 < max_x - tight_x2 <= 5.0:
+            tight_x2 = max_x
+        if 0 < tight_x1 - min_x <= 3.0:
+            tight_x1 = min_x
 
         new_h = tight_y2 - tight_y1
         new_w = tight_x2 - tight_x1

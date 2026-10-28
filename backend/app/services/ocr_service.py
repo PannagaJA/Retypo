@@ -302,7 +302,7 @@ class OCRService:
 
         norm_lower = clean_text.lower().lstrip('+').strip()
         is_ui_button = norm_lower in {
-            'account', 'filter', 'transaction', 'transactions', 'dashboard', 'settings',
+            'filter', 'transaction', 'transactions', 'dashboard', 'settings',
             'profile', 'history', 'subscriptions', 'budgets', 'search', 'sort', 'menu'
         }
 
