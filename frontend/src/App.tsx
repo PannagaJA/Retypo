@@ -9,7 +9,7 @@ import { ExportModal } from './components/ExportModal';
 import { DiscardModal } from './components/DiscardModal';
 import { LandingPage } from './components/LandingPage';
 import { analyzeImageOCR, restoreBackground } from './services/api';
-import { Layers, Type, Maximize2, Eye, Sliders, Copy, Trash2, X, ScanText, Plus, Loader2 } from 'lucide-react';
+import { Layers, Type, Maximize2, Sliders, Copy, Trash2, X, Plus } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [image, setImage] = useState<ImageMetadata | null>(null);
@@ -1304,54 +1304,6 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* Mobile Quick Action Pill Card */}
-        {image && mobileTab === 'canvas' && !selectedLayer && (
-          <div className="lg:hidden absolute top-3 inset-x-3 sm:max-w-md sm:mx-auto z-20 bg-white/95 border border-[#e8e4dc] shadow-xl backdrop-blur-xl rounded-2xl p-2.5 flex items-center justify-around gap-2 animate-in slide-in-from-top duration-150">
-            {/* Auto OCR */}
-            <button
-              onClick={() => handleRunOCR()}
-              disabled={isDetecting}
-              className={`flex flex-col items-center gap-1 text-center transition-all ${
-                isDetecting ? 'opacity-50 pointer-events-none cursor-not-allowed' : 'active:scale-95'
-              }`}
-            >
-              <div className="w-10 h-10 rounded-full bg-[#ffefe8] border border-[#ff6f42]/20 flex items-center justify-center text-[#ff6f42] shadow-xs">
-                {isDetecting ? <Loader2 className="w-4 h-4 animate-spin text-[#ff6f42]" /> : <ScanText className="w-4 h-4 text-[#ff6f42]" />}
-              </div>
-              <span className="text-[10px] font-semibold text-neutral-700">{isDetecting ? 'Detecting...' : 'Detect Text'}</span>
-            </button>
-
-            {/* Add Text */}
-            <button
-              onClick={handleAddText}
-              className="flex flex-col items-center gap-1 text-center active:scale-95 transition-transform"
-            >
-              <div className="w-10 h-10 rounded-full bg-[#ffefe8] border border-[#ff6f42]/20 flex items-center justify-center text-[#ff6f42] shadow-xs">
-                <Type className="w-4 h-4 text-[#ff6f42]" />
-              </div>
-              <span className="text-[10px] font-semibold text-neutral-700">Add Text</span>
-            </button>
-
-            {/* Compare */}
-            <button
-              onClick={() => setIsComparing((c) => !c)}
-              className="flex flex-col items-center gap-1 text-center active:scale-95 transition-transform"
-            >
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center shadow-xs transition-all ${
-                  isComparing
-                    ? 'bg-[#ffefe8] border border-[#ff6f42]/40 text-[#ff6f42]'
-                    : 'bg-[#ede9df] border border-[#e8e4dc] text-neutral-700'
-                }`}
-              >
-                <Eye className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] font-semibold text-neutral-700">
-                {isComparing ? 'Original' : 'Compare'}
-              </span>
-            </button>
-          </div>
-        )}
 
         {/* Mobile Floating Layer Card */}
         {selectedLayer && mobileTab === 'canvas' && (

@@ -85,17 +85,8 @@ export const Header: React.FC<HeaderProps> = ({
         onChange={handleFileChange}
       />
 
-      {/* Left: Retypo Brand & Back to Home */}
+      {/* Left: Retypo Brand */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {onHome && (
-          <button
-            onClick={onHome}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#ffefe8] text-neutral-700 hover:text-[#ff6f42] border border-[#e8e4dc] transition-all text-xs font-semibold shadow-2xs active:scale-95"
-            title="Return to Landing Page"
-          >
-            ← Home
-          </button>
-        )}
         <div
           onClick={onHome}
           className={`flex items-center gap-2 sm:gap-2.5 shrink-0 ${onHome ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
