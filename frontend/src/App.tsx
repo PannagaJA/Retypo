@@ -6,6 +6,7 @@ import { CanvasWorkspace } from './components/CanvasWorkspace';
 import { LayersPanel } from './components/LayersPanel';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { ExportModal } from './components/ExportModal';
+import { DiscardModal } from './components/DiscardModal';
 import { LandingPage } from './components/LandingPage';
 import { analyzeImageOCR, restoreBackground } from './services/api';
 import { Layers, Type, Maximize2, Eye, Sliders, Copy, Trash2, X, ScanText, Plus, Loader2 } from 'lucide-react';
@@ -38,6 +39,17 @@ export const App: React.FC = () => {
   const [isInpainting, setIsInpainting] = useState<boolean>(false);
   const [isInpaintingAll, setIsInpaintingAll] = useState<boolean>(false);
 
+  // Discard Confirmation Modal State
+  const [showDiscardModal, setShowDiscardModal] = useState<boolean>(false);
+  const [discardModalConfig, setDiscardModalConfig] = useState<{
+    title?: string;
+    message?: string;
+    confirmText?: string;
+    cancelText?: string;
+  }>({});
+  const [pendingDiscardAction, setPendingDiscardAction] = useState<(() => void) | null>(null);
+  const isAllowingUnloadRef = useRef<boolean>(false);
+
   // Toast notification state
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'warn' } | null>(null);
 
@@ -53,12 +65,34 @@ export const App: React.FC = () => {
   const [canUndo, setCanUndo] = useState<boolean>(false);
   const [canRedo, setCanRedo] = useState<boolean>(false);
 
+  const imageRef = useRef(image);
+  imageRef.current = image;
   const layersRef = useRef(layers);
   layersRef.current = layers;
   const inpaintPatchesRef = useRef(inpaintPatches);
   inpaintPatchesRef.current = inpaintPatches;
   const detectedRegionsRef = useRef(detectedRegions);
   detectedRegionsRef.current = detectedRegions;
+
+  // Prevent accidental page refresh / navigation when editing
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isAllowingUnloadRef.current) return;
+      if (!imageRef.current) return;
+
+      e.preventDefault();
+      e.returnValue = 'Your changes will be discarded.';
+      return 'Your changes will be discarded.';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload, { capture: true });
+    window.onbeforeunload = handleBeforeUnload;
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload, { capture: true });
+      window.onbeforeunload = null;
+    };
+  }, []);
 
   const textEditingSnapshotRef = useRef<EditorSnapshot | null>(null);
   const lastContinuousPushRef = useRef<{ time: number }>({ time: 0 });
@@ -932,14 +966,75 @@ export const App: React.FC = () => {
     setLayers(reordered);
   };
 
+  const handleConfirmDiscard = () => {
+    setShowDiscardModal(false);
+    if (pendingDiscardAction) {
+      pendingDiscardAction();
+      setPendingDiscardAction(null);
+    }
+  };
+
+  const handleCloseDiscardModal = () => {
+    setShowDiscardModal(false);
+    setPendingDiscardAction(null);
+  };
+
+  const handleHomeClick = () => {
+    if (imageRef.current) {
+      setDiscardModalConfig({
+        title: 'Discard changes & exit?',
+        message: 'You have an active editing session. If you return to the home screen, all your current text edits and inpainting modifications will be discarded.',
+        confirmText: 'Discard & Exit',
+        cancelText: 'Keep Editing',
+      });
+      setPendingDiscardAction(() => () => {
+        setImage(null);
+        setLayers([]);
+        setSelectedLayerId(null);
+        setInpaintPatches([]);
+        setDetectedRegions([]);
+        historyRef.current.clear();
+        updateUndoRedoState();
+      });
+      setShowDiscardModal(true);
+    } else {
+      setImage(null);
+      setLayers([]);
+      setSelectedLayerId(null);
+      setInpaintPatches([]);
+      setDetectedRegions([]);
+      historyRef.current.clear();
+      updateUndoRedoState();
+    }
+  };
+
   // Keyboard Shortcuts Handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const activeTag = (e.target as HTMLElement).tagName;
-      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
-
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const modKey = isMac ? e.metaKey : e.ctrlKey;
+
+      // Intercept page refresh shortcuts (F5 or Cmd+R / Ctrl+R) when editing
+      const isRefresh = e.key === 'F5' || (modKey && (e.key === 'r' || e.key === 'R'));
+      if (isRefresh && imageRef.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        setDiscardModalConfig({
+          title: 'Discard changes & refresh?',
+          message: 'You have unsaved changes in your editor. If you refresh now, all your text edits, inpainting, and modifications will be discarded.',
+          confirmText: 'Discard & Refresh',
+          cancelText: 'Keep Editing',
+        });
+        setPendingDiscardAction(() => () => {
+          isAllowingUnloadRef.current = true;
+          window.location.reload();
+        });
+        setShowDiscardModal(true);
+        return;
+      }
+
+      const activeTag = (e.target as HTMLElement).tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
 
       if (modKey && e.key.toLowerCase() === 'z') {
         e.preventDefault();
@@ -966,8 +1061,8 @@ export const App: React.FC = () => {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
   }, [selectedLayerId, layers, handleUndo, handleRedo]);
 
   const selectedLayer = layers.find((l) => l.id === selectedLayerId) || null;
@@ -1008,8 +1103,46 @@ export const App: React.FC = () => {
         onZoomOut={() => setZoom((z) => Math.max(0.1, z * 0.85))}
         onZoomFit={() => setFitTrigger((t) => t + 1)}
         onZoomReset={() => setZoom(1.0)}
-        onImageSelected={handleImageSelected}
-        onLoadSample={handleLoadSample}
+        onImageSelected={(file) => {
+          const hasUnsavedChanges = Boolean(image) && (
+            layers.length > 0 ||
+            inpaintPatches.length > 0 ||
+            canUndo ||
+            detectedRegions.some((r) => r.isConverted)
+          );
+          if (hasUnsavedChanges) {
+            setDiscardModalConfig({
+              title: 'Discard current edits?',
+              message: 'Opening a new image will discard all your current text edits and modifications.',
+              confirmText: 'Discard & Open',
+              cancelText: 'Keep Editing',
+            });
+            setPendingDiscardAction(() => () => handleImageSelected(file));
+            setShowDiscardModal(true);
+          } else {
+            handleImageSelected(file);
+          }
+        }}
+        onLoadSample={() => {
+          const hasUnsavedChanges = Boolean(image) && (
+            layers.length > 0 ||
+            inpaintPatches.length > 0 ||
+            canUndo ||
+            detectedRegions.some((r) => r.isConverted)
+          );
+          if (hasUnsavedChanges) {
+            setDiscardModalConfig({
+              title: 'Discard current edits?',
+              message: 'Loading a sample template will discard all your current text edits and modifications.',
+              confirmText: 'Discard & Load',
+              cancelText: 'Keep Editing',
+            });
+            setPendingDiscardAction(() => () => handleLoadSample('magazine'));
+            setShowDiscardModal(true);
+          } else {
+            handleLoadSample('magazine');
+          }
+        }}
         isComparing={isComparing}
         onToggleCompare={() => setIsComparing((c) => !c)}
         compareMode={compareMode}
@@ -1026,13 +1159,7 @@ export const App: React.FC = () => {
           setOcrLang(l);
           handleRunOCR(undefined, l);
         }}
-        onHome={() => {
-          setImage(null);
-          setLayers([]);
-          setSelectedLayerId(null);
-          setInpaintPatches([]);
-          setDetectedRegions([]);
-        }}
+        onHome={handleHomeClick}
       />
 
       {/* Main Workspace */}
@@ -1378,6 +1505,17 @@ export const App: React.FC = () => {
           layers={layers}
         />
       )}
+
+      {/* Discard Changes Confirmation Modal */}
+      <DiscardModal
+        isOpen={showDiscardModal}
+        onClose={handleCloseDiscardModal}
+        onConfirm={handleConfirmDiscard}
+        title={discardModalConfig.title}
+        message={discardModalConfig.message}
+        confirmText={discardModalConfig.confirmText}
+        cancelText={discardModalConfig.cancelText}
+      />
     </div>
   );
 };
