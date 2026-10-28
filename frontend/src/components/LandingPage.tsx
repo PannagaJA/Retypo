@@ -944,7 +944,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 onTouchStart={handleTouchStart}
               >
                 {/* AFTER STATE: Inpainted photograph + Reconstructed vector typography */}
-                <div className="absolute inset-0">
+                <div
+                  className="absolute inset-0 overflow-hidden pointer-events-none"
+                  style={{ clipPath: `polygon(${sliderPosition}% 0, 100% 0, 100% 100%, ${sliderPosition}% 100%)` }}
+                >
                   <img
                     src="/demo-editorial.jpg"
                     alt="Retypo Inpainted Travertine Editorial"
@@ -963,7 +966,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                   {/* Reconstructed Vector Typography with Live Handles */}
                   <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-3 sm:p-6 z-10 pointer-events-none">
-                    <div className="relative inline-block px-3.5 py-3 sm:px-8 sm:py-6 rounded-xl border-2 border-dashed border-[#ff6f42] bg-[#ff6f42]/15 backdrop-blur-[2px] shadow-2xl max-w-[94%] sm:max-w-none">
+                    <div className="relative inline-block w-[95%] sm:w-[580px] md:w-[680px] px-3.5 py-3 sm:px-8 sm:py-6 rounded-xl border-2 border-dashed border-[#ff6f42] bg-[#ff6f42]/15 backdrop-blur-[2px] shadow-2xl">
                       {/* Corner vector transform handles */}
                       <span className="absolute -top-1.5 -left-1.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
                       <span className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white border-2 border-[#ff6f42] rounded-xs shadow-xs" />
@@ -980,9 +983,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       <p className="text-[9px] sm:text-xs font-mono tracking-[0.2em] sm:tracking-[0.25em] text-[#ffc1ad] uppercase font-bold mb-0.5 sm:mb-1 drop-shadow-sm">
                         Architectural Monograph • Vol. 08
                       </p>
-                      <h3 className="text-xl xs:text-2xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-lg">
-                        Timeless Elegance
-                      </h3>
+                      <div className="flex items-baseline justify-center font-serif font-bold tracking-tight text-white drop-shadow-lg text-lg xs:text-xl sm:text-3xl md:text-4xl lg:text-5xl">
+                        <div className="w-1/2 text-right pr-1.5 sm:pr-2.5">
+                          <span>Timeless</span>
+                        </div>
+                        <div className="w-1/2 text-left pl-1.5 sm:pl-2.5">
+                          <span>Sophistication</span>
+                        </div>
+                      </div>
                       <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs text-neutral-100 font-medium max-w-xs sm:max-w-md mx-auto drop-shadow-sm line-clamp-2 sm:line-clamp-none">
                         Travertine stone restored seamlessly. Text converted to clean vector nodes.
                       </p>
@@ -1026,13 +1034,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                   {/* Flattened Raster Text with Locked Indicator */}
                   <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-3 sm:p-6 z-10 pointer-events-none">
-                    <div className="relative inline-block px-3.5 py-3 sm:px-8 sm:py-6 rounded-xl border border-dashed border-amber-400/35 bg-black/40 backdrop-blur-xs max-w-[94%] sm:max-w-none">
+                    <div className="relative inline-block w-[95%] sm:w-[580px] md:w-[680px] px-3.5 py-3 sm:px-8 sm:py-6 rounded-xl border border-dashed border-amber-400/35 bg-black/40 backdrop-blur-xs">
                       <p className="text-[9px] sm:text-xs font-mono tracking-[0.2em] sm:tracking-[0.25em] text-neutral-300 uppercase font-bold mb-0.5 sm:mb-1 opacity-80">
                         Architectural Monograph • Vol. 08
                       </p>
-                      <h3 className="text-xl xs:text-2xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-neutral-200 drop-shadow-md">
-                        Timeless Elegance
-                      </h3>
+                      <div className="flex items-baseline justify-center font-serif font-bold tracking-tight text-neutral-200 drop-shadow-md text-lg xs:text-xl sm:text-3xl md:text-4xl lg:text-5xl">
+                        <div className="w-1/2 text-right pr-1.5 sm:pr-2.5">
+                          <span>Timeless</span>
+                        </div>
+                        <div className="w-1/2 text-left pl-1.5 sm:pl-2.5">
+                          <span>Elegance</span>
+                        </div>
+                      </div>
                       <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs text-neutral-300 font-medium max-w-xs sm:max-w-md mx-auto opacity-80 line-clamp-2 sm:line-clamp-none">
                         Static raster pixels baked into stone. Cannot edit words, font, or styling.
                       </p>
