@@ -10,7 +10,7 @@ from PIL import Image
 from typing import List, Optional, Tuple, Any, Dict
 
 # Concurrency lock to strictly serialize OCR execution on low-memory environments (Render 512MB)
-OCR_LOCK = threading.Lock()
+OCR_LOCK = threading.RLock()
 
 # Configure project-local models directory for PaddleX OCR weights
 if "PADDLE_PDX_CACHE_HOME" not in os.environ:
@@ -530,7 +530,7 @@ class OCRService:
         # Exclude single digits or pure years (e.g. 2026, 7) unless amount contains comma or decimal
         if len(amount) == 4 and amount.startswith(('19', '20')) and not sign and '.' not in amount and ',' not in amount:
             return text
-        if len(amount) < 2:
+        if len(amount) < 1:
             return text
         # Exclude long continuous digit sequences without formatting (account numbers, UPI IDs, phone numbers)
         raw_digits = re.sub(r'[,\.]', '', amount)
@@ -577,7 +577,7 @@ class OCRService:
             if prefix_comps:
                 for c in prefix_comps:
                     gx, gy, gw, gh, garea = c
-                    if gh >= 0.35 * h and garea >= 10:
+                    if gh >= 0.28 * h and garea >= 10:
                         has_currency_glyph = True
                         break
 
@@ -592,6 +592,152 @@ class OCRService:
         except Exception:
             pass
         return text
+
+    def _recover_missed_hero_text(
+        self,
+        image: Image.Image,
+        engine: Any,
+        extracted_items: List[Tuple[List[List[float]], str, float]]
+    ) -> List[Tuple[List[List[float]], str, float]]:
+        """
+        Recovers prominent hero amounts or headline text missed by global DBNet detection.
+        In mobile transaction/receipt screens, single-line amounts (e.g. '₹5', '₹105', '$20')
+        often sit isolated in large empty background spaces between headers and buttons.
+        DBNet feature-map downsampling can fail to reach the contour activation threshold on these.
+        This targeted pass scans the upper section for uncovered high-contrast text glyph clusters,
+        runs localized inference on the candidate crop, and appends any detected text.
+        """
+        w, h = image.width, image.height
+        if w < 200 or h < 200 or engine is None:
+            return extracted_items
+
+        # Check if a prominent amount is already detected in the upper section
+        has_hero_amount = False
+        for poly, text, conf in extracted_items:
+            min_y = min(p[1] for p in poly)
+            max_y = max(p[1] for p in poly)
+            poly_h = max_y - min_y
+            if min_y < 0.45 * h and poly_h >= 24:
+                if any(c.isdigit() for c in text) and (any(curr in text for curr in ["₹", "$", "€", "£", "Rs", "INR"]) or len(text.strip()) <= 8):
+                    has_hero_amount = True
+                    break
+        if has_hero_amount:
+            return extracted_items
+
+        top_y = int(0.06 * h)
+        bot_y = int(0.45 * h)
+        crop_zone = image.crop((0, top_y, w, bot_y))
+        gray = cv2.cvtColor(np.array(crop_zone.convert("RGB")), cv2.COLOR_RGB2GRAY)
+        bg_val = float(np.median(gray))
+        diff = 26.0
+        if bg_val < 128:
+            _, thresh = cv2.threshold(gray, int(min(250, bg_val + diff)), 255, cv2.THRESH_BINARY)
+        else:
+            _, thresh = cv2.threshold(gray, int(max(5, bg_val - diff)), 255, cv2.THRESH_BINARY_INV)
+
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(thresh)
+        existing_boxes = []
+        for poly, text, conf in extracted_items:
+            xs = [p[0] for p in poly]
+            ys = [p[1] for p in poly]
+            existing_boxes.append((min(xs) - 8, min(ys) - 8, max(xs) + 8, max(ys) + 8))
+
+        uncovered_glyphs = []
+        for i in range(1, num_labels):
+            x, y_rel, cw, ch, area = stats[i]
+            y_abs = top_y + y_rel
+            if ch < 12 or cw < 6 or area < 30 or ch > 200 or cw > 400:
+                continue
+            overlaps = False
+            for bx1, by1, bx2, by2 in existing_boxes:
+                if not (x + cw < bx1 or x > bx2 or y_abs + ch < by1 or y_abs > by2):
+                    overlaps = True
+                    break
+            if not overlaps:
+                uncovered_glyphs.append((x, y_abs, cw, ch, area))
+
+        if not uncovered_glyphs:
+            return extracted_items
+
+        uncovered_glyphs.sort(key=lambda g: (g[1], g[0]))
+        clusters = []
+        for g in uncovered_glyphs:
+            gx, gy, gw, gh, ga = g
+            merged = False
+            for c in clusters:
+                c_y1, c_y2 = c["min_y"], c["max_y"]
+                c_x1, c_x2 = c["min_x"], c["max_x"]
+                vert_close = abs(gy - c_y1) < 25 or not (gy + gh < c_y1 or gy > c_y2)
+                horiz_close = not (gx > c_x2 + 45 or gx + gw < c_x1 - 45)
+                if vert_close and horiz_close:
+                    c["min_x"] = min(c_x1, gx)
+                    c["min_y"] = min(c_y1, gy)
+                    c["max_x"] = max(c_x2, gx + gw)
+                    c["max_y"] = max(c_y2, gy + gh)
+                    c["glyphs"].append(g)
+                    merged = True
+                    break
+            if not merged:
+                clusters.append({
+                    "min_x": gx,
+                    "min_y": gy,
+                    "max_x": gx + gw,
+                    "max_y": gy + gh,
+                    "glyphs": [g]
+                })
+
+        new_items = list(extracted_items)
+        for c in clusters:
+            c_w = c["max_x"] - c["min_x"]
+            c_h = c["max_y"] - c["min_y"]
+            if c_h < 14 or c_w < 8:
+                continue
+
+            pad_x = 28
+            pad_y = 22
+            cx1 = max(0, c["min_x"] - pad_x)
+            cy1 = max(0, c["min_y"] - pad_y)
+            cx2 = min(w, c["max_x"] + pad_x)
+            cy2 = min(h, c["max_y"] + pad_y)
+
+            crop = image.crop((cx1, cy1, cx2, cy2))
+            crop_np = np.array(crop.convert("RGB"))
+            try:
+                with OCR_LOCK:
+                    if hasattr(engine, "predict"):
+                        crop_out = engine.predict(crop_np)
+                    else:
+                        crop_out = engine.ocr(crop_np)
+            except Exception:
+                continue
+
+            rec_items = self._extract_ocr_items(crop_out, scale=1.0)
+            for r_poly, r_text, r_conf in rec_items:
+                shifted_poly = [[p[0] + cx1, p[1] + cy1] for p in r_poly]
+                cleaned_r_text = r_text.strip()
+                if not cleaned_r_text:
+                    continue
+                xs = [p[0] for p in shifted_poly]
+                ys = [p[1] for p in shifted_poly]
+                sx1, sy1, sx2, sy2 = min(xs), min(ys), max(xs), max(ys)
+                dup = False
+                for ex_poly, ex_text, _ in new_items:
+                    ex_xs = [p[0] for p in ex_poly]
+                    ex_ys = [p[1] for p in ex_poly]
+                    ex1, ey1, ex2, ey2 = min(ex_xs), min(ex_ys), max(ex_xs), max(ex_ys)
+                    ox1 = max(sx1, ex1)
+                    oy1 = max(sy1, ey1)
+                    ox2 = min(sx2, ex2)
+                    oy2 = min(sy2, ey2)
+                    if ox2 > ox1 and oy2 > oy1:
+                        inter = (ox2 - ox1) * (oy2 - oy1)
+                        area_s = (sx2 - sx1) * (sy2 - sy1)
+                        if inter > 0.5 * area_s:
+                            dup = True
+                            break
+                if not dup:
+                    new_items.append((shifted_poly, cleaned_r_text, r_conf))
+        return new_items
 
     def analyze_image(self, image: Image.Image, lang: str = "en") -> List[DetectedTextRegion]:
         """
@@ -663,6 +809,7 @@ class OCRService:
                     clear_system_memory_caches()
 
             extracted_items = self._extract_ocr_items(raw_ocr_out, scale=scale, scale_x=scale_x, scale_y=scale_y)
+            extracted_items = self._recover_missed_hero_text(image, engine, extracted_items)
         all_raw_texts = [item[1] for item in extracted_items]
 
         regions: List[DetectedTextRegion] = []
