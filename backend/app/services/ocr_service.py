@@ -51,8 +51,9 @@ def clear_system_memory_caches():
 
 import cv2
 import math
-from app.core.models import DetectedTextRegion
+from app.core.models import DetectedTextRegion, WordRegion
 from app.services.typography_service import TypographyService
+from app.services.text_grouping_service import TextGroupingService
 from app.services.geometry_service import (
     calculate_polygon_angle,
     calculate_font_size,
@@ -750,9 +751,9 @@ class OCRService:
         try:
             from app.services.google_vision_service import GoogleVisionService
             if GoogleVisionService.is_available():
-                extracted_items = GoogleVisionService.analyze_image_sync(image)
+                extracted_items = GoogleVisionService.analyze_image_sync(image, return_hierarchy=True)
                 if extracted_items is not None:
-                    print(f"[OCR] Google Cloud Vision detected {len(extracted_items)} high-accuracy text regions in ~350ms.")
+                    print(f"[OCR] Google Cloud Vision detected {len(extracted_items)} high-accuracy text items in ~350ms.")
         except Exception as gv_err:
             print(f"[OCR] Google Cloud Vision fallback triggered: {gv_err}")
             extracted_items = None
@@ -810,11 +811,41 @@ class OCRService:
 
             extracted_items = self._extract_ocr_items(raw_ocr_out, scale=scale, scale_x=scale_x, scale_y=scale_y)
             extracted_items = self._recover_missed_hero_text(image, engine, extracted_items)
-        all_raw_texts = [item[1] for item in extracted_items]
+
+        # Convert extracted items into standard word dictionaries for TextGroupingService
+        words_for_grouping: List[Dict[str, Any]] = []
+        if extracted_items and isinstance(extracted_items[0], dict):
+            words_for_grouping = extracted_items
+        else:
+            for item in (extracted_items or []):
+                if isinstance(item, dict):
+                    words_for_grouping.append(item)
+                elif isinstance(item, (list, tuple)) and len(item) >= 3:
+                    words_for_grouping.append({
+                        "polygon": item[0],
+                        "text": item[1],
+                        "confidence": item[2],
+                        "block_idx": None,
+                        "paragraph_idx": None,
+                        "break_type": None,
+                    })
+
+        # Group words into natural lines and text fields with hierarchy
+        grouped_lines = TextGroupingService.group_words(words_for_grouping, w, h)
+        all_raw_texts = [g["text"] for g in grouped_lines]
 
         regions: List[DetectedTextRegion] = []
 
-        for clean_polygon, raw_text, score in extracted_items:
+        for grouped_item in grouped_lines:
+            clean_polygon = grouped_item["polygon"]
+            raw_text = grouped_item["text"]
+            score = grouped_item["confidence"]
+            const_words = grouped_item.get("words", [])
+            line_id = grouped_item.get("lineId")
+            para_id = grouped_item.get("paragraphId")
+            block_id = grouped_item.get("blockId")
+            group_level = grouped_item.get("groupLevel", "line")
+
             try:
                 angle = calculate_polygon_angle(clean_polygon)
                 clean_polygon = refine_polygon_to_text(image, clean_polygon, angle)
@@ -873,6 +904,17 @@ class OCRService:
                     except Exception as typo_err:
                         print(f"Typography matching warning: {typo_err}")
 
+                word_models = [
+                    WordRegion(
+                        wordId=w.get("wordId") or f"w-{uuid.uuid4().hex[:6]}",
+                        text=w.get("text", ""),
+                        polygon=w.get("polygon", []),
+                        bbox=w.get("bbox", (0, 0, 0, 0)),
+                        confidence=w.get("confidence", 0.98)
+                    )
+                    for w in const_words
+                ]
+
                 region = DetectedTextRegion(
                     regionId=f"ocr-{uuid.uuid4().hex[:8]}",
                     text=normalized_text,
@@ -887,7 +929,12 @@ class OCRService:
                     estimatedBlur=blur,
                     confidence=round(score, 3),
                     geometryConfidence=geom_conf,
-                    isConverted=False
+                    isConverted=False,
+                    words=word_models,
+                    lineId=line_id,
+                    paragraphId=para_id,
+                    blockId=block_id,
+                    groupLevel=group_level
                 )
                 regions.append(region)
             except Exception as item_err:

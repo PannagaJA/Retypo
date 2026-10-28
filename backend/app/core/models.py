@@ -32,6 +32,19 @@ class TextLayerModel(BaseModel):
     isVisible: bool = True
     origin: Literal['ocr_detected', 'manual'] = 'manual'
 
+class WordRegion(BaseModel):
+    wordId: str
+    text: str
+    polygon: List[List[float]] = Field(
+        ...,
+        description="Quadrilateral polygon coordinates [[x1,y1], [x2,y2], [x3,y3], [x4,y4]] in original image pixels"
+    )
+    bbox: Tuple[float, float, float, float] = Field(
+        ...,
+        description="Axis-aligned bounding box (left, top, width, height) in original image pixels"
+    )
+    confidence: float = Field(0.98, ge=0.0, le=1.0)
+
 class DetectedTextRegion(BaseModel):
     regionId: str
     text: str
@@ -53,6 +66,12 @@ class DetectedTextRegion(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0, description="OCR confidence score")
     geometryConfidence: float = Field(1.0, ge=0.0, le=1.0, description="Polygon geometry regularity score")
     isConverted: bool = Field(False, description="Whether this region has been adopted into an editable layer")
+    words: Optional[List[WordRegion]] = Field(default_factory=list, description="Constituent words in this text group")
+    lineId: Optional[str] = Field(None, description="Identifier for this visual line")
+    paragraphId: Optional[str] = Field(None, description="Identifier for paragraph/sentence grouping")
+    blockId: Optional[str] = Field(None, description="Identifier for layout block grouping")
+    groupLevel: Optional[str] = Field("line", description="Selection group level: line, field, block, word")
+
 
 class OCRResponse(BaseModel):
     status: str = "success"

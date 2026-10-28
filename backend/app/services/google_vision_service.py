@@ -37,25 +37,27 @@ class GoogleVisionService:
         return bool(cls.get_api_key())
 
     @classmethod
-    @classmethod
     def parse_vision_response(
         cls,
         response_json: Dict[str, Any],
         image_width: Optional[int] = None,
-        image_height: Optional[int] = None
-    ) -> List[Tuple[List[List[float]], str, float]]:
+        image_height: Optional[int] = None,
+        return_hierarchy: bool = False
+    ) -> Any:
         """
         Parses Google Cloud Vision API response.
         Extracts word-level bounding polygons directly from
         fullTextAnnotation.pages[].blocks[].paragraphs[].words[].boundingBox.
         Preserves each word's exact text, quadrilateral vertices (including rotation),
-        and confidence score without substituting sentence-level boxes or calculating word widths.
-        Falls back to textAnnotations[1:] if fullTextAnnotation is not populated.
+        and confidence score. When return_hierarchy=True, returns rich dictionaries
+        with block_idx, paragraph_idx, and break_type for natural line & field grouping.
         """
         items: List[Tuple[List[List[float]], str, float]] = []
+        hierarchy_items: List[Dict[str, Any]] = []
+
         responses = response_json.get("responses", [])
         if not responses:
-            return items
+            return hierarchy_items if return_hierarchy else items
 
         first_resp = responses[0]
         full_text_annotation = first_resp.get("fullTextAnnotation")
@@ -65,8 +67,8 @@ class GoogleVisionService:
                 page_w = float(page.get("width") or image_width or 1)
                 page_h = float(page.get("height") or image_height or 1)
 
-                for block in page.get("blocks", []):
-                    for para in block.get("paragraphs", []):
+                for b_idx, block in enumerate(page.get("blocks", [])):
+                    for p_idx, para in enumerate(block.get("paragraphs", [])):
                         for word in para.get("words", []):
                             word_text = "".join([s.get("text", "") for s in word.get("symbols", [])]).strip()
                             if not word_text:
@@ -89,6 +91,7 @@ class GoogleVisionService:
 
                             # Check symbol bounds to ensure glyphs (e.g. final 't' in 'account') are never clipped
                             symbols = word.get("symbols", [])
+                            break_type = None
                             if symbols and poly is not None:
                                 sym_xs: List[float] = []
                                 sym_ys: List[float] = []
@@ -124,9 +127,26 @@ class GoogleVisionService:
                                             [new_min_x, new_max_y]
                                         ]
 
+                                # Extract detected break type from final symbol or word property
+                                last_sym = symbols[-1]
+                                break_prop = last_sym.get("property", {}).get("detectedBreak", {})
+                                break_type = break_prop.get("type")
+
+                            if not break_type:
+                                word_prop = word.get("property", {}).get("detectedBreak", {})
+                                break_type = word_prop.get("type")
+
                             if poly and len(poly) == 4:
                                 conf = float(word.get("confidence", 0.98))
                                 items.append((poly, word_text, round(conf, 3)))
+                                hierarchy_items.append({
+                                    "polygon": poly,
+                                    "text": word_text,
+                                    "confidence": round(conf, 3),
+                                    "block_idx": b_idx,
+                                    "paragraph_idx": p_idx,
+                                    "break_type": break_type,
+                                })
 
         # Fallback to textAnnotations if fullTextAnnotation didn't yield items
         if not items and "textAnnotations" in first_resp:
@@ -149,14 +169,27 @@ class GoogleVisionService:
                 if poly and len(poly) == 4:
                     conf = float(ann.get("confidence", 0.95))
                     items.append((poly, text, conf))
+                    hierarchy_items.append({
+                        "polygon": poly,
+                        "text": text,
+                        "confidence": conf,
+                        "block_idx": 0,
+                        "paragraph_idx": 0,
+                        "break_type": None,
+                    })
 
-        return items
+        return hierarchy_items if return_hierarchy else items
 
     @classmethod
-    def analyze_image_sync(cls, image: Image.Image) -> Optional[List[Tuple[List[List[float]], str, float]]]:
+    def analyze_image_sync(
+        cls,
+        image: Image.Image,
+        return_hierarchy: bool = False
+    ) -> Optional[Any]:
         """
         Synchronous call to Google Cloud Vision API with strict ZERO-RETRY policy (max_retries=0)
         and SHA-256 deduplication. Preserves native image resolution for 1:1 coordinate accuracy.
+        When return_hierarchy=True, returns rich word dictionaries with layout hierarchy metadata.
         """
         api_key = cls.get_api_key()
         if not api_key:
@@ -171,8 +204,9 @@ class GoogleVisionService:
         # 2. SHA-256 Deduplication check (prevents double API calls if triggered in rapid succession)
         img_hash = hashlib.sha256(image_bytes).hexdigest()
         now = time.time()
-        if img_hash in cls._dedup_cache:
-            cached_time, cached_result = cls._dedup_cache[img_hash]
+        cache_key = f"{img_hash}-{'h' if return_hierarchy else 'w'}"
+        if cache_key in cls._dedup_cache:
+            cached_time, cached_result = cls._dedup_cache[cache_key]
             if now - cached_time < cls.CACHE_TTL_SECONDS:
                 print(f"[GoogleVision] Serving cached OCR result for hash {img_hash[:8]} (saved 1 API call).")
                 return cached_result
@@ -199,15 +233,10 @@ class GoogleVisionService:
                 return None
 
             data = resp.json()
-            items = cls.parse_vision_response(data, image_width=w, image_height=h)
-
-            # Debug log affected words
-            for poly, text, conf in items:
-                if text.lower() in {"account", "payment", "transferred", "pm"}:
-                    print(f"[GoogleVision Debug] Word=\"{text}\", poly={poly}, conf={conf}")
+            items = cls.parse_vision_response(data, image_width=w, image_height=h, return_hierarchy=return_hierarchy)
 
             # Store in short-lived dedup cache
-            cls._dedup_cache[img_hash] = (now, items)
+            cls._dedup_cache[cache_key] = (now, items)
             return items
 
         except (httpx.RequestError, httpx.TimeoutException) as err:

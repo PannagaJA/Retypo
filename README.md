@@ -151,6 +151,7 @@ retypo/
 │   │   └── services/
 │   │       ├── ocr_service.py          # PaddleOCR mobile engine & hero amount recovery
 │   │       ├── google_vision_service.py # Google Cloud Vision API integration
+│   │       ├── text_grouping_service.py # Hierarchical line & field grouping engine
 │   │       ├── inpaint_service.py      # Multi-tier background inpainting engine
 │   │       ├── typography_service.py   # Serif, stroke weight, & font catalog matcher
 │   │       ├── geometry_service.py     # Polygon geometry, angles, & color estimation
@@ -160,7 +161,7 @@ retypo/
 │   ├── assets/
 │   │   └── fonts/              # Bundled TrueType fallback fonts (Inter)
 │   ├── benchmarks/             # 7-category validation & RAM leak pipeline
-│   └── tests/                  # Pytest automated test suite (35/35 passing)
+│   └── tests/                  # Pytest automated test suite (41/41 passing)
 │
 └── frontend/                   # React + TypeScript Frontend
     ├── package.json            # Node.js dependencies (React, Fabric.js, Lucide, Tailwind)
@@ -183,7 +184,7 @@ retypo/
         ├── services/           # API integration client
         │   └── api.ts              # Multipart HTTP client with automatic base URL detection
         ├── types/              # TypeScript interface definitions
-        └── tests/              # Vitest automated test suite (34/34 passing)
+        └── tests/              # Vitest automated test suite (38/38 passing)
 ```
 
 ---
@@ -271,10 +272,10 @@ Retypo includes a ready-to-use `render.yaml` Blueprint.
 ## Automated Test Suites
 
 ```bash
-# Run Backend Pytest Suite (35 Tests)
+# Run Backend Pytest Suite (41 Tests)
 PYTHONPATH=backend pytest backend/tests
 
-# Run Frontend Vitest Suite (34 Tests)
+# Run Frontend Vitest Suite (38 Tests)
 npm --prefix frontend test
 
 # Run End-to-End Performance & RAM Leak Benchmark (7 Image Categories)

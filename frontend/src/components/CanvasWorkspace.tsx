@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as fabric from 'fabric';
-import type { ImageMetadata, TextLayer, InpaintPatch, DetectedTextRegion } from '../types';
+import type { ImageMetadata, TextLayer, InpaintPatch, DetectedTextRegion, WordRegion } from '../types';
 import { calculateFitScale } from '../utils/coordinates';
 import { UploadCloud, HelpCircle, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 
@@ -46,10 +46,14 @@ interface CanvasWorkspaceProps {
   onSplitChange: (pos: number) => void;
   onDropImage: (file: File) => void;
   onLoadSample?: () => void;
-  // OCR detection overlay
+  // OCR detection overlay & hierarchical selection
   detectedRegions: DetectedTextRegion[];
   showDetectionOverlay: boolean;
+  selectionLevel?: 'line' | 'word' | 'block';
+  onSelectionLevelChange?: (level: 'line' | 'word' | 'block') => void;
   onConvertRegion: (region: DetectedTextRegion) => void;
+  onConvertWord?: (region: DetectedTextRegion, word: WordRegion) => void;
+  onConvertBlock?: (regions: DetectedTextRegion[]) => void;
   onHideDetectionOverlay?: () => void;
   onShowDetectionOverlay?: () => void;
   hoveredRegionId?: string | null;
@@ -76,7 +80,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   onDropImage,
   detectedRegions,
   showDetectionOverlay,
+  selectionLevel: propsSelectionLevel,
+  onSelectionLevelChange,
   onConvertRegion,
+  onConvertWord,
+  onConvertBlock,
   onHideDetectionOverlay,
   onShowDetectionOverlay,
   hoveredRegionId,
@@ -98,6 +106,14 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   const isInternalZoomUpdate = useRef<boolean>(false);
   const isPanningRef = useRef<boolean>(false);
   const lastPanPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [internalSelectionLevel, setInternalSelectionLevel] = useState<'line' | 'word' | 'block'>('line');
+  const selectionLevel = propsSelectionLevel || internalSelectionLevel;
+
+  const handleSelectionLevelChange = (level: 'line' | 'word' | 'block') => {
+    setInternalSelectionLevel(level);
+    onSelectionLevelChange?.(level);
+  };
+
   const [hoveredRegion, setHoveredRegion] = useState<{
     text: string;
     confidence: number;
@@ -106,14 +122,14 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     placement: 'top' | 'bottom';
   } | null>(null);
 
-  const computeRegionScreenPlacement = (region: DetectedTextRegion) => {
+  const computePolygonScreenPlacement = (poly: [number, number][]) => {
     const canvas = fabricCanvasRef.current;
-    if (!canvas || !containerRef.current) return null;
+    if (!canvas || !containerRef.current || !poly || poly.length === 0) return null;
     const rect = canvas.upperCanvasEl.getBoundingClientRect();
     const vpt = canvas.viewportTransform || [1, 0, 0, 1, 0, 0];
 
-    const xs = region.polygon.map((p) => p[0]);
-    const ys = region.polygon.map((p) => p[1]);
+    const xs = poly.map((p) => p[0]);
+    const ys = poly.map((p) => p[1]);
     const minX = Math.min(...xs);
     const maxX = Math.max(...xs);
     const minY = Math.min(...ys);
@@ -145,6 +161,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     layers,
     detectedRegions,
     onConvertRegion,
+    onConvertWord,
+    onConvertBlock,
+    selectionLevel,
     showDetectionOverlay,
     onHideDetectionOverlay,
     onShowDetectionOverlay,
@@ -160,6 +179,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     layers,
     detectedRegions,
     onConvertRegion,
+    onConvertWord,
+    onConvertBlock,
+    selectionLevel,
     showDetectionOverlay,
     onHideDetectionOverlay,
     onShowDetectionOverlay,
@@ -650,13 +672,12 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     canvas.renderAll();
   }, [patches, isComparing, compareMode, image]);
 
-  // 4. Render Detected OCR Polygons Overlay (keeps ghost hitboxes active even when visual overlay is dismissed)
+  // 4. Render Detected OCR Polygons Overlay with multi-level selection support (Line, Word, Block)
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
 
     const currentPolys = detectedPolygonsRef.current;
-
     currentPolys.forEach((p) => canvas.remove(p));
     currentPolys.clear();
 
@@ -666,81 +687,284 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     }
 
     const isVisible = showDetectionOverlay;
+    const unconvertedRegions = detectedRegions.filter((r) => !r.isConverted);
 
-    detectedRegions.forEach((region) => {
-      if (region.isConverted) return;
-
-      const isHov = region.regionId === hoveredRegionId;
-      const points = region.polygon.map((p) => ({ x: p[0], y: p[1] }));
-      const poly = new fabric.Polygon(points, {
-        fill: isHov
-          ? (isVisible ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)')
-          : (isVisible ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)'),
-        stroke: isHov
-          ? (isVisible ? '#34d399' : '#10b981')
-          : (isVisible ? '#10b981' : 'transparent'),
-        strokeWidth: isVisible || isHov ? 2 : 0,
-        strokeUniform: true,
-        strokeDashArray: isVisible || isHov ? [4, 3] : undefined,
-        selectable: false,
-        evented: true,
-        hoverCursor: 'pointer',
-      });
-
-      (poly as any).regionData = region;
-
-      poly.on('mouseover', () => {
-        const isOverlayOn = propsRef.current.showDetectionOverlay;
-        poly.set({
-          fill: isOverlayOn ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)',
-          stroke: isOverlayOn ? '#34d399' : '#10b981',
-          strokeWidth: 2,
+    if (selectionLevel === 'line') {
+      // Default: Clean single dashed rectangle per line / text field (No word box clutter!)
+      unconvertedRegions.forEach((region) => {
+        const isHov = region.regionId === hoveredRegionId;
+        const points = region.polygon.map((p) => ({ x: p[0], y: p[1] }));
+        const poly = new fabric.Polygon(points, {
+          fill: isHov
+            ? (isVisible ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)')
+            : (isVisible ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)'),
+          stroke: isHov
+            ? (isVisible ? '#34d399' : '#10b981')
+            : (isVisible ? '#10b981' : 'transparent'),
+          strokeWidth: isVisible || isHov ? 2 : 0,
           strokeUniform: true,
-          strokeDashArray: [4, 3],
+          strokeDashArray: isVisible || isHov ? [4, 3] : undefined,
+          selectable: false,
+          evented: true,
+          hoverCursor: 'pointer',
         });
-        canvas.requestRenderAll();
-        propsRef.current.onHoverRegion?.(region.regionId);
 
-        const placement = computeRegionScreenPlacement(region);
-        if (placement) {
-          setHoveredRegion({
-            text: region.text,
-            confidence: region.confidence,
-            ...placement,
+        (poly as any).regionData = region;
+        (poly as any).polyCoords = region.polygon;
+        (poly as any).hoverText = region.text;
+        (poly as any).hoverConf = region.confidence;
+        (poly as any).level = 'line';
+
+        poly.on('mouseover', () => {
+          const isOverlayOn = propsRef.current.showDetectionOverlay;
+          poly.set({
+            fill: isOverlayOn ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)',
+            stroke: isOverlayOn ? '#34d399' : '#10b981',
+            strokeWidth: 2,
+            strokeUniform: true,
+            strokeDashArray: [4, 3],
           });
-        }
-      });
+          canvas.requestRenderAll();
+          propsRef.current.onHoverRegion?.(region.regionId);
 
-      poly.on('mouseout', () => {
-        const isOverlayOn = propsRef.current.showDetectionOverlay;
-        poly.set({
-          fill: isOverlayOn ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)',
-          stroke: isOverlayOn ? '#10b981' : 'transparent',
-          strokeWidth: isOverlayOn ? 2 : 0,
-          strokeUniform: true,
-          strokeDashArray: isOverlayOn ? [4, 3] : undefined,
+          const placement = computePolygonScreenPlacement(region.polygon);
+          if (placement) {
+            setHoveredRegion({
+              text: region.text,
+              confidence: region.confidence,
+              ...placement,
+            });
+          }
         });
-        canvas.requestRenderAll();
-        setHoveredRegion(null);
-        propsRef.current.onHoverRegion?.(null);
+
+        poly.on('mouseout', () => {
+          const isOverlayOn = propsRef.current.showDetectionOverlay;
+          poly.set({
+            fill: isOverlayOn ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)',
+            stroke: isOverlayOn ? '#10b981' : 'transparent',
+            strokeWidth: isOverlayOn ? 2 : 0,
+            strokeUniform: true,
+            strokeDashArray: isOverlayOn ? [4, 3] : undefined,
+          });
+          canvas.requestRenderAll();
+          setHoveredRegion(null);
+          propsRef.current.onHoverRegion?.(null);
+        });
+
+        poly.on('mousedown', () => {
+          setHoveredRegion(null);
+          propsRef.current.onHoverRegion?.(null);
+          if (!propsRef.current.showDetectionOverlay && propsRef.current.onShowDetectionOverlay) {
+            propsRef.current.onShowDetectionOverlay();
+          }
+          onConvertRegion(region);
+        });
+
+        currentPolys.set(region.regionId, poly);
+        canvas.add(poly);
+      });
+    } else if (selectionLevel === 'word') {
+      // Word Selection Level: shows individual word boxes for fine-grained editing
+      unconvertedRegions.forEach((region) => {
+        const words = region.words && region.words.length > 0 ? region.words : [
+          {
+            wordId: `${region.regionId}-w0`,
+            text: region.text,
+            polygon: region.polygon,
+            bbox: region.bbox,
+            confidence: region.confidence,
+          }
+        ];
+
+        words.forEach((w) => {
+          const isHov = w.wordId === hoveredRegionId;
+          const points = w.polygon.map((p) => ({ x: p[0], y: p[1] }));
+          const poly = new fabric.Polygon(points, {
+            fill: isHov
+              ? (isVisible ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)')
+              : (isVisible ? 'rgba(16, 185, 129, 0.18)' : 'rgba(0, 0, 0, 0.001)'),
+            stroke: isHov
+              ? (isVisible ? '#34d399' : '#10b981')
+              : (isVisible ? '#10b981' : 'transparent'),
+            strokeWidth: isVisible || isHov ? 2 : 0,
+            strokeUniform: true,
+            strokeDashArray: isVisible || isHov ? [3, 2] : undefined,
+            selectable: false,
+            evented: true,
+            hoverCursor: 'pointer',
+          });
+
+          (poly as any).regionData = region;
+          (poly as any).wordData = w;
+          (poly as any).polyCoords = w.polygon;
+          (poly as any).hoverText = w.text;
+          (poly as any).hoverConf = w.confidence;
+          (poly as any).level = 'word';
+
+          poly.on('mouseover', () => {
+            const isOverlayOn = propsRef.current.showDetectionOverlay;
+            poly.set({
+              fill: isOverlayOn ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)',
+              stroke: isOverlayOn ? '#34d399' : '#10b981',
+              strokeWidth: 2,
+              strokeUniform: true,
+              strokeDashArray: [3, 2],
+            });
+            canvas.requestRenderAll();
+            propsRef.current.onHoverRegion?.(w.wordId);
+
+            const placement = computePolygonScreenPlacement(w.polygon);
+            if (placement) {
+              setHoveredRegion({
+                text: w.text,
+                confidence: w.confidence,
+                ...placement,
+              });
+            }
+          });
+
+          poly.on('mouseout', () => {
+            const isOverlayOn = propsRef.current.showDetectionOverlay;
+            poly.set({
+              fill: isOverlayOn ? 'rgba(16, 185, 129, 0.18)' : 'rgba(0, 0, 0, 0.001)',
+              stroke: isOverlayOn ? '#10b981' : 'transparent',
+              strokeWidth: isOverlayOn ? 2 : 0,
+              strokeUniform: true,
+              strokeDashArray: isOverlayOn ? [3, 2] : undefined,
+            });
+            canvas.requestRenderAll();
+            setHoveredRegion(null);
+            propsRef.current.onHoverRegion?.(null);
+          });
+
+          poly.on('mousedown', () => {
+            setHoveredRegion(null);
+            propsRef.current.onHoverRegion?.(null);
+            if (!propsRef.current.showDetectionOverlay && propsRef.current.onShowDetectionOverlay) {
+              propsRef.current.onShowDetectionOverlay();
+            }
+            if (propsRef.current.onConvertWord) {
+              propsRef.current.onConvertWord(region, w);
+            } else {
+              propsRef.current.onConvertRegion({
+                ...region,
+                text: w.text,
+                polygon: w.polygon,
+                bbox: w.bbox,
+              });
+            }
+          });
+
+          currentPolys.set(w.wordId, poly);
+          canvas.add(poly);
+        });
+      });
+    } else if (selectionLevel === 'block') {
+      // Block Selection Level: groups multi-line wrapped sentences into single selectable blocks
+      const blockGroups = new Map<string, DetectedTextRegion[]>();
+      unconvertedRegions.forEach((r) => {
+        const key = r.paragraphId || r.regionId;
+        if (!blockGroups.has(key)) blockGroups.set(key, []);
+        blockGroups.get(key)!.push(r);
       });
 
-      poly.on('mousedown', () => {
-        setHoveredRegion(null);
-        propsRef.current.onHoverRegion?.(null);
-        // Re-activate detection overlay if it was hidden
-        if (!propsRef.current.showDetectionOverlay && propsRef.current.onShowDetectionOverlay) {
-          propsRef.current.onShowDetectionOverlay();
-        }
-        onConvertRegion(region);
-      });
+      blockGroups.forEach((groupRegions, blockKey) => {
+        const allXs = groupRegions.flatMap((r) => r.polygon.map((p) => p[0]));
+        const allYs = groupRegions.flatMap((r) => r.polygon.map((p) => p[1]));
+        const minX = Math.min(...allXs);
+        const maxX = Math.max(...allXs);
+        const minY = Math.min(...allYs);
+        const maxY = Math.max(...allYs);
 
-      currentPolys.set(region.regionId, poly);
-      canvas.add(poly);
-    });
+        const blockPoly: [number, number][] = [
+          [minX, minY],
+          [maxX, minY],
+          [maxX, maxY],
+          [minX, maxY],
+        ];
+
+        const isHov = blockKey === hoveredRegionId;
+        const points = blockPoly.map((p) => ({ x: p[0], y: p[1] }));
+        const poly = new fabric.Polygon(points, {
+          fill: isHov
+            ? (isVisible ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)')
+            : (isVisible ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)'),
+          stroke: isHov
+            ? (isVisible ? '#34d399' : '#10b981')
+            : (isVisible ? '#10b981' : 'transparent'),
+          strokeWidth: isVisible || isHov ? 2 : 0,
+          strokeUniform: true,
+          strokeDashArray: isVisible || isHov ? [5, 4] : undefined,
+          selectable: false,
+          evented: true,
+          hoverCursor: 'pointer',
+        });
+
+        const combinedText = groupRegions.map((r) => r.text).join(' ');
+        const avgConf = groupRegions.reduce((sum, r) => sum + r.confidence, 0) / groupRegions.length;
+
+        (poly as any).blockRegions = groupRegions;
+        (poly as any).polyCoords = blockPoly;
+        (poly as any).hoverText = combinedText;
+        (poly as any).hoverConf = avgConf;
+        (poly as any).level = 'block';
+
+        poly.on('mouseover', () => {
+          const isOverlayOn = propsRef.current.showDetectionOverlay;
+          poly.set({
+            fill: isOverlayOn ? 'rgba(16, 185, 129, 0.45)' : 'rgba(16, 185, 129, 0.25)',
+            stroke: isOverlayOn ? '#34d399' : '#10b981',
+            strokeWidth: 2,
+            strokeUniform: true,
+            strokeDashArray: [5, 4],
+          });
+          canvas.requestRenderAll();
+          propsRef.current.onHoverRegion?.(blockKey);
+
+          const placement = computePolygonScreenPlacement(blockPoly);
+          if (placement) {
+            setHoveredRegion({
+              text: combinedText,
+              confidence: avgConf,
+              ...placement,
+            });
+          }
+        });
+
+        poly.on('mouseout', () => {
+          const isOverlayOn = propsRef.current.showDetectionOverlay;
+          poly.set({
+            fill: isOverlayOn ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.001)',
+            stroke: isOverlayOn ? '#10b981' : 'transparent',
+            strokeWidth: isOverlayOn ? 2 : 0,
+            strokeUniform: true,
+            strokeDashArray: isOverlayOn ? [5, 4] : undefined,
+          });
+          canvas.requestRenderAll();
+          setHoveredRegion(null);
+          propsRef.current.onHoverRegion?.(null);
+        });
+
+        poly.on('mousedown', () => {
+          setHoveredRegion(null);
+          propsRef.current.onHoverRegion?.(null);
+          if (!propsRef.current.showDetectionOverlay && propsRef.current.onShowDetectionOverlay) {
+            propsRef.current.onShowDetectionOverlay();
+          }
+          if (propsRef.current.onConvertBlock) {
+            propsRef.current.onConvertBlock(groupRegions);
+          } else {
+            groupRegions.forEach((r) => propsRef.current.onConvertRegion(r));
+          }
+        });
+
+        currentPolys.set(blockKey, poly);
+        canvas.add(poly);
+      });
+    }
 
     canvas.renderAll();
-  }, [detectedRegions, showDetectionOverlay, image, onConvertRegion]);
+  }, [detectedRegions, showDetectionOverlay, selectionLevel, image, onConvertRegion, onConvertWord, onConvertBlock]);
 
   // Synchronize canvas polygon highlight when hovered from sidebar or canvas
   useEffect(() => {
@@ -757,7 +981,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           stroke: isHov ? '#34d399' : '#10b981',
           strokeWidth: 2,
           strokeUniform: true,
-          strokeDashArray: [4, 3],
+          strokeDashArray: (poly as any).level === 'block' ? [5, 4] : [4, 3],
         });
       } else {
         poly.set({
@@ -770,14 +994,15 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
     });
 
-    if (hoveredRegionId) {
-      const reg = detectedRegions.find((r) => r.regionId === hoveredRegionId);
-      if (reg) {
-        const placement = computeRegionScreenPlacement(reg);
+    if (hoveredRegionId && currentPolys.has(hoveredRegionId)) {
+      const poly = currentPolys.get(hoveredRegionId)!;
+      const polyCoords = (poly as any).polyCoords;
+      if (polyCoords) {
+        const placement = computePolygonScreenPlacement(polyCoords);
         if (placement) {
           setHoveredRegion({
-            text: reg.text,
-            confidence: reg.confidence,
+            text: (poly as any).hoverText || '',
+            confidence: (poly as any).hoverConf || 0.98,
             ...placement,
           });
         }
@@ -787,7 +1012,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     }
 
     canvas.requestRenderAll();
-  }, [hoveredRegionId, showDetectionOverlay, detectedRegions]);
+  }, [hoveredRegionId, showDetectionOverlay]);
 
   // 5. Synchronize Text Layers with Fabric Textbox Objects
   useEffect(() => {
@@ -992,6 +1217,49 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }`}
     >
       <canvas ref={canvasElRef} id="editor-canvas" className="w-full h-full block" />
+
+      {/* Floating Multi-Level Selection Bar (Line, Word, Block) */}
+      {showDetectionOverlay && image && detectedRegions.length > 0 && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/95 backdrop-blur-md px-2 py-1 rounded-full border border-slate-200/90 shadow-md text-xs select-none animate-in fade-in duration-150">
+          <span className="text-slate-500 font-medium px-1.5 text-[11px]">Select:</span>
+          <button
+            type="button"
+            onClick={() => handleSelectionLevelChange('line')}
+            className={`px-2.5 py-0.5 rounded-full transition-all text-xs font-semibold ${
+              selectionLevel === 'line'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+            title="Line selection: selects full text lines and fields (Default)"
+          >
+            Line
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSelectionLevelChange('word')}
+            className={`px-2.5 py-0.5 rounded-full transition-all text-xs font-semibold ${
+              selectionLevel === 'word'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+            title="Word selection: selects individual words for fine editing"
+          >
+            Word
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSelectionLevelChange('block')}
+            className={`px-2.5 py-0.5 rounded-full transition-all text-xs font-semibold ${
+              selectionLevel === 'block'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+            title="Block selection: selects full wrapped sentences or paragraphs"
+          >
+            Block
+          </button>
+        </div>
+      )}
 
       {/* Scanning Document Animation (from LottieFiles scanning-document) */}
       {isDetecting && image && (

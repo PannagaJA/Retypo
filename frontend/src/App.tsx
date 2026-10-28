@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import type { ImageMetadata, TextLayer, InpaintPatch, DetectedTextRegion } from './types';
+import type { ImageMetadata, TextLayer, InpaintPatch, DetectedTextRegion, WordRegion } from './types';
 import { HistoryManager, type EditorSnapshot } from './utils/history';
 import { Header } from './components/Header';
 import { CanvasWorkspace } from './components/CanvasWorkspace';
@@ -30,6 +30,7 @@ export const App: React.FC = () => {
   const isDetectingRef = useRef<boolean>(false);
   const ocrAbortControllerRef = useRef<AbortController | null>(null);
   const [showDetectionOverlay, setShowDetectionOverlay] = useState<boolean>(true);
+  const [selectionLevel, setSelectionLevel] = useState<'line' | 'word' | 'block'>('line');
   const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null);
   const [ocrLang, setOcrLang] = useState<string>('en');
 
@@ -271,6 +272,156 @@ export const App: React.FC = () => {
         setInpaintPatches((prev) => [...prev.filter((p) => p.id !== newPatch.id), newPatch]);
       } catch (err) {
         console.warn('Auto inpaint/typo error:', err);
+      }
+    }
+  };
+
+  // Convert an individual word from a detected text region
+  const handleConvertWord = async (region: DetectedTextRegion, word: WordRegion) => {
+    const newId = `layer-ocr-w-${Date.now()}`;
+    const newLayer: TextLayer = {
+      id: newId,
+      text: word.text,
+      fontFamily: region.estimatedFontFamily || 'Inter',
+      fontSize: region.estimatedFontSize,
+      fontWeight: region.estimatedWeight || '400',
+      fontStyle: 'normal',
+      fill: region.estimatedColor || '#ffffff',
+      strokeWidth: 0,
+      letterSpacing: 0,
+      lineHeight: 1.2,
+      textAlign: 'left',
+      left: word.bbox[0],
+      top: word.bbox[1],
+      width: Math.max(word.bbox[2] * 1.08 + 8, 20),
+      height: Math.max(word.bbox[3], 14),
+      angle: region.angle || 0,
+      opacity: 1,
+      blur: 0,
+      isLocked: false,
+      isVisible: true,
+      origin: 'ocr_detected',
+    };
+
+    pushHistory();
+    setDetectedRegions((prev) =>
+      prev.map((r) => {
+        if (r.regionId !== region.regionId) return r;
+        const remainingWords = (r.words || []).filter((w) => w.wordId !== word.wordId);
+        return {
+          ...r,
+          words: remainingWords,
+          isConverted: remainingWords.length === 0,
+        };
+      })
+    );
+
+    setLayers((prev) => [...prev, newLayer]);
+    setSelectedLayerId(newId);
+
+    if (image) {
+      try {
+        let blob: Blob = image.file ? image.file : await (await fetch(image.dataUrl)).blob();
+        const result = await restoreBackground(
+          blob,
+          word.polygon,
+          region.estimatedFontSize,
+          'auto',
+          2,
+          image.fileName || 'image.png'
+        );
+        const newPatch: InpaintPatch = {
+          id: `patch-${newId}`,
+          targetLayerId: newId,
+          bounds: result.bounds,
+          dataUrl: result.patchDataUrl,
+          maskDataUrl: result.maskDataUrl,
+          strategy: result.strategyUsed as any,
+          createdAt: Date.now(),
+        };
+        setInpaintPatches((prev) => [...prev.filter((p) => p.id !== newPatch.id), newPatch]);
+      } catch (err) {
+        console.warn('Word inpaint error:', err);
+      }
+    }
+  };
+
+  // Convert an entire multi-line block / wrapped sentence
+  const handleConvertBlock = async (regions: DetectedTextRegion[]) => {
+    if (regions.length === 0) return;
+    if (regions.length === 1) {
+      return handleConvertRegion(regions[0]);
+    }
+
+    const newId = `layer-ocr-block-${Date.now()}`;
+    const allXs = regions.flatMap((r) => [r.bbox[0], r.bbox[0] + r.bbox[2]]);
+    const allYs = regions.flatMap((r) => [r.bbox[1], r.bbox[1] + r.bbox[3]]);
+    const minX = Math.min(...allXs);
+    const maxX = Math.max(...allXs);
+    const minY = Math.min(...allYs);
+    const maxY = Math.max(...allYs);
+
+    const combinedText = regions.map((r) => r.text).join('\n');
+    const firstRegion = regions[0];
+
+    const newLayer: TextLayer = {
+      id: newId,
+      text: combinedText,
+      fontFamily: firstRegion.estimatedFontFamily || 'Inter',
+      fontSize: firstRegion.estimatedFontSize,
+      fontWeight: firstRegion.estimatedWeight || '400',
+      fontStyle: 'normal',
+      fill: firstRegion.estimatedColor || '#ffffff',
+      strokeWidth: 0,
+      letterSpacing: 0,
+      lineHeight: 1.25,
+      textAlign: 'left',
+      left: minX,
+      top: minY,
+      width: Math.max((maxX - minX) * 1.05 + 12, 40),
+      height: Math.max(maxY - minY, 24),
+      angle: firstRegion.angle || 0,
+      opacity: 1,
+      blur: 0,
+      isLocked: false,
+      isVisible: true,
+      origin: 'ocr_detected',
+    };
+
+    pushHistory();
+    const regionIds = new Set(regions.map((r) => r.regionId));
+    setDetectedRegions((prev) =>
+      prev.map((r) => (regionIds.has(r.regionId) ? { ...r, isConverted: true } : r))
+    );
+
+    setLayers((prev) => [...prev, newLayer]);
+    setSelectedLayerId(newId);
+
+    if (image) {
+      try {
+        let blob: Blob = image.file ? image.file : await (await fetch(image.dataUrl)).blob();
+        for (const reg of regions) {
+          const result = await restoreBackground(
+            blob,
+            reg.polygon,
+            reg.estimatedFontSize,
+            'auto',
+            2,
+            image.fileName || 'image.png'
+          );
+          const newPatch: InpaintPatch = {
+            id: `patch-${reg.regionId}-${Date.now()}`,
+            targetLayerId: newId,
+            bounds: result.bounds,
+            dataUrl: result.patchDataUrl,
+            maskDataUrl: result.maskDataUrl,
+            strategy: result.strategyUsed as any,
+            createdAt: Date.now(),
+          };
+          setInpaintPatches((prev) => [...prev.filter((p) => p.id !== newPatch.id), newPatch]);
+        }
+      } catch (err) {
+        console.warn('Block inpaint error:', err);
       }
     }
   };
@@ -955,7 +1106,11 @@ export const App: React.FC = () => {
           onLoadSample={handleLoadSample}
           detectedRegions={detectedRegions}
           showDetectionOverlay={showDetectionOverlay}
+          selectionLevel={selectionLevel}
+          onSelectionLevelChange={setSelectionLevel}
           onConvertRegion={handleConvertRegion}
+          onConvertWord={handleConvertWord}
+          onConvertBlock={handleConvertBlock}
           onHideDetectionOverlay={() => setShowDetectionOverlay(false)}
           onShowDetectionOverlay={() => setShowDetectionOverlay(true)}
           hoveredRegionId={hoveredRegionId}

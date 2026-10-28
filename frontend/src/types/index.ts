@@ -31,6 +31,14 @@ export interface TextLayer {
   origin: 'ocr_detected' | 'manual';
 }
 
+export interface WordRegion {
+  wordId: string;
+  text: string;
+  polygon: [number, number][]; // 4 points [[x1, y1], [x2, y2], [x3, y3], [x4, y4]] in native image pixels
+  bbox: [number, number, number, number]; // [left, top, width, height]
+  confidence: number;
+}
+
 export interface DetectedTextRegion {
   regionId: string;
   text: string;
@@ -46,6 +54,11 @@ export interface DetectedTextRegion {
   confidence: number;
   geometryConfidence: number;
   isConverted: boolean;
+  words?: WordRegion[];
+  lineId?: string;
+  paragraphId?: string;
+  blockId?: string;
+  groupLevel?: 'line' | 'field' | 'block' | 'word';
 }
 
 export interface ImageMetadata {
