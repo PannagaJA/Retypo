@@ -10,7 +10,8 @@ import {
   SplitSquareVertical,
   Eye,
   ScanText,
-  Loader2
+  Loader2,
+  Info
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -40,6 +41,7 @@ interface HeaderProps {
   ocrLang?: string;
   onChangeOcrLang?: (lang: string) => void;
   onHome?: () => void;
+  onOpenAbout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -65,6 +67,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleDetectionOverlay,
   detectedCount,
   onHome,
+  onOpenAbout,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -100,6 +103,18 @@ export const Header: React.FC<HeaderProps> = ({
             Studio
           </span>
         </div>
+
+        {onOpenAbout && (
+          <button
+            onClick={onOpenAbout}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-white hover:bg-[#ffefe8] text-neutral-700 hover:text-[#ff6f42] border border-[#e8e4dc] transition-all shadow-2xs active:scale-95 cursor-pointer"
+            title="About Retypo, Licenses & Attributions"
+            aria-label="About and Licenses"
+          >
+            <Info className="w-3.5 h-3.5 text-[#ff6f42]" />
+            <span className="hidden sm:inline text-[11px]">About</span>
+          </button>
+        )}
       </div>
 
       {/* Center: Desktop Undo/Redo & Zoom & Compare (lg+ only) */}

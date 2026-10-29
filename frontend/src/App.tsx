@@ -7,6 +7,7 @@ import { LayersPanel } from './components/LayersPanel';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { ExportModal } from './components/ExportModal';
 import { DiscardModal } from './components/DiscardModal';
+import { AboutModal, type AboutTab } from './components/AboutModal';
 import { LandingPage } from './components/LandingPage';
 import { analyzeImageOCR, restoreBackground } from './services/api';
 import { Layers, Type, Maximize2, Sliders, Copy, Trash2, X, Plus } from 'lucide-react';
@@ -50,6 +51,15 @@ export const App: React.FC = () => {
   }>({});
   const [pendingDiscardAction, setPendingDiscardAction] = useState<(() => void) | null>(null);
   const isAllowingUnloadRef = useRef<boolean>(false);
+
+  // About & Licenses Modal State
+  const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
+  const [aboutTab, setAboutTab] = useState<AboutTab>('about');
+
+  const handleOpenAbout = useCallback((tab: AboutTab = 'about') => {
+    setAboutTab(tab);
+    setIsAboutOpen(true);
+  }, []);
 
   // Toast notification state
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'warn' } | null>(null);
@@ -1138,6 +1148,7 @@ export const App: React.FC = () => {
         <LandingPage
           onSelectImage={handleImageSelected}
           onLoadSample={handleLoadSample}
+          onOpenAbout={handleOpenAbout}
         />
 
         {/* Floating Status Toast */}
@@ -1148,6 +1159,13 @@ export const App: React.FC = () => {
             <button onClick={() => setToast(null)} className="ml-2 text-slate-400 hover:text-slate-700 shrink-0">✕</button>
           </div>
         )}
+
+        {/* About & Licenses Modal */}
+        <AboutModal
+          isOpen={isAboutOpen}
+          onClose={() => setIsAboutOpen(false)}
+          initialTab={aboutTab}
+        />
       </div>
     );
   }
@@ -1222,6 +1240,7 @@ export const App: React.FC = () => {
           handleRunOCR(undefined, l);
         }}
         onHome={handleHomeClick}
+        onOpenAbout={() => handleOpenAbout('about')}
       />
 
       {/* Main Workspace */}
@@ -1529,6 +1548,13 @@ export const App: React.FC = () => {
         message={discardModalConfig.message}
         confirmText={discardModalConfig.confirmText}
         cancelText={discardModalConfig.cancelText}
+      />
+
+      {/* About & Licenses Modal */}
+      <AboutModal
+        isOpen={isAboutOpen}
+        onClose={() => setIsAboutOpen(false)}
+        initialTab={aboutTab}
       />
     </div>
   );

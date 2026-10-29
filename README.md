@@ -21,7 +21,7 @@ _Detect, erase, edit, and reconstruct text inside raster images in place while p
 
 <br/>
 
-[Live Demo](https://retypo-image.vercel.app) • [Architecture Guide](RENDER_DEPLOYMENT.md) • [Backend API](https://retypo-backend.onrender.com/docs)
+[Live Demo](https://retypo-image.vercel.app) • [Architecture Guide](#architecture) • [Backend API](https://retypo-backend.onrender.com/docs)
 
 </div>
 
@@ -127,7 +127,6 @@ Tested on CPU-only infrastructure under Render Free Tier constraints:
 retypo/
 ├── Dockerfile                  # Production Dockerfile with baked models & low-mem flags
 ├── render.yaml                 # 1-Click Render Blueprint deployment configuration
-├── RENDER_DEPLOYMENT.md        # Complete production deployment & troubleshooting guide
 ├── README.md                   # Project documentation
 ├── vercel.json                 # Vercel proxy rewrite config for production frontend
 ├── requirements.txt            # Root requirements pointer

@@ -20,11 +20,13 @@ import {
 interface LandingPageProps {
   onSelectImage: (file: File) => void;
   onLoadSample: (type?: 'magazine' | 'coffee' | 'tech') => void;
+  onOpenAbout?: (tab?: 'about' | 'licenses' | 'privacy') => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onSelectImage,
-  onLoadSample
+  onLoadSample,
+  onOpenAbout
 }) => {
   const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
   const [isGlobalDraggingOver, setIsGlobalDraggingOver] = useState<boolean>(false);
@@ -367,6 +369,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 >
                   FAQ
                 </a>
+                {onOpenAbout && (
+                  <button
+                    onClick={() => onOpenAbout('about')}
+                    className="hover:text-[#ff6f42] transition-colors font-bold cursor-pointer"
+                  >
+                    About
+                  </button>
+                )}
+                {onOpenAbout && (
+                  <button
+                    onClick={() => onOpenAbout('licenses')}
+                    className="hover:text-[#ff6f42] transition-colors font-bold cursor-pointer"
+                  >
+                    Licenses
+                  </button>
+                )}
                 <a
                   href="https://pannagaja.vercel.app/"
                   target="_blank"
@@ -1351,6 +1369,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <li><a href="#demo" onClick={(e) => scrollToSection(e, 'demo')} className="hover:text-neutral-950 transition-colors font-semibold">Interactive Demo</a></li>
                     <li><a href="#workflow" onClick={(e) => scrollToSection(e, 'workflow')} className="hover:text-neutral-950 transition-colors font-semibold">Workflow</a></li>
                     <li><a href="#faq" onClick={(e) => scrollToSection(e, 'faq')} className="hover:text-neutral-950 transition-colors font-semibold">FAQ</a></li>
+                    {onOpenAbout && (
+                      <li><button onClick={() => onOpenAbout('about')} className="hover:text-neutral-950 transition-colors font-semibold cursor-pointer">About Retypo</button></li>
+                    )}
                   </ul>
                 </div>
                 <div>
@@ -1384,6 +1405,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div>
                   <p className="font-extrabold text-neutral-950 mb-3">Legal &amp; Safety</p>
                   <ul className="space-y-2 text-neutral-700 font-semibold">
+                    {onOpenAbout && (
+                      <li>
+                        <button
+                          onClick={() => onOpenAbout('licenses')}
+                          className="hover:text-neutral-950 transition-colors cursor-pointer text-left"
+                        >
+                          MIT License &amp; Attributions
+                        </button>
+                      </li>
+                    )}
+                    {onOpenAbout && (
+                      <li>
+                        <button
+                          onClick={() => onOpenAbout('privacy')}
+                          className="hover:text-neutral-950 transition-colors cursor-pointer text-left"
+                        >
+                          Privacy &amp; Safety Policy
+                        </button>
+                      </li>
+                    )}
                     <li><span>100% Non-Destructive</span></li>
                     <li><span>Zero Data Tracking</span></li>
                     <li><span>Local Processing</span></li>
@@ -1394,7 +1435,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <div className="mt-12 pt-6 border-t border-neutral-200 flex flex-col sm:flex-row items-center justify-between text-xs font-semibold text-neutral-600 gap-4">
-              <p>© 2026 Retypo. All rights reserved.</p>
+              <div className="flex items-center gap-2">
+                <p>© 2026 Retypo. MIT Licensed.</p>
+                {onOpenAbout && (
+                  <>
+                    <span className="text-neutral-300">•</span>
+                    <button
+                      onClick={() => onOpenAbout('licenses')}
+                      className="hover:text-[#ff6f42] underline underline-offset-2 transition-colors cursor-pointer"
+                    >
+                      Licenses
+                    </button>
+                    <span className="text-neutral-300">•</span>
+                    <button
+                      onClick={() => onOpenAbout('about')}
+                      className="hover:text-[#ff6f42] underline underline-offset-2 transition-colors cursor-pointer"
+                    >
+                      About
+                    </button>
+                  </>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-neutral-600">Designed &amp; built by</span>
                 <a

@@ -45,3 +45,16 @@ temp/
 # Machine Learning Models & Local OCR Weights
 models/
 .paddlex/
+
+# Planning, AI Agent Artifacts & Scratch Workspaces
+.planning/
+**/.planning/
+.agents/
+.gemini/
+.cursor/
+.claude/
+.turbo/
+.vercel/
+build/
+coverage/
+*.tsbuildinfo
